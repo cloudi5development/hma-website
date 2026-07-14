@@ -6,6 +6,8 @@
 @push('styles')
     {{-- Bootstrap 5 + Font Awesome are loaded site-wide via layouts/common-css --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" crossorigin="anonymous">
+    {{-- Poppins — used only for the Upcoming Events heading (per its design spec) --}}
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap">
     <link rel="stylesheet" href="{{ asset('assets/css/frontend/home.css') }}">
 @endpush
 
@@ -15,6 +17,9 @@
 
     {{-- ================================== HERO ================================== --}}
     <section class="hm-hero" id="hero" aria-labelledby="hmHeroTitle">
+
+        {{-- Blurred four-colour aurora (blue·violet·yellow·pink) rotating clockwise --}}
+        <div class="hm-hero__glow" aria-hidden="true"></div>
 
         {{-- Slow-rotating holographic glow, blurred + low opacity, behind everything --}}
         <div class="hm-hero__bg" aria-hidden="true">
@@ -99,7 +104,7 @@
                                     </textPath>
                                 </text>
                             </svg>
-                            <span class="hm-scroll__arrow" aria-hidden="true"><i class="fa-solid fa-arrow-down"></i></span>
+                            <span class="hm-scroll__arrow" aria-hidden="true"><i class="fa-solid fa-arrow-down-long"></i></span>
                         </button>
 
                     </div>
@@ -252,7 +257,7 @@
                 'pills'   => ['HR Professionals', 'Practical Sessions', 'Career Guidance'],
                 'tone'    => 'orange',
                 'reverse' => false,
-                'bg'      => 'bg-1.png', 'component' => 'component-1.png', 'person' => 'person-1.png',
+                'bg'      => 'bg-1.png', 'component' => 'component-1.png', 'person' => 'person-1.png', 'fit' => 'tall',
             ],
             [
                 'title'   => 'Career Support',
@@ -260,7 +265,7 @@
                 'pills'   => ['Resume Building', 'Mock Interviews', 'Placement Support'],
                 'tone'    => 'blue',
                 'reverse' => true,
-                'bg'      => 'bg-2.png', 'component' => 'component-2.png', 'person' => 'person-2.png',
+                'bg'      => 'bg-2.png', 'component' => 'component-2.png', 'person' => 'person-2.png', 'fit' => 'wide',
             ],
             [
                 'title'   => 'Hands-On Learning',
@@ -268,7 +273,7 @@
                 'pills'   => ['Live Projects', 'Practical Workshops', 'Case Studies'],
                 'tone'    => 'yellow',
                 'reverse' => false,
-                'bg'      => 'bg-3.png', 'component' => 'component-3.png', 'person' => 'person-3.png',
+                'bg'      => 'bg-3.png', 'component' => 'component-3.png', 'person' => 'person-3.png', 'fit' => 'tall',
             ],
             [
                 'title'   => 'Industry-Aligned Curriculum',
@@ -276,11 +281,22 @@
                 'pills'   => ['Latest Technologies', 'Updated Syllabus', 'In-Demand Skills'],
                 'tone'    => 'pink',
                 'reverse' => true,
-                'bg'      => 'bg-4.png', 'component' => 'component-4.png', 'person' => 'person-4.png',
+                'bg'      => 'bg-4.png', 'component' => 'component-4.png', 'person' => 'person-4.png', 'fit' => 'wide',
             ],
         ];
     @endphp
     <section class="hm-why" id="why-choose" aria-labelledby="hm-why-title">
+        {{-- Heading scrolls away with the page; only the card area pins below it. --}}
+        <div class="hm-why__intro">
+            <div class="container">
+                <div class="hm-why__head">
+                    <span class="hm-why__eyebrow"><i class="fa-solid fa-square"></i> Why Choose HireMinds</span>
+                    <h2 class="hm-why__title" id="hm-why-title">Everything You Need to Launch a Successful Career</h2>
+                    <p class="hm-why__lead">Gain practical skills, learn from industry experts, and receive career guidance that prepares you for real-world opportunities.</p>
+                </div>
+            </div>
+        </div>
+
         <div class="hm-why__pin">
             {{-- Reused hero rotating background — same image / blur / opacity / 90s spin --}}
             <div class="hm-why__bg" aria-hidden="true">
@@ -288,18 +304,17 @@
             </div>
 
             <div class="container hm-why__container">
-                <div class="hm-why__head">
-                    <span class="hm-why__eyebrow"><i class="fa-solid fa-square"></i> Why Choose HireMinds</span>
-                    <h2 class="hm-why__title" id="hm-why-title">Everything You Need to Launch a Successful Career</h2>
-                    <p class="hm-why__lead">Gain practical skills, learn from industry experts, and receive career guidance that prepares you for real-world opportunities.</p>
-                </div>
-
                 <div class="hm-why__stack" id="hmWhyStack">
                     @foreach ($whyCards as $i => $card)
                         <article @class(['hm-why__card', 'hm-why__card--'.$card['tone'], 'is-reverse' => $card['reverse']])
                                  data-index="{{ $i }}" aria-label="{{ $card['title'] }}">
                             <img class="hm-why__lines" src="{{ asset('assets/images/why-choose/'.$card['bg']) }}" alt="" aria-hidden="true">
-                            <img class="hm-why__deco" src="{{ asset('assets/images/why-choose/'.$card['component']) }}" alt="" aria-hidden="true">
+                            <span class="hm-why__decor" aria-hidden="true">
+                                <img class="hm-why__circle hm-why__circle--a" src="{{ asset('assets/images/why-choose/'.$card['component']) }}" alt="">
+                                <img class="hm-why__circle hm-why__circle--b" src="{{ asset('assets/images/why-choose/'.$card['component']) }}" alt="">
+                                <span class="hm-why__plus"></span>
+                                <span class="hm-why__slash"></span>
+                            </span>
 
                             <div class="hm-why__card-inner">
                                 <div class="hm-why__content">
@@ -311,13 +326,94 @@
                                         @endforeach
                                     </ul>
                                 </div>
-                                <div class="hm-why__figure">
+                                <div class="hm-why__figure hm-why__figure--{{ $card['fit'] }}">
                                     <img src="{{ asset('assets/images/why-choose/'.$card['person']) }}" alt="{{ $card['title'] }} — HireMinds mentor" loading="lazy">
                                 </div>
                             </div>
                         </article>
                     @endforeach
                 </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- ============================ UPCOMING EVENTS ============================ --}}
+    @php
+        // Speaker cut-outs live in public/assets/images/events/. Array order is
+        // left → centre → right on first paint; the carousel rotates them.
+        $events = [
+            [
+                'speaker' => 'Rochelle Fernandez',
+                'title'   => 'Learn about no-code tools',
+                'type'    => 'Live Event',
+                'price'   => '₹499/-',
+                'link'    => '#',
+                'person'  => 'person-2.png',
+                'tone'    => 'purple',
+            ],
+            [
+                'speaker' => 'Regina Phalange',
+                'title'   => 'Nail your interviews',
+                'type'    => 'Live Event',
+                'price'   => '₹499/-',
+                'link'    => '#',
+                'person'  => 'person-3.png',
+                'tone'    => 'teal',
+            ],
+            [
+                'speaker' => 'Rachel Bennett',
+                'title'   => 'Sell your first product online',
+                'type'    => 'Live Event',
+                'price'   => '₹499/-',
+                'link'    => '#',
+                'person'  => 'person-1.png',
+                'tone'    => 'green',
+            ],
+        ];
+    @endphp
+    <section class="hm-events" id="events" aria-labelledby="hmEventsTitle">
+        <div class="hm-events__bg" aria-hidden="true">
+            <img src="{{ asset('assets/images/events/events-bg.png') }}" alt="" role="presentation" loading="lazy">
+        </div>
+
+        <div class="container hm-events__container">
+            <div class="hm-events__head" data-ev-io>
+                <span class="hm-events__badge hm-ev-anim"><span class="hm-events__badge-sq"></span> Upcoming Event</span>
+                <h2 class="hm-events__title hm-ev-anim" id="hmEventsTitle">Learn, Connect &amp; Grow Through Our Events</h2>
+                <p class="hm-events__desc hm-ev-anim">Join workshops, seminars, career guidance sessions, and industry events designed to expand your knowledge, build your network, and prepare for future opportunities.</p>
+            </div>
+
+            <div class="hm-ev-carousel" id="hmEvCarousel" data-ev-io
+                 role="group" aria-roledescription="carousel" aria-label="Upcoming events" tabindex="0">
+
+                <button class="hm-ev-nav hm-ev-nav--prev" id="hmEvPrev" type="button" aria-label="Previous event">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                </button>
+
+                <div class="hm-ev-track" id="hmEvTrack">
+                    @foreach ($events as $i => $ev)
+                        <article class="hm-ev-card hm-ev-card--{{ $ev['tone'] }}" data-ev-index="{{ $i }}" aria-label="{{ $ev['title'] }} — {{ $ev['speaker'] }}">
+                            <div class="hm-ev-card__body">
+                                <span class="hm-ev-card__speaker">{{ $ev['speaker'] }}</span>
+                                <h3 class="hm-ev-card__title">{{ $ev['title'] }}</h3>
+                                <div class="hm-ev-card__foot">
+                                    <div class="hm-ev-card__meta">
+                                        <span class="hm-ev-card__type">{{ $ev['type'] }}</span>
+                                        <span class="hm-ev-card__price">{{ $ev['price'] }}</span>
+                                    </div>
+                                    <a class="hm-ev-card__btn" href="{{ $ev['link'] }}">
+                                        Event Details <i class="fa-solid fa-arrow-up-right" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <img class="hm-ev-card__person" src="{{ asset('assets/images/events/'.$ev['person']) }}" alt="{{ $ev['speaker'] }}" loading="lazy">
+                        </article>
+                    @endforeach
+                </div>
+
+                <button class="hm-ev-nav hm-ev-nav--next" id="hmEvNext" type="button" aria-label="Next event">
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </button>
             </div>
         </div>
     </section>
@@ -1240,12 +1336,13 @@
                 stack.classList.add('is-gsap');
                 pin.classList.add('is-gsap');   // switches the pin to fixed-viewport sizing
 
-                // Depth slots: 0 = active/sharp, deeper = smaller · fainter · softly blurred.
+                // Depth slots: 0 = active card (sharp), deeper cards peek out
+                // along the bottom edge as blurred, slightly-narrower strips.
                 var slots = [
                     { yp: 0,  scale: 1,    op: 1,   blur: 0 },
-                    { yp: 6,  scale: .965, op: .55, blur: 1 },
-                    { yp: 12, scale: .93,  op: .30, blur: 1 },
-                    { yp: 18, scale: .90,  op: .15, blur: 1 }
+                    { yp: 4,  scale: .975, op: 1,   blur: 3 },
+                    { yp: 8,  scale: .95,  op: .96, blur: 3 },
+                    { yp: 12, scale: .925, op: .9,  blur: 3 }
                 ];
                 var EXIT = { yPercent: -120, scale: .96, autoAlpha: 0, filter: 'blur(0px)' };
 
@@ -1346,5 +1443,116 @@
                 };
             });
         });
+    </script>
+
+    {{-- Upcoming Events — Cover-Flow rotational carousel (autoplay · swipe · keys) --}}
+    <script>
+        (function () {
+            'use strict';
+
+            var carousel = document.getElementById('hmEvCarousel');
+            var track    = document.getElementById('hmEvTrack');
+            if (!carousel || !track) return;
+
+            var cards = Array.prototype.slice.call(track.querySelectorAll('.hm-ev-card'));
+            if (cards.length < 3) return;
+
+            var prevBtn = document.getElementById('hmEvPrev');
+            var nextBtn = document.getElementById('hmEvNext');
+            var section = document.querySelector('.hm-events');
+            var reduce  = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            // order = [leftIndex, centerIndex, rightIndex, ...hidden]
+            var order = cards.map(function (_, i) { return i; });   // [0,1,2,...]
+            // Start with the middle card centred: order -> [left, center, right].
+            order = [0, 1, 2].concat(order.slice(3));
+
+            function paint() {
+                cards.forEach(function (c) {
+                    c.classList.remove('is-left', 'is-center', 'is-right', 'is-hidden');
+                    c.setAttribute('aria-hidden', 'true');
+                });
+                cards[order[0]].classList.add('is-left');
+                cards[order[1]].classList.add('is-center');
+                cards[order[2]].classList.add('is-right');
+                cards[order[1]].setAttribute('aria-hidden', 'false');
+                for (var i = 3; i < order.length; i++) cards[order[i]].classList.add('is-hidden');
+            }
+
+            // Right arrow: centre→right, right→left, left→centre.
+            function next() { order = [order[order.length - 1]].concat(order.slice(0, order.length - 1)); paint(); }
+            // Left arrow: centre→left, left→right, right→centre.
+            function prev() { order = order.slice(1).concat(order[0]); paint(); }
+
+            /* ---- Autoplay (5s) — pauses on hover / when tab hidden ---- */
+            var timer = null;
+            function play() { stop(); if (!reduce) timer = window.setInterval(next, 5000); }
+            function stop() { if (timer) { window.clearInterval(timer); timer = null; } }
+
+            if (nextBtn) nextBtn.addEventListener('click', function () { next(); play(); });
+            if (prevBtn) prevBtn.addEventListener('click', function () { prev(); play(); });
+
+            (section || carousel).addEventListener('mouseenter', stop);
+            (section || carousel).addEventListener('mouseleave', function () { if (started) play(); });
+            document.addEventListener('visibilitychange', function () {
+                if (document.hidden) stop(); else if (started) play();
+            });
+
+            /* ---- Click a side card to bring it to the centre ---- */
+            cards.forEach(function (card) {
+                card.addEventListener('click', function (e) {
+                    if (card.classList.contains('is-center')) return;   // let its button work
+                    e.preventDefault();
+                    if (card.classList.contains('is-left')) next();
+                    else if (card.classList.contains('is-right')) prev();
+                    play();
+                });
+            });
+
+            /* ---- Keyboard (arrow keys) ---- */
+            carousel.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); play(); }
+                else if (e.key === 'ArrowRight') { e.preventDefault(); next(); play(); }
+            });
+
+            /* ---- Touch swipe (mobile) ---- */
+            var startX = null;
+            track.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; }, { passive: true });
+            track.addEventListener('touchend', function (e) {
+                if (startX === null) return;
+                var dx = e.changedTouches[0].clientX - startX;
+                if (Math.abs(dx) > 40) { if (dx < 0) next(); else prev(); play(); }
+                startX = null;
+            }, { passive: true });
+
+            /* ---- Entrance — heading fades down, cards reveal centre → sides ---- */
+            var started = false;
+            function reveal() {
+                if (reduce) { cards.forEach(function (c) { c.classList.add('ev-revealed'); }); started = true; play(); return; }
+                var seq = [order[1], order[0], order[2]];   // centre first, then left, right
+                seq.forEach(function (idx, i) {
+                    window.setTimeout(function () { cards[idx].classList.add('ev-revealed'); }, i * 150);
+                });
+                started = true;
+                play();
+            }
+
+            paint();   // set initial positions (kept collapsed until revealed)
+
+            if ('IntersectionObserver' in window) {
+                var io = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (!entry.isIntersecting) return;
+                        entry.target.classList.add('is-in');
+                        if (entry.target === carousel) reveal();
+                        io.unobserve(entry.target);
+                    });
+                }, { threshold: 0.2 });
+                document.querySelectorAll('[data-ev-io]').forEach(function (el) { io.observe(el); });
+            } else {
+                document.querySelectorAll('[data-ev-io]').forEach(function (el) { el.classList.add('is-in'); });
+                reveal();
+            }
+        })();
     </script>
 @endpush

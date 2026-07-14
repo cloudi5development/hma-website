@@ -12,15 +12,46 @@
         initMegaMenu();
     });
 
-    /* Solidify the floating navbar once the page scrolls */
+    /* Solidify the floating navbar once the page scrolls, and hide it on
+       scroll-down / reveal it on scroll-up (once past the hero). */
     function initNavbarScroll() {
         var navbar = document.getElementById('hmNavbar');
         if (!navbar) return;
 
-        var onScroll = function () {
-            navbar.classList.toggle('is-scrolled', window.scrollY > 30);
+        var hero = document.getElementById('hero');
+        var lastY = window.scrollY || 0;
+        var ticking = false;
+
+        var update = function () {
+            ticking = false;
+            var y = window.scrollY || 0;
+
+            navbar.classList.toggle('is-scrolled', y > 30);
+
+            // Where the hide/show behaviour starts — below the hero on the home
+            // page, or a small offset on inner pages that have no hero.
+            var threshold = hero ? (hero.offsetTop + hero.offsetHeight - 60) : 120;
+
+            // Always show near the top, or while a menu / dropdown is open.
+            if (y < threshold || navbar.classList.contains('is-open') || navbar.querySelector('.is-open')) {
+                navbar.classList.remove('hm-navbar--hidden');
+                lastY = y;
+                return;
+            }
+
+            var delta = y - lastY;
+            if (delta > 6) {
+                navbar.classList.add('hm-navbar--hidden');      // scrolling down → hide
+            } else if (delta < -6) {
+                navbar.classList.remove('hm-navbar--hidden');   // scrolling up → show
+            }
+            lastY = y;
         };
-        onScroll();
+
+        var onScroll = function () {
+            if (!ticking) { window.requestAnimationFrame(update); ticking = true; }
+        };
+        update();
         window.addEventListener('scroll', onScroll, { passive: true });
     }
 

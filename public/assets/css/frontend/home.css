@@ -70,6 +70,28 @@
     will-change: transform;
 }
 
+/* Four-colour aurora — blue (left) · violet (top) · yellow (right) · pink
+   (bottom), soft and light, orbiting slowly clockwise. */
+.hm-hero__glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 150vmax;
+    height: 150vmax;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 50% 30%, rgba(150, 120, 255, .50), transparent 26%),  /* top — violet */
+        radial-gradient(circle at 70% 50%, rgba(255, 205, 95,  .50), transparent 26%),  /* right — yellow */
+        radial-gradient(circle at 50% 70%, rgba(255, 150, 195, .50), transparent 26%),  /* bottom — pink */
+        radial-gradient(circle at 30% 50%, rgba(120, 178, 255, .50), transparent 26%);  /* left — blue */
+    filter: blur(64px);
+    opacity: .55;
+    animation: hm-spin 55s linear infinite;
+    will-change: transform;
+}
+
 .hm-hero__container {
     position: relative;
     z-index: 2;
@@ -236,6 +258,19 @@
     color: #843D21;
 }
 
+/* Hero: Explore Course + Apply share the exact same width & height. Scoped to
+   the hero so the About / Contact buttons keep their own sizing. */
+.hm-hero__actions .hm-btn {
+    width: 220px;
+    height: 56px;
+    padding: 0;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+}
+.hm-hero__actions .hm-btn--primary { padding: 0 8px 0 24px; }
+.hm-hero__actions .hm-btn--primary .hm-btn__label { width: 100%; justify-content: space-between; gap: 12px; }
+.hm-hero__actions .hm-btn--ghost { justify-content: center; }
+
 /* ============================== RIGHT VISUAL ============================== */
 .hm-hero__right {
     position: relative;
@@ -348,7 +383,7 @@
     width: 54px;
     height: 54px;
     background: #fff;
-    border-radius: 8px;
+    border-radius: 10px;
     box-shadow: var(--hm-shadow-md);
 }
 
@@ -414,7 +449,7 @@
     align-items: center;
     justify-content: center;
     color: #000;
-    font-size: 1.7rem;
+    font-size: 1.3rem;
     /* background: linear-gradient(135deg, var(--hm-gold-2), var(--hm-gold-dark)); */
     border-radius: 50%;
 }
@@ -688,6 +723,7 @@
 .hm-partners {
     /* blends with the page background (transparent) */
     overflow: hidden;
+    padding-bottom: 50px;
 }
 
 .hm-partners__title {
@@ -703,8 +739,8 @@
     position: relative;
     width: 100%;
     overflow: hidden;
-    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
-    mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
+    -webkit-mask-image: none;
+    mask-image: none;
 }
 
 /* Two identical groups slide left by exactly one group width → seamless loop */
@@ -800,7 +836,7 @@
 /* ============================== ABOUT US ============================== */
 .hm-about {
     position: relative;
-    padding: 90px 0;
+    padding: 90px 0 50px;
     overflow: hidden;
 }
 
@@ -834,7 +870,7 @@
 /* ------------------------------ Left visual ------------------------------ */
 .hm-about__visual {
     position: relative;
-    max-width: 560px;
+    max-width: 640px;
     margin: 0 auto;
 }
 
@@ -954,7 +990,7 @@
     margin: 0;
     font-size: 14px;
     line-height: 1.6;
-    color: #5B5B5B;
+    color: #111111;
 }
 
 /* Reuse the hero CTA look; add the hover the hero button doesn't apply,
@@ -1162,7 +1198,7 @@
 /* ============================== TOP CATEGORIES ============================== */
 .hm-cats {
     position: relative;
-    padding: 90px 0;
+    padding: 90px 0 50px;
     overflow: hidden;
 }
 
@@ -1280,9 +1316,8 @@
 }
 
 .hm-cat:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 24px 46px rgba(42, 29, 20, .14);
-    filter: brightness(1.03);
+    box-shadow: 0 18px 40px rgba(42, 29, 20, .12);
+    filter: brightness(1.02);
 }
 
 .hm-cat__text {
@@ -1313,8 +1348,8 @@
     transition: transform .35s ease;
 }
 
-.hm-cat:hover .hm-cat__icon {
-    transform: rotate(-8deg);
+.hm-cat:hover .hm-cat__icon img {
+    animation: hm-spin 3.5s linear infinite;
 }
 
 .hm-cat__icon img {
@@ -1391,7 +1426,7 @@
 /* ============================== POPULAR COURSES ============================== */
 .hm-courses {
     position: relative;
-    padding: 90px 0 100px;
+    padding: 90px 0 50px;
     overflow: hidden;
 }
 
@@ -1530,7 +1565,7 @@
     height: 100%;
     padding: 14px;
     background: #fff;
-    border-radius: 24px;
+    border-radius: 14px;
     box-shadow: 0 12px 34px rgba(42, 29, 20, .07);
     transition: transform .35s ease, box-shadow .35s ease;
 }
@@ -1545,7 +1580,7 @@
     position: relative;
     aspect-ratio: 16 / 10;
     margin-bottom: 14px;
-    border-radius: 16px;
+    border-radius: 10px;
     overflow: hidden;
 }
 
@@ -1738,7 +1773,7 @@
 /* ============================== STUDENT SUCCESS STORIES ============================== */
 .hm-stories {
     position: relative;
-    padding: 100px 0;
+    padding: 100px 0 50px;
     overflow: hidden;
 }
 
@@ -2049,7 +2084,7 @@
 /* ============================== LATEST BLOG ============================== */
 .hm-blogs {
     position: relative;
-    padding: 100px 0;
+    padding: 100px 0 50px;
     overflow: hidden;
 }
 
@@ -2277,7 +2312,7 @@
 /* ============================== TESTIMONIALS ============================== */
 .hm-tst {
     position: relative;
-    padding: 100px 0 110px;
+    padding: 100px 0 50px;
     overflow: hidden;
 }
 .hm-tst__bg {
@@ -2589,7 +2624,7 @@
 /* ============================== FAQ ============================== */
 .hm-faq {
     position: relative;
-    padding: 100px 0;
+    padding: 100px 0 50px;
     overflow: hidden;
 }
 .hm-faq__bg {
@@ -2805,7 +2840,7 @@
 /* ============================== CONTACT / ENQUIRY ============================== */
 .hm-contact {
     position: relative;
-    padding: 100px 0;
+    padding: 100px 0 50px;
     overflow: hidden;
 }
 .hm-contact__bg {
@@ -3101,7 +3136,7 @@
 /* ============================== OUR JOURNEY / REELS ============================== */
 .hm-reels {
     position: relative;
-    padding: 100px 0;
+    padding: 100px 0 50px;
     overflow: hidden;
 }
 .hm-reels__bg {
@@ -3324,17 +3359,21 @@
 .hm-why {
     position: relative;
     background: #FFFDFB;
+    padding-bottom: 50px;
 }
 
-/* Pinned wrapper — fills the viewport while the section is scrubbed. */
+/* Heading block — normal flow, scrolls away before the card area pins. */
+.hm-why__intro {
+    position: relative;
+    z-index: 1;
+    padding: 96px 0 34px;             /* top clears the fixed navbar on entry */
+}
+
+/* Card wrapper — pins on its own (heading excluded) so only the card shows. */
 .hm-why__pin {
     position: relative;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
     overflow: hidden;                 /* clips the rotating background */
-    padding: 54px 0;
+    padding: 10px 0 44px;
 }
 
 /* Reused hero rotating background (identical treatment to .hm-hero__bg). */
@@ -3367,7 +3406,7 @@
 .hm-why__head {
     text-align: center;
     max-width: 660px;
-    margin: 0 auto 42px;
+    margin: 0 auto;
 }
 .hm-why__eyebrow {
     display: inline-flex;
@@ -3432,18 +3471,42 @@
     pointer-events: none;
     z-index: 1;
 }
-.hm-why__deco {
+/* Decorative layer — soft floating circles, a plus-grid and a diagonal hatch,
+   sitting behind the content (matches the reference card). */
+.hm-why__decor {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+}
+.hm-why__circle {
+    position: absolute;
+    height: auto;
+    opacity: .85;
+    animation: hm-why-float 6s ease-in-out infinite;
+}
+.hm-why__circle--a { top: 16%; left: 46%; width: 56px; }
+.hm-why__circle--b { bottom: 11%; right: 8%; width: 82px; animation-delay: -3s; }
+
+.hm-why__plus {
     position: absolute;
     top: 26px;
     right: 34px;
-    width: 118px;
-    height: auto;
-    opacity: .9;
-    pointer-events: none;
-    z-index: 2;
-    animation: hm-why-float 6s ease-in-out infinite;
+    width: 68px;
+    height: 52px;
+    opacity: .6;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='17' height='17'%3E%3Cpath d='M8.5 4.5v8M4.5 8.5h8' stroke='%23000' stroke-opacity='.28' stroke-width='1.2'/%3E%3C/svg%3E");
 }
-.hm-why__card.is-reverse .hm-why__deco { right: auto; left: 34px; }
+
+.hm-why__slash {
+    position: absolute;
+    bottom: 15%;
+    left: 44%;
+    width: 62px;
+    height: 40px;
+    opacity: .5;
+    background: repeating-linear-gradient(-45deg, rgba(0, 0, 0, .18) 0 1.4px, transparent 1.4px 7px);
+}
 
 @keyframes hm-why-float {
     0%, 100% { transform: translateY(0); }
@@ -3519,63 +3582,74 @@
 .hm-why__card--yellow .hm-why__pill { background: #6E5013; }
 .hm-why__card--pink   .hm-why__pill { background: #C22A3E; }
 
-/* Person figure. */
+/* Person figure. The person fills its column via object-fit:cover, so both
+   portrait (person-1/3) and landscape (person-2/4) cut-outs frame correctly.
+   'tall' = portrait/square (narrower column, head at top); 'wide' = landscape
+   (wider column so the gesture/prop isn't cropped). */
 .hm-why__figure {
-    flex: 0 0 40%;
-    align-self: flex-end;
-    display: flex;
-    justify-content: center;
+    align-self: stretch;
     height: 100%;
-    padding-top: 18px;
+    overflow: hidden;
 }
 .hm-why__figure img {
+    width: 100%;
     height: 100%;
-    width: auto;
-    max-width: 100%;
-    object-fit: contain;
-    object-position: bottom center;
-    filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .14));
+    object-fit: cover;
+    object-position: center bottom;
+    filter: drop-shadow(0 16px 26px rgba(0, 0, 0, .12));
 }
+.hm-why__figure--tall { flex: 0 0 44%; }
+.hm-why__figure--tall img { object-position: center top; }
+.hm-why__figure--wide { flex: 0 0 52%; }
+.hm-why__figure--wide img { object-position: center bottom; }
 
 /* ---- Desktop: GSAP stacked mode (JS adds .is-gsap once pinned) --------- */
 @media (min-width: 992px) {
-    /* Pinned wrapper fits the viewport exactly and clears the fixed navbar,
-       so the whole active card is always visible before it slides. */
+    /* Only the card area pins — it clears the fixed navbar and centres the
+       card, so the card floats on the page (heading has scrolled away). */
     .hm-why__pin.is-gsap {
-        height: 100vh;
-        min-height: 0;
+        display: flex;
+        flex-direction: column;
         justify-content: center;
-        padding: 104px 16px 36px;
+        height: 100vh;
+        padding: 92px 16px 32px;
     }
-    .hm-why__pin.is-gsap .hm-why__head { margin-bottom: 24px; }
 
-    /* Card area takes the height left over under navbar + heading (capped). */
+    /* Fixed reference card: 990 × 542, 30px radius. Centred, with the rest of
+       the deck peeking out (blurred) along the bottom edge. */
     .hm-why__stack.is-gsap {
         display: block;
-        height: clamp(320px, calc(100vh - 340px), 448px);
+        width: min(990px, calc(100vw - 48px));
+        height: 542px;
+        margin: 0 auto;
+        overflow: visible;              /* let the stacked cards peek below */
         gap: 0;
     }
     .hm-why__stack.is-gsap .hm-why__card {
         position: absolute;
         inset: 0;
         height: 100%;
+        border-radius: 30px;
+        box-shadow: 0 24px 52px rgba(42, 29, 20, .17);
         will-change: transform, opacity, filter;
     }
+
+    /* Content spacing tuned to the 990 × 542 card. */
+    .hm-why__stack.is-gsap .hm-why__content { padding: 52px 56px; }
+    .hm-why__stack.is-gsap .hm-why__card-title { font-size: 30px; margin-bottom: 14px; }
+    .hm-why__stack.is-gsap .hm-why__card-desc { margin-bottom: 26px; font-size: 15px; max-width: 384px; }
+    .hm-why__stack.is-gsap .hm-why__pills { gap: 14px; }
+    .hm-why__stack.is-gsap .hm-why__pill { padding: 11px 26px; font-size: 14.5px; }
+
+    /* Person fills its column (cover); widths per orientation are set on the
+       base .hm-why__figure--tall / --wide rules. */
+    .hm-why__stack.is-gsap .hm-why__figure { align-self: stretch; }
 }
 
-/* Short viewports (laptops, shrunken windows): compact the heading + card so
-   the full card still fits inside the pinned screen without clipping. */
-@media (min-width: 992px) and (max-height: 760px) {
-    .hm-why__pin.is-gsap { padding: 90px 16px 22px; }
-    .hm-why__pin.is-gsap .hm-why__head { margin-bottom: 14px; }
-    .hm-why__pin.is-gsap .hm-why__eyebrow { margin-bottom: 9px; }
-    .hm-why__pin.is-gsap .hm-why__title { font-size: clamp(23px, 2.6vw, 32px); }
-    .hm-why__pin.is-gsap .hm-why__lead { font-size: 14px; line-height: 1.5; }
-    .hm-why__stack.is-gsap { height: clamp(300px, calc(100vh - 250px), 420px); }
-    .hm-why__pin.is-gsap .hm-why__content { padding: 26px 40px; }
-    .hm-why__pin.is-gsap .hm-why__card-desc { margin-bottom: 15px; }
-    .hm-why__pin.is-gsap .hm-why__pills { gap: 10px; }
-    .hm-why__pin.is-gsap .hm-why__pill { padding: 9px 21px; }
+/* Short viewports: scale the reference card down so it still fits on-screen. */
+@media (min-width: 992px) and (max-height: 720px) {
+    .hm-why__pin.is-gsap { padding: 74px 16px 20px; }
+    .hm-why__stack.is-gsap { height: min(542px, calc(100vh - 120px)); }
 }
 
 /* ---- Mobile / tablet-portrait: native swipe slider (scroll-snap) ------- */
@@ -3611,5 +3685,290 @@
 /* ---- Reduced motion — hold the rotating background + card float still --- */
 @media (prefers-reduced-motion: reduce) {
     .hm-why__bg img,
-    .hm-why__deco { animation: none !important; }
+    .hm-why__circle { animation: none !important; }
+}
+
+/* ==========================================================================
+   UPCOMING EVENTS — Cover-Flow rotational carousel
+   ========================================================================== */
+.hm-events {
+    position: relative;
+    overflow: hidden;
+    padding: 100px 0 50px;
+    background: #FFFDFB;
+}
+.hm-events__bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+.hm-events__bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    opacity: .95;
+}
+.hm-events__container { position: relative; z-index: 1; }
+
+/* ---- Header ---- */
+.hm-events__head { text-align: center; max-width: 780px; margin: 0 auto; }
+.hm-events__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--hm-gold-dark, #C6851A);
+}
+.hm-events__badge-sq { width: 11px; height: 11px; border-radius: 2px; background: var(--hm-gold, #E9A320); }
+.hm-events__title {
+    font-family: 'Poppins', 'Geist', sans-serif;
+    margin: 0 0 16px;
+    font-size: clamp(30px, 4vw, 50px);
+    font-weight: 700;
+    line-height: 1.15;
+    color: #222222;
+}
+.hm-events__desc {
+    max-width: 700px;
+    margin: 0 auto;
+    font-size: 15.5px;
+    line-height: 1.7;
+    color: #6D6357;
+}
+
+/* Header entrance — fade down. */
+.hm-ev-anim {
+    opacity: 0;
+    transform: translateY(-22px);
+    transition: opacity .7s var(--hm-ease), transform .7s var(--hm-ease);
+}
+.hm-events__head.is-in .hm-ev-anim { opacity: 1; transform: none; }
+.hm-events__head.is-in .hm-ev-anim:nth-child(2) { transition-delay: .1s; }
+.hm-events__head.is-in .hm-ev-anim:nth-child(3) { transition-delay: .2s; }
+
+/* ---- Carousel shell ---- */
+.hm-ev-carousel {
+    position: relative;
+    max-width: 1120px;
+    height: 520px;
+    margin: 54px auto 0;
+    outline: none;
+}
+.hm-ev-track { position: absolute; inset: 0; }
+
+/* ---- Cards — absolutely centred; position classes translate/scale them ---- */
+.hm-ev-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 392px;
+    height: 457px;
+    border-radius: 26px;
+    overflow: hidden;
+    transform: translate(-50%, -50%) scale(.9);
+    z-index: 1;
+    box-shadow: 0 30px 70px rgba(20, 14, 30, .28);
+    transition: transform .7s cubic-bezier(.22, .61, .36, 1),
+                opacity .7s cubic-bezier(.22, .61, .36, 1);
+    will-change: transform, opacity;
+}
+.hm-ev-card.is-left {
+    transform: translate(calc(-50% - 292px), -50%) scale(.9);
+    opacity: .85;
+    z-index: 3;
+}
+.hm-ev-card.is-right {
+    transform: translate(calc(-50% + 292px), -50%) scale(.9);
+    opacity: .85;
+    z-index: 3;
+}
+.hm-ev-card.is-center {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    z-index: 5;
+    box-shadow: 0 44px 96px rgba(20, 14, 30, .42);
+}
+.hm-ev-card.is-hidden {
+    transform: translate(-50%, -50%) scale(.82);
+    opacity: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+/* Collapsed + hidden until the entrance reveal runs (staggered by JS). */
+.hm-ev-card:not(.ev-revealed) {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.86);
+}
+
+/* Card colour sets (dark premium gradients + radial glow behind the person). */
+.hm-ev-card--purple { background: radial-gradient(120% 88% at 74% 72%, #7d2f95 0%, rgba(125, 47, 149, 0) 56%), linear-gradient(158deg, #251636 0%, #3b2154 100%); }
+.hm-ev-card--teal   { background: radial-gradient(120% 88% at 70% 68%, #1c7f8a 0%, rgba(28, 127, 138, 0) 56%), linear-gradient(158deg, #0c2529 0%, #123b42 100%); }
+.hm-ev-card--green  { background: radial-gradient(120% 88% at 70% 68%, #2f7d40 0%, rgba(47, 125, 64, 0) 56%), linear-gradient(158deg, #0f2218 0%, #163420 100%); }
+
+/* ---- Card content ---- */
+.hm-ev-card__body {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    padding: 34px 32px;
+    display: flex;
+    flex-direction: column;
+}
+.hm-ev-card__speaker { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+.hm-ev-card--purple .hm-ev-card__speaker { color: #e29bff; }
+.hm-ev-card--teal   .hm-ev-card__speaker { color: #4fd8e8; }
+.hm-ev-card--green  .hm-ev-card__speaker { color: #7ee08a; }
+
+.hm-ev-card__title {
+    margin: 0;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: 33px;
+    font-weight: 700;
+    line-height: 1.14;
+    color: #fff;
+    max-width: 8.5em;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.hm-ev-card__foot { margin-top: auto; }
+.hm-ev-card__meta { margin-bottom: 20px; }
+.hm-ev-card__type { display: block; font-size: 13.5px; color: rgba(255, 255, 255, .6); margin-bottom: 4px; }
+.hm-ev-card__price { display: block; font-size: 22px; font-weight: 700; color: #fff; }
+
+.hm-ev-card__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 22px;
+    border-radius: 30px;
+    background: rgba(0, 0, 0, .40);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    transition: background .25s var(--hm-ease), transform .25s var(--hm-ease);
+}
+.hm-ev-card__btn:hover { background: var(--hm-gold, #E9A320); color: #fff; transform: translateY(-2px); }
+.hm-ev-card__btn i { font-size: 12px; }
+
+/* ---- Speaker cut-out — bottom-right, grayscale, blended into the card ---- */
+.hm-ev-card__person {
+    position: absolute;
+    right: 2%;
+    bottom: 0;
+    width: 62%;
+    height: auto;
+    object-fit: contain;
+    object-position: bottom center;
+    z-index: 1;
+    filter: grayscale(1) contrast(1.03) brightness(.98);
+    -webkit-mask-image: linear-gradient(to left, #000 60%, transparent 100%);
+    mask-image: linear-gradient(to left, #000 60%, transparent 100%);
+    pointer-events: none;
+}
+
+/* ---- Navigation buttons ---- */
+.hm-ev-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 60px;
+    height: 60px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: #1b1b1b;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .24);
+    opacity: 0;
+    transition: background .25s var(--hm-ease), transform .25s var(--hm-ease), opacity .5s var(--hm-ease);
+}
+.hm-ev-carousel.is-in .hm-ev-nav { opacity: 1; }
+.hm-ev-nav--prev { left: 4px; }
+.hm-ev-nav--next { right: 4px; }
+.hm-ev-nav:hover { background: var(--hm-gold, #E9A320); transform: translateY(-50%) scale(1.07); }
+.hm-ev-nav:focus-visible { outline: 3px solid rgba(233, 163, 32, .5); outline-offset: 3px; }
+
+/* ---- Tablet — smaller cards, sides tucked closer ---- */
+@media (max-width: 991.98px) {
+    .hm-ev-carousel { height: 470px; }
+    .hm-ev-card { width: 348px; height: 406px; }
+    .hm-ev-card.is-left  { transform: translate(calc(-50% - 190px), -50%) scale(.86); }
+    .hm-ev-card.is-right { transform: translate(calc(-50% + 190px), -50%) scale(.86); }
+    .hm-ev-card__title { font-size: 27px; }
+}
+
+/* ---- Mobile — one card, swipe, buttons below ---- */
+@media (max-width: 575.98px) {
+    .hm-ev-carousel { height: 450px; padding-bottom: 76px; }
+    .hm-ev-card { width: min(340px, 88vw); height: 396px; }
+    .hm-ev-card.is-left,
+    .hm-ev-card.is-right {
+        transform: translate(-50%, -50%) scale(.8);
+        opacity: 0;
+        pointer-events: none;
+    }
+    .hm-ev-card.is-center { transform: translate(-50%, -50%) scale(1); }
+    .hm-ev-card__title { font-size: 28px; }
+    .hm-ev-nav { top: auto; bottom: 8px; transform: none; }
+    .hm-ev-nav:hover { transform: none; }
+    .hm-ev-nav--prev { left: 50%; margin-left: -70px; }
+    .hm-ev-nav--next { left: 50%; margin-left: 10px; }
+}
+
+/* ---- Reduced motion — no travel, no autoplay flourish ---- */
+@media (prefers-reduced-motion: reduce) {
+    .hm-ev-card,
+    .hm-ev-anim,
+    .hm-ev-nav { transition: none !important; }
+}
+
+/* ==========================================================================
+   Shared section aurora — the same soft rotating colour glow as the hero, so
+   every content section carries the same background effect.
+   ========================================================================== */
+.hm-about, .hm-cats, .hm-courses, .hm-stories, .hm-blogs,
+.hm-tst, .hm-faq, .hm-contact, .hm-reels { position: relative; }
+
+.hm-about::before, .hm-cats::before, .hm-courses::before, .hm-stories::before,
+.hm-blogs::before, .hm-tst::before, .hm-faq::before, .hm-contact::before,
+.hm-reels::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 150vmax;
+    height: 150vmax;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 50% 30%, rgba(150, 120, 255, .28), transparent 26%),
+        radial-gradient(circle at 70% 50%, rgba(255, 205, 95, .28), transparent 26%),
+        radial-gradient(circle at 50% 70%, rgba(255, 150, 195, .28), transparent 26%),
+        radial-gradient(circle at 30% 50%, rgba(120, 178, 255, .28), transparent 26%);
+    filter: blur(60px);
+    opacity: .5;
+    animation: hm-spin 55s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+    .hm-about::before, .hm-cats::before, .hm-courses::before, .hm-stories::before,
+    .hm-blogs::before, .hm-tst::before, .hm-faq::before, .hm-contact::before,
+    .hm-reels::before { animation: none; }
 }

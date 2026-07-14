@@ -30,7 +30,14 @@
     box-shadow: var(--hm-shadow-md);
     -webkit-backdrop-filter: blur(16px) saturate(150%);
     backdrop-filter: blur(16px) saturate(150%);
-    transition: top .3s var(--hm-ease), background .3s var(--hm-ease), box-shadow .3s var(--hm-ease);
+    transition: top .3s var(--hm-ease), transform .38s var(--hm-ease), background .3s var(--hm-ease), box-shadow .3s var(--hm-ease);
+    will-change: transform;
+}
+
+/* Hidden state — slides up out of view on scroll-down (toggled by navbar.js). */
+.hm-navbar--hidden {
+    transform: translate(-50%, calc(-100% - 44px));
+    pointer-events: none;
 }
 /* 
 .hm-navbar.is-scrolled {
