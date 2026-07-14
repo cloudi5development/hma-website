@@ -1,0 +1,325 @@
+/* ==========================================================================
+   Hire Minds Academy — Global site navbar
+   Markup: resources/views/frontend/layouts/header.blade.php
+   Loaded site-wide via layouts/common-css. Self-contained (own tokens).
+   ========================================================================== */
+
+:root {
+    --hm-gold-2: #F6B72B;
+    --hm-gold-dark: #C6851A;
+    --hm-brown: #2A1D14;
+    --hm-shadow-md: 0 14px 40px rgba(42, 29, 20, .12);
+    --hm-shadow-lg: 0 30px 70px rgba(42, 29, 20, .18);
+    --hm-ease: cubic-bezier(.22, .7, .2, 1);
+}
+
+.hm-navbar {
+    position: fixed;
+    top: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(1180px, calc(100% - 32px));
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 10px 12px 10px 20px;
+    background: #843D21;
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 999px;
+    box-shadow: var(--hm-shadow-md);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    backdrop-filter: blur(16px) saturate(150%);
+    transition: top .3s var(--hm-ease), background .3s var(--hm-ease), box-shadow .3s var(--hm-ease);
+}
+/* 
+.hm-navbar.is-scrolled {
+    top: 12px;
+    background: rgba(28, 19, 12, .92);
+    box-shadow: var(--hm-shadow-lg);
+} */
+
+.hm-navbar__logo {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.hm-navbar__logo img {
+    height: 50px;
+    width: auto;
+    display: block;
+}
+
+.hm-navbar__menu {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 16px;
+}
+
+.hm-navbar__links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0 auto;
+    padding: 0;
+    list-style: none;
+}
+
+.hm-navbar__links a {
+    display: inline-block;
+    padding: 9px 16px;
+    padding-left:0px !important;
+    color: rgba(255, 255, 255, .82);
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    border-radius: 999px;
+  
+}
+
+.hm-navbar__links a:hover,
+.hm-navbar__links a:focus-visible,
+.hm-navbar__links a.active {
+    color: #F9B11D;
+    font-weight: 700;
+
+}
+
+.hm-navbar__cta {
+  display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 14px;
+    color: var(--hm-brown);
+    font-weight: 700;
+    font-size: 16px;
+    text-decoration: none;
+    white-space: nowrap;
+    background: white;
+    /* background: linear-gradient(135deg, var(--hm-gold-2), var(--hm-gold-dark)); */
+    border-radius: 999px;
+}
+/* 
+.hm-navbar__cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 26px rgba(233, 163, 32, .45);
+    color: var(--hm-brown);
+} */
+
+.hm-navbar__cta i {
+       font-size: 16px;
+    background: #000;
+    color: white;
+    border-radius: 50%;
+    padding: 11px;
+    border: 1px solid black;
+}
+
+.hm-navbar__cta:hover i {
+    transform: translateX(3px);
+}
+
+.hm-navbar__toggle {
+    display: none;
+    margin-left: auto;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.2rem;
+    background: rgba(255, 255, 255, .10);
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* Tablet & below — collapse to a hamburger dropdown */
+@media (max-width: 991.98px) {
+    .hm-navbar__toggle {
+        display: inline-flex;
+    }
+
+    .hm-navbar__menu {
+        position: absolute;
+        top: calc(100% + 12px);
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 16px;
+        background: rgba(28, 19, 12, .97);
+        border-radius: 22px;
+        box-shadow: var(--hm-shadow-lg);
+        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
+        opacity: 0;
+        transform: translateY(-8px);
+        pointer-events: none;
+        transition: opacity .25s var(--hm-ease), transform .25s var(--hm-ease);
+    }
+
+    .hm-navbar.is-open .hm-navbar__menu {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
+    .hm-navbar__links {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 2px;
+        margin: 0;
+    }
+
+    .hm-navbar__links a {
+        padding: 12px 16px;
+    }
+
+    .hm-navbar__cta {
+        justify-content: center;
+        margin-top: 6px;
+    }
+}
+
+/* ============================== COURSES MEGA MENU ============================== */
+/* Relative so the panel anchors to the Courses item (opens under it, not full width). */
+.hm-nav-item--mega { position: relative; }
+
+.hm-mega-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    color: rgba(255, 255, 255, .82);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1;
+    background: transparent;
+    border: 0;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color .2s;
+}
+.hm-mega-toggle:hover,
+.hm-mega-toggle:focus-visible,
+.hm-nav-item--mega.is-open .hm-mega-toggle {
+    color: #F9B11D;
+    font-weight: 700;
+}
+.hm-mega-toggle__caret {
+    font-size: 11px;
+    transition: transform .25s var(--hm-ease);
+}
+.hm-nav-item--mega.is-open .hm-mega-toggle__caret { transform: rotate(180deg); }
+
+.hm-mega {
+    position: absolute;
+    top: calc(100% + 16px);
+    left: 0;
+    right: auto;
+    width: 44rem;
+    max-width: calc(100vw - 32px);
+    z-index: 1001;
+    padding: 24px;
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 30px 80px rgba(42, 29, 20, .22);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: opacity .25s var(--hm-ease), transform .25s var(--hm-ease), visibility .25s;
+}
+.hm-nav-item--mega.is-open .hm-mega {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.hm-mega__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    /* gap: 28px; */
+}
+.hm-mega__col .hm-mega__thumb img{
+    display: block;
+    line-height: 0;
+    /* border-radius: 10px; */
+    overflow: hidden;
+}
+.hm-mega__thumb img {
+    width: 100%;
+    height: 78px;
+    object-fit: cover;
+    display: block;
+    transition: transform .4s var(--hm-ease);
+}
+.hm-mega__thumb:hover img { transform: scale(1.05); }
+.hm-mega__title {
+    margin: 16px 0 12px;
+    font-size: 1.06rem;
+    font-weight: 800;
+    color: #14100C;
+}
+.hm-mega__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.hm-mega__list a {
+    display: block;
+    padding: 7px 0;
+    color: #4A4741;
+    font-size: .95rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color .18s, padding-left .18s;
+}
+.hm-mega__list a:hover {
+    color: #F9B11D;
+    padding-left: 4px;
+}
+.hm-mega__list a.is-featured {
+    color: #F9B11D;
+    font-weight: 700;
+}
+
+/* Tablet & below — collapse the mega panel inline inside the mobile menu */
+@media (max-width: 991.98px) {
+    .hm-mega-toggle {
+        width: 100%;
+        justify-content: space-between;
+        padding: 12px 16px;
+    }
+    .hm-mega {
+        position: static;
+        opacity: 1;
+        visibility: hidden;
+        transform: none;
+        pointer-events: auto;
+        max-height: 0;
+        padding: 0 12px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, .05);
+        border-radius: 14px;
+        box-shadow: none;
+        transition: max-height .3s var(--hm-ease), padding .3s var(--hm-ease);
+    }
+    .hm-nav-item--mega.is-open .hm-mega {
+        visibility: visible;
+        max-height: 1400px;
+        padding: 12px;
+        margin-top: 8px;
+    }
+    .hm-mega__grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+    .hm-mega__thumb { display: none; }
+    .hm-mega__title { margin-top: 0; color: #fff; font-size: .95rem; }
+    .hm-mega__list a { color: rgba(255, 255, 255, .8); }
+    .hm-mega__list a:hover,
+    .hm-mega__list a.is-featured { color: #F9B11D; }
+}

@@ -1,0 +1,268 @@
+/* ==========================================================================
+   Hire Minds Academy — Global site footer
+   Markup: resources/views/frontend/layouts/footer.blade.php
+   Loaded site-wide via layouts/common-css. Self-contained (own tokens).
+   ========================================================================== */
+
+:root {
+    --hmf-gold: #F9B11D;
+    --hmf-brown: #7B3F1F;
+    --hmf-text: rgba(255, 255, 255, .85);
+    --hmf-ease: cubic-bezier(.22, .7, .2, 1);
+}
+
+.hm-footer {
+    position: relative;
+    padding: 70px 0 35px;
+    background: linear-gradient(160deg, #8B4726 0%, #8A4322 55%, #7B3F1F 100%);
+    color: var(--hmf-text);
+    font-size: 16px;
+    line-height: 1.8;
+}
+
+/* ------------------------------ Column 1: Brand ------------------------------ */
+.hm-footer__logo {
+    display: block;
+    height: 54px;
+    width: auto;
+    margin-bottom: 22px;
+}
+.hm-footer__about {
+    max-width: 280px;
+    margin: 0 0 24px;
+    color: var(--hmf-text);
+    font-size: 16px;
+    line-height: 1.8;
+}
+.hm-footer__socials {
+    display: flex;
+    gap: 12px;
+}
+.hm-footer__social {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    background: #fff;
+    color: var(--hmf-brown);
+    font-size: 1rem;
+    border-radius: 11px;
+    text-decoration: none;
+    transition: transform .25s var(--hmf-ease), background .25s var(--hmf-ease),
+                color .25s var(--hmf-ease), box-shadow .25s var(--hmf-ease);
+}
+.hm-footer__social:hover,
+.hm-footer__social:focus-visible {
+    background: var(--hmf-gold);
+    color: #fff;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, .22);
+}
+
+/* ------------------------------ Headings ------------------------------ */
+.hm-footer__heading {
+    margin: 0 0 22px;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #fff;
+}
+
+/* ------------------------------ Link lists ------------------------------ */
+.hm-footer__links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.hm-footer__links li { margin-bottom: 12px; }
+.hm-footer__links a {
+    display: inline-block;
+    color: var(--hmf-text);
+    font-size: 16px;
+    text-decoration: none;
+    transition: color .22s var(--hmf-ease), transform .22s var(--hmf-ease);
+}
+.hm-footer__links a:hover,
+.hm-footer__links a:focus-visible {
+    color: var(--hmf-gold);
+    transform: translateX(6px);
+}
+
+/* ------------------------------ Contact ------------------------------ */
+.hm-footer__contact {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.hm-footer__contact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.hm-footer__contact-icon {
+    flex-shrink: 0;
+    width: 20px;
+    line-height: 1.8;          /* aligns icon with the first text line */
+    color: var(--hmf-gold);
+    font-size: .95rem;
+    text-align: center;
+}
+.hm-footer__contact-link {
+    color: var(--hmf-text);
+    text-decoration: none;
+    transition: color .22s var(--hmf-ease);
+}
+.hm-footer__contact-link:hover,
+.hm-footer__contact-link:focus-visible { color: var(--hmf-gold); }
+.hm-footer__address { color: var(--hmf-text); }
+.hm-footer__branch {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--hmf-gold);
+    font-weight: 700;
+}
+
+/* ------------------------------ Divider ------------------------------ */
+.hm-footer__divider {
+    height: 1px;
+    margin: 40px 0;
+    border: 0;
+    background: rgba(255, 255, 255, .15);
+    opacity: 1;
+}
+
+/* ------------------------------ Bottom bar ------------------------------ */
+.hm-footer__bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+.hm-footer__copy {
+    margin: 0;
+    font-size: .95rem;
+    color: var(--hmf-text);
+}
+.hm-footer__dev-line { white-space: nowrap; }
+.hm-footer__dev {
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    transition: color .22s var(--hmf-ease);
+}
+.hm-footer__dev:hover,
+.hm-footer__dev:focus-visible { color: var(--hmf-gold); }
+.hm-footer__legal {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.hm-footer__legal a {
+    position: relative;
+    color: var(--hmf-text);
+    font-size: .95rem;
+    text-decoration: none;
+    transition: color .22s var(--hmf-ease);
+}
+.hm-footer__legal a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -3px;
+    width: 100%;
+    height: 1px;
+    background: var(--hmf-gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .28s var(--hmf-ease);
+}
+.hm-footer__legal a:hover,
+.hm-footer__legal a:focus-visible { color: var(--hmf-gold); }
+.hm-footer__legal a:hover::after,
+.hm-footer__legal a:focus-visible::after { transform: scaleX(1); }
+.hm-footer__legal-sep { color: rgba(255, 255, 255, .4); }
+
+/* ------------------------------ Scroll to top ------------------------------ */
+.hm-scrolltop {
+    position: fixed;
+    right: 26px;
+    bottom: 26px;
+    z-index: 900;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    color: var(--hmf-brown);
+    background: #fff;
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .22);
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(16px);
+    transition: opacity .3s var(--hmf-ease), transform .3s var(--hmf-ease),
+                background .25s var(--hmf-ease), color .25s var(--hmf-ease);
+}
+.hm-scrolltop.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.hm-scrolltop:hover,
+.hm-scrolltop:focus-visible {
+    background: var(--hmf-gold);
+    color: #fff;
+    transform: translateY(0) scale(1.08) rotate(-6deg);
+}
+
+/* ------------------------------ Entrance reveal ------------------------------ */
+/* The --reveal class is added by JS, so without JS the footer is simply visible. */
+.hm-footer--reveal .hm-footer__col {
+    opacity: 0;
+    transform: translateY(26px);
+    transition: opacity .6s var(--hmf-ease), transform .6s var(--hmf-ease);
+}
+.hm-footer--reveal.is-visible .hm-footer__col { opacity: 1; transform: none; }
+.hm-footer--reveal.is-visible .hm-footer__col:nth-child(1) { transition-delay: .05s; }
+.hm-footer--reveal.is-visible .hm-footer__col:nth-child(2) { transition-delay: .15s; }
+.hm-footer--reveal.is-visible .hm-footer__col:nth-child(3) { transition-delay: .25s; }
+.hm-footer--reveal.is-visible .hm-footer__col:nth-child(4) { transition-delay: .35s; }
+
+/* ------------------------------ Responsive ------------------------------ */
+/* Tablet — Bootstrap col-md-6 already gives two columns per row. */
+
+/* Mobile — everything stacks; centre the brand column, keep nav left-aligned. */
+@media (max-width: 767.98px) {
+    .hm-footer { padding: 50px 0 25px; }
+
+    .hm-footer__brand { text-align: center; }
+    .hm-footer__brand .hm-footer__logo,
+    .hm-footer__brand .hm-footer__about { margin-left: auto; margin-right: auto; }
+    .hm-footer__brand .hm-footer__socials { justify-content: center; }
+
+    .hm-footer__bottom {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .hm-footer__legal { justify-content: center; }
+}
+
+/* ------------------------------ Reduced motion ------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+    .hm-footer--reveal .hm-footer__col {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+    .hm-footer__social,
+    .hm-footer__links a,
+    .hm-scrolltop,
+    .hm-footer__legal a::after { transition: none !important; }
+}
