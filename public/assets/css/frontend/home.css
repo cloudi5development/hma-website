@@ -70,27 +70,9 @@
     will-change: transform;
 }
 
-/* Four-colour aurora — blue (left) · violet (top) · yellow (right) · pink
-   (bottom), soft and light, orbiting slowly clockwise. */
-.hm-hero__glow {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 150vmax;
-    height: 150vmax;
-    transform: translate(-50%, -50%);
-    z-index: 0;
-    pointer-events: none;
-    background:
-        radial-gradient(circle at 50% 30%, rgba(150, 120, 255, .50), transparent 26%),  /* top — violet */
-        radial-gradient(circle at 70% 50%, rgba(255, 205, 95,  .50), transparent 26%),  /* right — yellow */
-        radial-gradient(circle at 50% 70%, rgba(255, 150, 195, .50), transparent 26%),  /* bottom — pink */
-        radial-gradient(circle at 30% 50%, rgba(120, 178, 255, .50), transparent 26%);  /* left — blue */
-    filter: blur(64px);
-    opacity: .55;
-    animation: hm-spin 55s linear infinite;
-    will-change: transform;
-}
+/* The hero's four-colour aurora now lives page-wide on #main-content::before
+   (see "Page-wide aurora" at the end of this file) so the very same background
+   runs continuously behind every section with no visible seams. */
 
 .hm-hero__container {
     position: relative;
@@ -383,13 +365,13 @@
     width: 54px;
     height: 54px;
     background: #fff;
-    border-radius: 10px;
+    border-radius: 10px !important;
     box-shadow: var(--hm-shadow-md);
 }
 
 .hm-tech img {
-    width: 30px;
-    height: 30px;
+    width: 44px;
+    height: 44px;
     object-fit: contain;
 }
 
@@ -719,119 +701,10 @@
     border: 1px solid #843d21;
 } */
 
-/* ============================== TRUSTED PARTNERS ============================== */
-.hm-partners {
-    /* blends with the page background (transparent) */
-    overflow: hidden;
-    padding-bottom: 50px;
-}
-
-.hm-partners__title {
-    margin: 0 0 45px;
-    font-size: 34px;
-    font-weight: 700;
-    color: #1E1E1E;
-    text-align: center;
-}
-
-/* Full-bleed viewport with a soft fade on both edges (pure CSS mask) */
-.hm-partners__marquee {
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-    -webkit-mask-image: none;
-    mask-image: none;
-}
-
-/* Two identical groups slide left by exactly one group width → seamless loop */
-.hm-partners__track {
-    display: flex;
-    width: max-content;
-    animation: hm-marquee 30s linear infinite;
-    will-change: transform;
-}
-
-.hm-partners__marquee:hover .hm-partners__track {
-    animation-play-state: paused;
-}
-
-.hm-partners__group {
-    display: flex;
-    align-items: center;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.hm-partners__item {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 35px;
-    /* 35 + 35 = 70px between logos, uniform across the wrap */
-}
-
-.hm-partners__logo {
-    height: 50px;
-    width: auto;
-    object-fit: contain;
-    cursor: pointer;
-    transition: transform .3s var(--hm-ease), filter .3s var(--hm-ease);
-}
-
-.hm-partners__logo:hover {
-    transform: scale(1.08);
-    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, .18));
-}
-
-@keyframes hm-marquee {
-    from {
-        transform: translateX(0);
-    }
-
-    to {
-        transform: translateX(-50%);
-    }
-}
-
-/* Tablet — tighter spacing */
-@media (max-width: 991.98px) {
-    .hm-partners__title {
-        font-size: 34px;
-    }
-
-    .hm-partners__item {
-        margin: 0 26px;
-    }
-}
-
-/* Mobile — smaller logos, single row, still smooth */
-@media (max-width: 575.98px) {
-    .hm-partners {
-        padding: 56px 0;
-    }
-
-    .hm-partners__title {
-        font-size: 26px;
-        margin-bottom: 30px;
-    }
-
-    .hm-partners__item {
-        margin: 0 18px;
-    }
-
-    .hm-partners__logo {
-        height: 30px;
-    }
-}
-
-/* Respect reduced-motion — hold the logos still */
-@media (prefers-reduced-motion: reduce) {
-    .hm-partners__track {
-        animation: none;
-    }
-}
+/* ============================== TRUSTED PARTNERS ==============================
+   Moved to assets/css/frontend/partners.css — the section is now shared with
+   the About page (markup: resources/views/frontend/partials/partners.blade.php).
+   ============================================================================ */
 
 /* ============================== ABOUT US ============================== */
 .hm-about {
@@ -1001,30 +874,8 @@
 } */
 
 /* ------------------------------ Statistics ------------------------------ */
-.hm-about__stats {
-    margin-top: 60px;
-    padding-top: 46px;
-
-    row-gap: 34px;
-}
-
-.hm-stat {
-    text-align: center;
-}
-
-.hm-stat__num {
-    font-size: clamp(38px, 4vw, 50px);
-    font-weight: 800;
-    line-height: 1;
-    color: var(--hm-gold);
-}
-
-.hm-stat__label {
-    margin-top: 8px;
-    font-size: 18px;
-    font-weight: 600;
-    color: #5C5C5C;
-}
+/* Stat counters moved to assets/css/frontend/counters.css — the section is now
+   shared with the About page (markup: partials/counters.blade.php). */
 
 /* ------------------------------ Animations ------------------------------ */
 @keyframes hm-float-y {
@@ -3256,14 +3107,24 @@
     box-shadow: 0 30px 60px rgba(42, 29, 20, .22);
     outline: none;
 }
-.hm-reel__img {
+.hm-reel__img,
+.hm-reel__video {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    background: #16100b;          /* shown while the poster/video loads */
     transition: transform .5s ease;
 }
 .hm-reel:hover .hm-reel__img,
-.hm-reel:focus-visible .hm-reel__img { transform: scale(1.08); }
+.hm-reel:focus-visible .hm-reel__img,
+.hm-reel:hover .hm-reel__video,
+.hm-reel:focus-visible .hm-reel__video { transform: scale(1.08); }
+
+/* Once the clip is rolling the play badge is redundant — fade it out. */
+.hm-reel.is-playing .hm-reel__play { opacity: 0; }
+.hm-reel.is-playing:hover .hm-reel__play,
+.hm-reel.is-playing:focus-visible .hm-reel__play { opacity: 1; }
 
 .hm-reel__overlay {
     position: absolute;
@@ -3940,17 +3801,18 @@
 }
 
 /* ==========================================================================
-   Shared section aurora — the same soft rotating colour glow as the hero, so
-   every content section carries the same background effect.
+   Page-wide aurora — ONE continuous background for the whole page, fixed to
+   the viewport. Every section shares it, so no section boundary is ever
+   visible: nothing reads as "the next section's background".
    ========================================================================== */
-.hm-about, .hm-cats, .hm-courses, .hm-stories, .hm-blogs,
-.hm-tst, .hm-faq, .hm-contact, .hm-reels { position: relative; }
+#main-content {
+    position: relative;
+    background: #FFFDFB;
+}
 
-.hm-about::before, .hm-cats::before, .hm-courses::before, .hm-stories::before,
-.hm-blogs::before, .hm-tst::before, .hm-faq::before, .hm-contact::before,
-.hm-reels::before {
+#main-content::before {
     content: "";
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 50%;
     width: 150vmax;
@@ -3959,16 +3821,25 @@
     z-index: 0;
     pointer-events: none;
     background:
-        radial-gradient(circle at 50% 30%, rgba(150, 120, 255, .28), transparent 26%),
-        radial-gradient(circle at 70% 50%, rgba(255, 205, 95, .28), transparent 26%),
-        radial-gradient(circle at 50% 70%, rgba(255, 150, 195, .28), transparent 26%),
-        radial-gradient(circle at 30% 50%, rgba(120, 178, 255, .28), transparent 26%);
-    filter: blur(60px);
-    opacity: .5;
+        radial-gradient(circle at 50% 30%, rgba(150, 120, 255, .30), transparent 26%),
+        radial-gradient(circle at 70% 50%, rgba(255, 205, 95, .30), transparent 26%),
+        radial-gradient(circle at 50% 70%, rgba(255, 150, 195, .30), transparent 26%),
+        radial-gradient(circle at 30% 50%, rgba(120, 178, 255, .30), transparent 26%);
+    filter: blur(64px);
+    opacity: .55;
     animation: hm-spin 55s linear infinite;
 }
+
+/* Sections sit above the page aurora and stay transparent, so it shows through
+   as one uninterrupted background from the hero all the way down. */
+.hm-hero, .hm-about, .hm-cats, .hm-courses, .hm-stories,
+.hm-blogs, .hm-tst, .hm-faq, .hm-contact, .hm-reels, .hm-why, .hm-events {
+    position: relative;
+    background: transparent;
+}
+
+/* The Partners section keeps itself above the glow — see partners.css. */
+
 @media (prefers-reduced-motion: reduce) {
-    .hm-about::before, .hm-cats::before, .hm-courses::before, .hm-stories::before,
-    .hm-blogs::before, .hm-tst::before, .hm-faq::before, .hm-contact::before,
-    .hm-reels::before { animation: none; }
+    #main-content::before { animation: none; }
 }

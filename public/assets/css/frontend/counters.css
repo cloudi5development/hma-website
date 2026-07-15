@@ -1,0 +1,58 @@
+/* ==========================================================================
+   Hire Minds Academy — Statistics counters (shared section)
+   Markup: resources/views/frontend/partials/counters.blade.php
+   Pushed by any page that includes the partial (home, about, …).
+   Self-contained: the tokens fall back, so this works without home.css.
+   ========================================================================== */
+
+.hm-counters {
+    position: relative;
+    z-index: 1;              /* stays above the page-wide background glow */
+    margin-top: 60px;
+    padding-top: 46px;
+    row-gap: 34px;
+}
+
+.hm-stat {
+    text-align: center;
+}
+
+.hm-stat__num {
+    font-size: clamp(38px, 4vw, 50px);
+    font-weight: 800;
+    line-height: 1;
+    color: var(--hm-gold, #E9A320);
+}
+
+.hm-stat__label {
+    margin-top: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #5C5C5C;
+}
+
+/* ---- Entrance: each stat fades up in turn once the row scrolls into view.
+   The JS adds .is-in — it is not tied to any page's reveal system. ---- */
+.hm-counters .hm-stat {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+        opacity .7s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)),
+        transform .7s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+
+.hm-counters.is-in .hm-stat { opacity: 1; transform: none; }
+
+.hm-counters.is-in .hm-stat--d1 { transition-delay: .05s; }
+.hm-counters.is-in .hm-stat--d2 { transition-delay: .15s; }
+.hm-counters.is-in .hm-stat--d3 { transition-delay: .25s; }
+.hm-counters.is-in .hm-stat--d4 { transition-delay: .35s; }
+
+/* ---- Reduced motion — show the figures, skip the travel ---- */
+@media (prefers-reduced-motion: reduce) {
+    .hm-counters .hm-stat {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+}

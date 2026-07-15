@@ -1,0 +1,100 @@
+/* ==========================================================================
+   Hire Minds Academy — "Our Trusted Partners" (shared section)
+   Markup: resources/views/frontend/partials/partners.blade.php
+   Pushed by any page that includes the partial (home, about, …).
+   Self-contained: --hm-ease has a fallback so this works without home.css.
+   ========================================================================== */
+
+.hm-partners {
+    position: relative;             /* sits above the page background */
+    overflow: hidden;
+    background: transparent;        /* lets the page-wide aurora show through */
+    padding-bottom: 50px;
+}
+
+/* No positioned container of its own — lift the content above the page glow. */
+.hm-partners__title {
+    position: relative;
+    z-index: 1;
+    margin: 0 0 45px;
+    font-size: 34px;
+    font-weight: 700;
+    color: #1E1E1E;
+    text-align: center;
+}
+
+/* Full-bleed viewport — logos run edge to edge (no fade mask). */
+.hm-partners__marquee {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    overflow: hidden;
+    -webkit-mask-image: none;
+    mask-image: none;
+}
+
+/* Two identical groups slide left by exactly one group width → seamless loop */
+.hm-partners__track {
+    display: flex;
+    width: max-content;
+    animation: hm-marquee 30s linear infinite;
+    will-change: transform;
+}
+
+.hm-partners__marquee:hover .hm-partners__track {
+    animation-play-state: paused;
+}
+
+.hm-partners__group {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.hm-partners__item {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 35px;                 /* 35 + 35 = 70px between logos */
+}
+
+.hm-partners__logo {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+    cursor: pointer;
+    transition: transform .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)),
+                filter .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+
+.hm-partners__logo:hover {
+    transform: scale(1.08);
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, .18));
+}
+
+@keyframes hm-marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+/* Tablet — tighter spacing */
+@media (max-width: 991.98px) {
+    .hm-partners__title { font-size: 34px; }
+    .hm-partners__item  { margin: 0 26px; }
+}
+
+/* Mobile — smaller logos, single row, still smooth */
+@media (max-width: 575.98px) {
+    .hm-partners { padding: 56px 0; }
+    .hm-partners__title { font-size: 26px; margin-bottom: 30px; }
+    .hm-partners__item  { margin: 0 18px; }
+    .hm-partners__logo  { height: 30px; }
+}
+
+/* Respect reduced-motion — hold the logos still */
+@media (prefers-reduced-motion: reduce) {
+    .hm-partners__track { animation: none; }
+}

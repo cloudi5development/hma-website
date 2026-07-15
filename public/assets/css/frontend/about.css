@@ -1,0 +1,1798 @@
+/* ==========================================================================
+   Hire Minds Academy — About page
+   Loaded only on the About page (pushed from frontend/about-us.blade.php).
+   ========================================================================== */
+
+:root {
+    --hm-gold: #E9A320;
+    --hm-gold-dark: #C6851A;
+    --hm-yellow: #F7B500;
+    --hm-mark: #FFB31A;
+    --hm-ink: #1F1F1F;
+    --hm-muted: #6D6357;
+    --hm-ease: cubic-bezier(.22, .7, .2, 1);
+}
+
+/* The shared layout centres #main-content with flex; the hero needs the full
+   canvas, so neutralise that here (about.css only loads on this page). */
+#main-content {
+    position: relative;
+    display: block;
+    min-height: auto;
+    padding: 0;
+    text-align: left;
+    background: #FFFDFB;
+}
+
+/* Page-wide aurora — identical to the home page, so the About page carries the
+   exact same continuous animated background. */
+#main-content::before {
+    content: "";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 150vmax;
+    height: 150vmax;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 50% 30%, rgba(150, 120, 255, .30), transparent 26%),
+        radial-gradient(circle at 70% 50%, rgba(255, 205, 95, .30), transparent 26%),
+        radial-gradient(circle at 50% 70%, rgba(255, 150, 195, .30), transparent 26%),
+        radial-gradient(circle at 30% 50%, rgba(120, 178, 255, .30), transparent 26%);
+    filter: blur(64px);
+    opacity: .55;
+    animation: hm-spin 55s linear infinite;
+}
+
+/* ============================== HERO SHELL ============================== */
+.hm-abt-hero {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 130px 0 96px;
+    /* top clears the fixed navbar, bottom gives
+                                       the pills / description room to breathe */
+    background: transparent;
+}
+
+/* Same slow-rotating hero background image, opacity, blur and motion as the
+   home hero — reused, not recreated. */
+.hm-abt-hero__bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 170vmax;
+    height: 170vmax;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.hm-abt-hero__bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: .16;
+    filter: blur(46px);
+    animation: hm-spin 90s linear infinite;
+    will-change: transform;
+}
+
+@keyframes hm-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================ DECORATIVE LAYER ============================ */
+.hm-abt-deco {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.hm-abt-deco img {
+    position: absolute;
+    height: auto;
+}
+
+.hm-abt-deco__dots {
+    top: 9%;
+    left: 17%;
+    width: 112px;
+    opacity: .9;
+}
+
+.hm-abt-deco__spiral {
+    top: 27%;
+    right: 4%;
+    width: 88px;
+    opacity: .9;
+}
+
+.hm-abt-deco__strokes {
+    top: 58%;
+    left: -1%;
+    width: 92px;
+    opacity: .9;
+}
+
+/* Small transparent circle outline, centred above the heading */
+.hm-abt-deco__circle {
+    position: absolute;
+    top: 36%;
+    left: 50%;
+    width: 34px;
+    height: 34px;
+    border: 1.5px solid rgba(42, 29, 20, .10);
+    border-radius: 50%;
+}
+
+/* Large, very faint academy emblem watermark, centre bottom */
+.hm-abt-deco__emblem {
+    left: 50%;
+    bottom: 2%;
+    width: 128px;
+    transform: translateX(-50%);
+    opacity: .55;
+}
+
+/* ---------------------------- Floating icons ---------------------------- */
+/* Three nested layers keep the animations from fighting:
+   .hm-abt-float = placement · .hm-abt-anim = entrance · .hm-abt-bob = float  */
+.hm-abt-float {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.hm-abt-float--html {
+    top: 34%;
+    left: 5%;
+}
+
+.hm-abt-float--js {
+    top: 67%;
+    right: 1%;
+}
+
+/* The CSS icon is anchored to the heading itself (it lives inside
+   .hm-abt-hero__main), so it always sits just after "Talent" — measuring from
+   the centre keeps it glued to the centred heading at any viewport size. */
+.hm-abt-float--css {
+    top: 35px;
+    left: 89%;
+}
+
+.hm-abt-bob {
+    display: block;
+    width: 90px;
+    height: auto;
+    animation: hm-abt-bob 7s ease-in-out infinite;
+    will-change: transform;
+}
+
+/* Each icon floats independently — different duration and offset. */
+.hm-abt-float--html .hm-abt-bob {
+    width: 66px;
+    animation-duration: 7s;
+    animation-delay: 0s;
+}
+
+.hm-abt-float--css .hm-abt-bob {
+    width: 50px;
+    animation-duration: 9.5s;
+    animation-delay: -2.5s;
+}
+
+.hm-abt-float--js .hm-abt-bob {
+    width: 82px;
+    animation-duration: 8.2s;
+    animation-delay: -4s;
+}
+
+/* component-9 is a bare CSS3 badge — give it the same white card as the others */
+.hm-abt-float--css .hm-abt-bob {
+    padding: 9px;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 10px 26px rgba(42, 29, 20, .12);
+}
+
+@keyframes hm-abt-bob {
+
+    0%,
+    100% {
+        transform: translateY(-12px);
+    }
+
+    50% {
+        transform: translateY(12px);
+    }
+}
+
+/* ============================== LAYOUT ============================== */
+.hm-abt-hero__container {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 56px;
+    /* keeps badges / heading / footer apart */
+    min-height: calc(100vh - 226px);
+}
+
+.hm-abt-hero__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.hm-abt-hero__main {
+    position: relative;
+    /* anchors the CSS icon beside "Talent" */
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+
+.hm-abt-hero__foot {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+}
+
+/* ============================ TOP STAT BADGES ============================ */
+.hm-abt-stat__text {
+    margin: 0 0 9px;
+    font-size: 14px;
+    color: var(--hm-muted);
+}
+
+.hm-abt-stat__text strong {
+    font-weight: 700;
+    color: var(--hm-gold-dark);
+}
+
+.hm-abt-stat__row {
+    display: block;
+    width: 104px;
+    height: auto;
+
+}
+
+.hm-abt-stat--right {
+    text-align: right;
+}
+
+.hm-abt-stat--right .hm-abt-stat__row {
+    margin-left: auto;
+    animation-delay: -3s;
+}
+
+/* ============================ LABEL + HEADING ============================ */
+.hm-abt-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    align-self: center;
+    margin-bottom: 18px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: var(--hm-gold-dark);
+}
+
+/* Same pulsing gradient box as the home hero badge (.hm-badge__icon) */
+.hm-abt-label__sq {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    border-radius: 4px;
+    background: linear-gradient(135deg, var(--hm-yellow), var(--hm-gold-dark));
+    animation: hm-fade-pulse 1.6s ease-in-out infinite;
+}
+
+/* Fading badge box — mirrors the home page's shared pulse */
+@keyframes hm-fade-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0; }
+}
+
+.hm-abt-title {
+    margin: 0;
+    /* font-family: 'Poppins', 'Geist', sans-serif; */
+    font-size: 80px;
+    font-family: 'Geist';
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -.5px;
+    color: var(--hm-ink);
+}
+
+.hm-abt-line {
+    display: block;
+}
+
+/* Word-by-word entrance — delays are set per word via --dN modifiers. */
+.hm-abt-word {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(26px);
+    transition: opacity .7s var(--hm-ease), transform .7s var(--hm-ease);
+    will-change: transform, opacity;
+}
+
+.hm-abt-hero__main.is-in .hm-abt-word {
+    opacity: 1;
+    transform: none;
+}
+
+.hm-abt-word--d1 {
+    transition-delay: .05s;
+}
+
+.hm-abt-word--d2 {
+    transition-delay: .15s;
+}
+
+.hm-abt-word--d3 {
+    transition-delay: .25s;
+}
+
+.hm-abt-word--d4 {
+    transition-delay: .35s;
+}
+
+.hm-abt-word--d5 {
+    transition-delay: .45s;
+}
+
+/* Only "Learning." sits in the orange rectangle — square corners. */
+.hm-abt-mark {
+    padding: 2px 20px 8px;
+    background: var(--hm-mark);
+}
+
+/* ============================= REVIEW BADGE ============================= */
+.hm-abt-review {
+    position: absolute;
+    z-index: 4;
+    top: 61%;
+    right: 5%;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 20px;
+    background: #fff;
+    border-radius: 999px;
+    box-shadow: 0 14px 34px rgba(42, 29, 20, .14);
+    font-size: 14px;
+    color: var(--hm-ink);
+    animation: hm-abt-bob 6.5s ease-in-out infinite;
+    will-change: transform;
+}
+
+.hm-abt-review img {
+    width: 18px;
+    height: 18px;
+}
+
+.hm-abt-review strong {
+    font-weight: 700;
+}
+
+.hm-abt-review span {
+    color: var(--hm-muted);
+}
+
+/* ============================== PILLS ============================== */
+.hm-abt-pills {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.hm-abt-pills__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.hm-abt-pills__row:last-child {
+    margin-bottom: 0;
+}
+
+.hm-abt-pill {
+    padding: 8px 17px;
+    background: #EFEFEF;
+    border-radius: 999px;
+    font-size: 13px;
+    color: #5B5B5B;
+    white-space: nowrap;
+    transition: background .25s var(--hm-ease), color .25s var(--hm-ease);
+    animation: hm-abt-pill-cycle 10s linear infinite;
+}
+
+.hm-abt-pill:hover {
+    background: #E2E2E2;
+    color: #3A3A3A;
+}
+
+/* Each tag lights up in turn and loops for ever. --pill-color is read inside
+   the keyframes, so one shared animation drives all five colours; the delays
+   (2s apart over a 10s loop) mean only one tag is ever lit. */
+@keyframes hm-abt-pill-cycle {
+
+    0%,
+    17% {
+        background: var(--pill-color);
+        color: #fff;
+    }
+
+    22%,
+    100% {
+        background: #EFEFEF;
+        color: #5B5B5B;
+    }
+}
+
+.hm-abt-pill--c1 {
+    --pill-color: #4F46E5;
+    animation-delay: 0s;
+}
+
+/* blue   */
+.hm-abt-pill--c2 {
+    --pill-color: #16A34A;
+    animation-delay: 2s;
+}
+
+/* green  */
+.hm-abt-pill--c3 {
+    --pill-color: #0D8BF2;
+    animation-delay: 4s;
+}
+
+/* blue   */
+.hm-abt-pill--c4 {
+    --pill-color: #F97316;
+    animation-delay: 6s;
+}
+
+/* orange */
+.hm-abt-pill--c5 {
+    --pill-color: #EF4444;
+    animation-delay: 8s;
+}
+
+/* red    */
+
+/* ============================ DESCRIPTION ============================ */
+.hm-abt-desc {
+    max-width: 420px;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--hm-muted);
+}
+
+/* ====================== ENTRANCE (IntersectionObserver) ================== */
+.hm-abt-anim {
+    display: block;
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity .7s var(--hm-ease), transform .7s var(--hm-ease);
+}
+
+.is-in .hm-abt-anim,
+.hm-abt-anim.is-in {
+    opacity: 1;
+    transform: none;
+}
+
+.hm-abt-anim--d1 {
+    transition-delay: .08s;
+}
+
+.hm-abt-anim--d2 {
+    transition-delay: .16s;
+}
+
+.hm-abt-anim--d3 {
+    transition-delay: .24s;
+}
+
+.hm-abt-anim--d4 {
+    transition-delay: .32s;
+}
+
+.hm-abt-anim--d5 {
+    transition-delay: .40s;
+}
+
+/* ============================== RESPONSIVE ============================== */
+/* Tablet — smaller heading, layout preserved */
+@media (max-width: 991.98px) {
+    .hm-abt-hero {
+        padding: 120px 0 48px;
+    }
+
+    .hm-abt-hero__container {
+        min-height: auto;
+        gap: 44px;
+    }
+
+    .hm-abt-title {
+        font-size: clamp(32px, 6.4vw, 60px);
+    }
+
+    .hm-abt-review {
+        top: auto;
+        bottom: 20%;
+        right: 4%;
+    }
+
+    /* Heading shrinks here, so drop the centre-anchored offset and tuck the
+       icon against the top-right of the heading block instead. */
+    .hm-abt-float--css {
+        top: 6px;
+        left: auto;
+        right: 60px;
+        margin-left: 0;
+    }
+
+    .hm-abt-deco__dots {
+        width: 84px;
+    }
+}
+
+/* Mobile — stack vertically, centre align, fewer floating icons */
+@media (max-width: 767.98px) {
+    .hm-abt-hero {
+        padding: 112px 0 56px;
+        min-height: auto;
+    }
+
+    /* Badges move below the heading */
+    .hm-abt-hero__container {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .hm-abt-hero__top {
+        order: 2;
+        justify-content: center;
+        gap: 34px;
+    }
+
+    .hm-abt-hero__main {
+        order: 1;
+    }
+
+    .hm-abt-hero__foot {
+        order: 3;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 28px;
+    }
+
+    .hm-abt-stat--right {
+        text-align: center;
+    }
+
+    .hm-abt-stat--right .hm-abt-stat__row,
+    .hm-abt-stat__row {
+        margin-inline: auto;
+    }
+
+    .hm-abt-title {
+        font-size: clamp(30px, 9vw, 44px);
+    }
+
+    .hm-abt-mark {
+        padding: 2px 12px 6px;
+    }
+
+    .hm-abt-pills__row {
+        justify-content: center;
+    }
+
+    .hm-abt-desc {
+        max-width: 100%;
+    }
+
+    .hm-abt-review {
+        position: static;
+        align-self: center;
+        margin: 22px auto 0;
+    }
+
+    /* Keep the canvas calm on small screens */
+    .hm-abt-float--css,
+    .hm-abt-deco__dots,
+    .hm-abt-deco__strokes {
+        display: none;
+    }
+
+    .hm-abt-float--html {
+        top: 6%;
+        left: 2%;
+    }
+
+    .hm-abt-float--js {
+        top: 8%;
+        right: 2%;
+    }
+
+    .hm-abt-bob {
+        width: 44px !important;
+    }
+
+    .hm-abt-deco__emblem {
+        width: 92px;
+        opacity: .4;
+    }
+}
+
+/* ============================ REDUCED MOTION ============================ */
+@media (prefers-reduced-motion: reduce) {
+
+    #main-content::before,
+    .hm-abt-hero__bg img,
+    .hm-abt-bob,
+    .hm-abt-stat__row,
+    .hm-abt-label__sq,
+    .hm-abt-pill,
+    .hm-abt-review {
+        animation: none !important;
+    }
+
+    .hm-abt-anim,
+    .hm-abt-word {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+}
+
+/* ==========================================================================
+   COUNTERS — section shell (the row itself lives in counters.css)
+   ========================================================================== */
+.hm-stats {
+    position: relative;
+    background: transparent;   /* the page-wide aurora shows through */
+    padding: 0 0 50px;
+}
+
+/* The shared row ships with 60px margin-top + 46px padding-top, which is the
+   spacing it needs inside home's About block. Standing on its own here that is
+   106px of dead air under the pinned story, so drop it. */
+.hm-stats .hm-counters {
+    margin-top: 0;
+    padding-top: 0;
+}
+
+/* ==========================================================================
+   OUR STORY — pinned scroll storytelling (GSAP ScrollTrigger)
+   ========================================================================== */
+.hm-story {
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+    /* The pinned area is 100vh with its content centred, so it already leaves
+       room under the story — no extra padding needed before the counters. */
+    padding-bottom: 0;
+}
+
+/* Same slow-rotating hero background image, opacity, blur and motion */
+.hm-story__bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 170vmax;
+    height: 170vmax;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.hm-story__bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: .16;
+    filter: blur(46px);
+    animation: hm-spin 90s linear infinite;
+    will-change: transform;
+}
+
+/* ---------------------------- Decorations ---------------------------- */
+.hm-story__deco {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.hm-story__deco img {
+    position: absolute;
+    height: auto;
+    animation: hm-abt-bob 9s ease-in-out infinite;
+    will-change: transform;
+}
+
+.hm-story__deco-dots    { top: 5%;    left: 1%;  width: 104px; opacity: .9; animation-duration: 11s; }
+.hm-story__deco-spiral  { top: 9%;    right: 2%; width: 86px;  opacity: .9; animation-duration: 10s;  animation-delay: -3s; }
+.hm-story__deco-strokes { bottom: 8%; left: 2%;  width: 88px;  opacity: .9; animation-duration: 12s;  animation-delay: -5s; }
+.hm-story__deco-star-a  { top: 8%;    left: 30%; width: 32px;  animation-duration: 8s;   animation-delay: -2s; }
+.hm-story__deco-star-b  { bottom: 16%; left: 24%; width: 28px; animation-duration: 9.5s; animation-delay: -4s; }
+
+/* ------------------------------ Pin shell ------------------------------ */
+.hm-story__pin {
+    position: relative;
+    z-index: 2;
+    min-height: 100vh;   /* required by the pin — the section holds the viewport */
+    display: flex;
+    align-items: center;
+    padding: 64px 0;
+}
+
+/* ------------------------------- Layout -------------------------------
+   Two equal columns. Each <article> is `display: contents`, so its text
+   drops into column 1 / row 2 and its photo into column 2 — every text
+   overlaps in one cell, every photo in another. That builds the stack
+   without absolute positioning, and keeps text+photo paired in the DOM so
+   mobile can simply stack them with no duplicate markup.                  */
+/* 1fr spacers top and bottom centre the label+copy group against the blob, so
+   both columns share the same vertical centre instead of the text hugging the
+   top and leaving dead space beneath it. */
+.hm-story__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr auto auto 1fr;
+    column-gap: 48px;
+    align-items: center;
+}
+
+.hm-story__chapter { display: contents; }
+
+/* --------------------------- Left: fixed label --------------------------- */
+.hm-story__label {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: end;
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 22px;   /* breathing room before the heading */
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--hm-gold-dark);
+}
+
+.hm-story__label-sq {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+    border-radius: 2px;
+    background: var(--hm-mark);
+}
+
+/* ----------------------------- Left: copy ----------------------------- */
+/* All five texts share the same cell; only the active one is visible. */
+.hm-story__text {
+    grid-column: 1;
+    grid-row: 3;
+    align-self: start;
+    max-width: 500px;          /* copy column stays readable, not stretched */
+    min-height: 230px;
+    will-change: transform, opacity;
+}
+
+.hm-story__title {
+    margin: 0 0 16px;
+    font-size: 25px;
+    font-weight: 700;
+    line-height: 1.28;
+    letter-spacing: -.2px;
+    color: var(--hm-ink);
+}
+
+.hm-story__desc {
+    margin: 0;
+    max-width: 100%;
+    font-size: 13.5px;
+    line-height: 1.9;
+    color: var(--hm-muted);
+}
+
+/* ---------------------- Right: blob + photo stack ---------------------- */
+.hm-story__blob {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    justify-self: center;
+    align-self: center;
+    width: 100%;
+    max-width: 560px;      /* softer background presence, not dominating */
+    height: auto;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Every photo lands in the same cell, dead centre over the blob.
+   Each card is a printed photo: a white paper frame around the image. That is
+   what makes the fanned-out stack read cleanly — the slivers peeking from
+   behind the top card are white paper edges, not blurred photo content. */
+.hm-story__card {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    justify-self: center;
+    align-self: center;
+    width: 52%;
+    max-width: 350px;
+    /* margin (not transform) nudges the photo lower — GSAP owns the transform */
+    margin: 18px 0 0;
+    aspect-ratio: 1 / 1;
+    /* just the photo — no frame, no container */
+    border-radius: 10px;
+    overflow: hidden;
+    /* layered: contact · mid lift · large ambient — reads deeper than one shadow */
+    box-shadow:
+        0 2px 6px rgba(42, 29, 20, .10),
+        0 10px 24px rgba(42, 29, 20, .12),
+        0 30px 70px rgba(42, 29, 20, .16);
+    backface-visibility: hidden;
+    will-change: transform, opacity, filter;
+}
+
+.hm-story__card img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* One source photo (people-4) was exported with a shadow border baked in, so
+   its subject only fills ~79% of the canvas. Zoom past that frame — the card's
+   overflow clips it — so this photo frames like the other four. */
+.hm-story__card--zoom img {
+    transform: scale(1.27);
+    transform-origin: 50% 42%;
+}
+
+/* Fanned stack — each photo behind the front one is rotated a further -5° with
+   transform: rotate(). This is the resting state; GSAP animates the same
+   rotate/scale on scroll, so the hand-off continues from exactly here. */
+.hm-story__card[data-story-card="0"] { transform: rotate(0deg) scale(1); }
+.hm-story__card[data-story-card="1"] { transform: rotate(14deg) scale(.97); }
+.hm-story__card[data-story-card="2"] { transform: rotate(-27deg) scale(.94); }
+.hm-story__card[data-story-card="3"] { transform: rotate(38deg) scale(.91); }
+.hm-story__card[data-story-card="4"] { transform: rotate(-52deg) scale(.88); }
+
+/* Before GSAP takes over, show only the first chapter (no flash of five). */
+.hm-story__grid:not(.is-gsap) .hm-story__card:not([data-story-card="0"]),
+.hm-story__grid:not(.is-gsap) .hm-story__text:not([data-story-text="0"]) {
+    opacity: 0;
+}
+
+/* ------------------------------ Responsive ------------------------------ */
+/* Tablet — smaller stage, storytelling kept */
+@media (max-width: 991.98px) {
+    .hm-story__pin { padding: 70px 0; }
+    .hm-story__grid { column-gap: 30px; }
+    .hm-story__blob { max-width: 360px; }
+    .hm-story__card { max-width: 210px; }
+    .hm-story__title { font-size: 23px; }
+    .hm-story__text { min-height: 260px; }
+}
+
+/* Mobile — no sticky storytelling; every chapter is a normal stacked card */
+@media (max-width: 767.98px) {
+    .hm-story__pin {
+        display: block;
+        min-height: 0;
+        padding: 56px 0;
+    }
+
+    .hm-story__grid { display: block; }
+
+    .hm-story__label { display: inline-flex; margin-bottom: 26px; }
+    .hm-story__blob { display: none; }
+
+    /* Each article becomes its own little section */
+    .hm-story__chapter {
+        display: block;
+        margin-bottom: 54px;
+    }
+    .hm-story__chapter:last-of-type { margin-bottom: 0; }
+
+    .hm-story__card {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 0 20px;
+        aspect-ratio: 4 / 3;
+        /* flat, unrotated cards — neutralise the stack fan and GSAP's transform */
+        transform: none !important;
+        filter: none !important;
+        opacity: 1 !important;
+        box-shadow: 0 16px 36px rgba(42, 29, 20, .18);
+    }
+
+    .hm-story__text {
+        min-height: 0;
+        transform: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    .hm-story__deco-star-a,
+    .hm-story__deco-star-b,
+    .hm-story__deco-strokes { display: none; }
+}
+
+/* ---------------------------- Reduced motion ---------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    .hm-story__bg img,
+    .hm-story__deco img { animation: none !important; }
+}
+
+/* ==========================================================================
+   OUR PURPOSE — header + office image + Vision / Mission cards
+   Background is the page-wide aurora (#main-content::before), so the section
+   stays transparent rather than declaring its own.
+   ========================================================================== */
+.hm-purpose {
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+    padding: 120px 0;
+}
+
+.hm-purpose__container {
+    position: relative;
+    z-index: 2;
+    max-width: 1320px;
+}
+
+/* ---------------------------- Decorations ---------------------------- */
+.hm-purpose__deco {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.hm-purpose__deco img,
+.hm-purpose__dots {
+    position: absolute;
+    height: auto;
+    animation: hm-purpose-float 6s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+.hm-purpose__ring--a { top: -26px; left: 50%; width: 92px; }
+.hm-purpose__ring--b { top: 54%;   left: 3%;  width: 82px; animation-delay: -2s; }
+.hm-purpose__ring--c { bottom: 4%; right: 11%; width: 82px; animation-delay: -4s; }
+
+.hm-purpose__star--a { top: 20%; left: 11%; width: 34px; animation-delay: -1s; }
+.hm-purpose__star--b { top: 60%; right: 4%; width: 30px; animation-delay: -3s; }
+
+/* Orange dot grid — drawn in CSS because the only dotted asset is blue. */
+.hm-purpose__dots {
+    bottom: 4%;
+    left: 11%;
+    width: 74px;
+    height: 62px;
+    opacity: .75;
+    background-image: radial-gradient(var(--hm-gold, #E9A320) 1.4px, transparent 1.6px);
+    background-size: 9px 9px;
+    animation-delay: -5s;
+}
+
+@keyframes hm-purpose-float {
+    from { transform: translateY(0); }
+    to   { transform: translateY(8px); }
+}
+
+/* ------------------------------ Header ------------------------------ */
+.hm-purpose__head {
+    text-align: center;
+    margin-bottom: 54px;
+}
+
+.hm-purpose__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #B45A17;
+}
+
+.hm-purpose__label-sq {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    background: var(--hm-mark, #FFB31A);
+}
+
+.hm-purpose__title {
+    margin: 0 0 18px;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.15;
+    color: #1D1D1F;
+}
+
+.hm-purpose__lead {
+    max-width: 700px;
+    margin: 0 auto;
+    font-size: 16px;
+    line-height: 1.8;
+    color: #666;
+}
+
+/* --------------------------- Left: office image --------------------------- */
+/* Fixed 542 x 542. aspect-ratio keeps it square once max-width kicks in on
+   narrower screens, so it never distorts. The source is 1024x1024, so the
+   square crop is 1:1 with the original — nothing is squashed. */
+.hm-purpose__figure {
+    width: 542px;
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    /* The 542px image is narrower than its 648px column. Pushing it right puts
+       that ~106px of slack on the OUTER side as breathing room, and leaves only
+       the 24px gutter between the image and the cards. */
+    margin: 0 0 0 auto;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow:
+        0 2px 8px rgba(29, 29, 31, .06),
+        0 18px 44px rgba(29, 29, 31, .12);
+}
+
+.hm-purpose__figure img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .4s ease;
+}
+
+.hm-purpose__figure:hover img { transform: scale(1.02); }
+
+/* --------------------- Right: Vision / Mission cards --------------------- */
+.hm-purpose__cards {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    height: 100%;
+}
+
+/* Fixed 600 x 259. Two cards + the 24px gap = 542, so the pair lines up
+   exactly with the 542px image on the left. */
+.hm-purpose__card {
+    width: 600px;
+    max-width: 100%;
+    height: 259px;
+    padding: 30px 32px;
+    border-radius: 24px;
+    box-shadow:
+        0 2px 8px rgba(29, 29, 31, .05),
+        0 14px 34px rgba(29, 29, 31, .08);
+    transition: transform .35s ease, box-shadow .35s ease;
+}
+
+.hm-purpose__card:hover {
+    transform: translateY(-8px);          /* lift only — never scale */
+    box-shadow:
+        0 4px 12px rgba(29, 29, 31, .08),
+        0 26px 56px rgba(29, 29, 31, .16);
+}
+
+/* Type is scaled to the fixed 259px card — at 34px/17px the copy needed 269px
+   of a 199px content box and spilled out. */
+.hm-purpose__card-title {
+    margin: 0 0 10px;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.hm-purpose__card-text {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.65;
+    text-align: justify;
+}
+
+/* Colour sets */
+.hm-purpose__card--vision { background: #FFF4C8; }
+.hm-purpose__card--vision .hm-purpose__card-title { color: #1D1D1F; }
+.hm-purpose__card--vision .hm-purpose__card-text  { color: #333; }
+
+.hm-purpose__card--mission { background: #E99B00; }
+.hm-purpose__card--mission .hm-purpose__card-title { color: #fff; }
+.hm-purpose__card--mission .hm-purpose__card-text  { color: rgba(255, 255, 255, .95); }
+
+/* ------------------------------ Responsive ------------------------------ */
+/* Tablet — image full width, cards beneath it */
+@media (max-width: 991.98px) {
+    .hm-purpose { padding: 90px 0; }
+    .hm-purpose__head { margin-bottom: 40px; }
+
+    /* Columns stack here, so centre the image instead of pushing it right. */
+    .hm-purpose__figure { margin-inline: auto; }
+
+    /* Release the fixed 600x259 below desktop — the card narrows, so the copy
+       reflows into more lines and must be allowed to grow rather than clip. */
+    .hm-purpose__card {
+        width: 100%;
+        height: auto;
+        padding: 30px;
+    }
+    .hm-purpose__ring--a { display: none; }
+}
+
+/* Mobile — everything stacked, centred, type scaled down */
+@media (max-width: 767.98px) {
+    .hm-purpose { padding: 64px 0; }
+    .hm-purpose__lead { font-size: 16px; }
+    .hm-purpose__card { padding: 24px; }
+    .hm-purpose__card-text { font-size: 15.5px; text-align: left; }
+    .hm-purpose__cards { gap: 18px; }
+
+    /* keep the canvas calm on small screens */
+    .hm-purpose__ring--b,
+    .hm-purpose__ring--c,
+    .hm-purpose__dots { display: none; }
+    .hm-purpose__star--a { top: 4%; left: 4%; }
+    .hm-purpose__star--b { top: 6%; right: 4%; }
+}
+
+/* ---------------------------- Reduced motion ---------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    .hm-purpose__deco img,
+    .hm-purpose__dots { animation: none !important; }
+    .hm-purpose__figure img,
+    .hm-purpose__card { transition: none !important; }
+}
+
+/* ==========================================================================
+   OUR FEATURES — expanding cards
+   Background is the page-wide aurora (#main-content::before); the section
+   stays transparent rather than declaring its own.
+   ========================================================================== */
+.hm-feat {
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+    padding: 110px 0 120px;
+    --hm-feat-ease: cubic-bezier(.22, .61, .36, 1);
+}
+
+.hm-feat__container {
+    position: relative;
+    z-index: 2;
+    max-width: 1320px;
+}
+
+/* ---------------------------- Decorations ---------------------------- */
+.hm-feat__deco {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.hm-feat__deco img,
+.hm-feat__dots {
+    position: absolute;
+    height: auto;
+    animation: hm-purpose-float 6s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+.hm-feat__ring { top: 52%; left: 2%;  width: 84px; }
+.hm-feat__star { bottom: 8%; right: 5%; width: 34px; animation-delay: -3s; }
+
+.hm-feat__dots {
+    top: 16%;
+    right: 3%;
+    width: 74px;
+    height: 62px;
+    opacity: .7;
+    background-image: radial-gradient(var(--hm-gold, #E9A320) 1.4px, transparent 1.6px);
+    background-size: 9px 9px;
+    animation-delay: -4s;
+}
+
+/* ------------------------------ Header ------------------------------ */
+.hm-feat__head {
+    text-align: center;
+    margin-bottom: 52px;
+}
+
+.hm-feat__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #B45A17;
+}
+
+.hm-feat__label-sq {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    background: var(--hm-mark, #FFB31A);
+}
+
+.hm-feat__title-main {
+    margin: 0 0 18px;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.15;
+    color: #1D1D1F;
+}
+
+.hm-feat__lead {
+    max-width: 700px;
+    margin: 0 auto;
+    font-size: 18px;
+    line-height: 1.8;
+    color: #666;
+}
+
+/* ------------------------------- Track ------------------------------- */
+/* 4 x 272 + 3 x 20 gaps = 1148, so each card rests at exactly 272px.
+   The cards keep that width — they never grow. */
+.hm-feat__track {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    max-width: 1148px;
+    margin: 0 auto;
+}
+
+.hm-feat__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    min-width: 0;
+    height: 353px;
+    padding: 30px 22px;
+    border-radius: 28px;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow:
+        0 2px 6px rgba(29, 29, 31, .05),
+        0 10px 24px rgba(29, 29, 31, .07),
+        0 24px 50px rgba(29, 29, 31, .08);
+    transition:
+        transform .45s var(--hm-feat-ease),
+        opacity .45s var(--hm-feat-ease),
+        box-shadow .45s var(--hm-feat-ease);
+    will-change: transform, opacity;
+}
+
+/* ---- Deck state: piled at the centre until the section is revealed ----
+   The flex row IS the final layout; only transform pulls each card back to the
+   centre, so nothing reflows — they simply travel into the slots they already
+   occupy. Offsets are % of the card width, so they track its size. */
+.hm-feat__track:not(.is-spread) .hm-feat__card { pointer-events: none; }
+
+/* Gathering back runs in reverse order (outermost card first), so the purple
+   card lands on top of the pile last. On first paint nothing is transitioning,
+   so these delays only ever play on the way back in. */
+.hm-feat__track:not(.is-spread) .hm-feat__card:nth-child(1) { transform: translateX(161%)   rotate(-8deg);  z-index: 4; transition-delay: .21s; }
+.hm-feat__track:not(.is-spread) .hm-feat__card:nth-child(2) { transform: translateX(53.7%)  rotate(7deg);   z-index: 3; transition-delay: .14s; }
+.hm-feat__track:not(.is-spread) .hm-feat__card:nth-child(3) { transform: translateX(-53.7%) rotate(-14deg); z-index: 2; transition-delay: .07s; }
+.hm-feat__track:not(.is-spread) .hm-feat__card:nth-child(4) { transform: translateX(-161%)  rotate(12deg);  z-index: 1; transition-delay: 0s; }
+
+/* Fan out one after another … */
+.hm-feat__track.is-spread .hm-feat__card:nth-child(2) { transition-delay: .07s; }
+.hm-feat__track.is-spread .hm-feat__card:nth-child(3) { transition-delay: .14s; }
+.hm-feat__track.is-spread .hm-feat__card:nth-child(4) { transition-delay: .21s; }
+
+/* … then drop the stagger, or it would lag every later hover. JS adds this
+   once the fan-out has finished. */
+.hm-feat__track.is-settled .hm-feat__card { transition-delay: 0s; }
+
+/* Cards never resize — hovering just lifts one and deepens its shadow. */
+.hm-feat__track.is-spread .hm-feat__card:hover {
+    transform: translateY(-10px);
+    box-shadow:
+        0 4px 10px rgba(29, 29, 31, .07),
+        0 18px 38px rgba(29, 29, 31, .12),
+        0 36px 76px rgba(29, 29, 31, .16);
+}
+
+/* Body fills the card so the description can sit at its foot. */
+.hm-feat__body {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.hm-feat__card-title {
+    margin: 0;
+    font-size: 27px;
+    font-weight: 700;
+    line-height: 1.22;
+}
+
+/* margin-top:auto pins the description to the bottom of the card. */
+.hm-feat__text {
+    margin: 18px 0 0;
+    margin-top: auto;
+    font-size: 15px;
+    line-height: 1.62;
+}
+
+/* ---- Colour sets ---- */
+.hm-feat__card--purple { background: #7C3AED; }
+.hm-feat__card--purple .hm-feat__card-title { color: #12121A; }
+
+.hm-feat__card--red { background: #E0333F; }
+.hm-feat__card--red .hm-feat__card-title,
+.hm-feat__card--red .hm-feat__text { color: #fff; }
+
+.hm-feat__card--peach { background: #FBD7B8; }
+.hm-feat__card--peach .hm-feat__card-title,
+.hm-feat__card--peach .hm-feat__text { color: #1D1D1F; }
+
+.hm-feat__card--yellow { background: #FFC629; }
+.hm-feat__card--yellow .hm-feat__card-title,
+.hm-feat__card--yellow .hm-feat__text { color: #1D1D1F; }
+
+/* ---- Eyes illustration (pure CSS — there is no eyes asset) ---- */
+.hm-feat__eyes {
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    bottom: 30px;
+    display: flex;
+    gap: 12px;
+    transform: translateX(-50%);
+    transition: transform .45s var(--hm-feat-ease);
+}
+
+.hm-feat__track.is-spread .hm-feat__card:hover .hm-feat__eyes {
+    transform: translateX(-50%) translateY(-20px);
+}
+
+.hm-feat__eye {
+    position: relative;
+    width: 84px;
+    height: 158px;
+    background: #fff;
+    border-radius: 50%;
+}
+
+.hm-feat__eye::after {
+    content: "";
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    background: #12121A;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* ------------------------------ Responsive ------------------------------ */
+/* Tablet — 2 x 2 grid, hover still expands within each row */
+@media (max-width: 991.98px) {
+    .hm-feat { padding: 84px 0 90px; }
+    .hm-feat__head { margin-bottom: 40px; }
+
+    .hm-feat__track {
+        flex-wrap: wrap;
+        max-width: 620px;
+    }
+    .hm-feat__card {
+        flex: 1 1 calc(50% - 10px);
+        height: 420px;
+    }
+
+    /* The deck offsets are computed for the 4-across row; in a 2x2 grid they
+       would fling cards off-screen, so the cards just start in place here. */
+    .hm-feat__track:not(.is-spread) .hm-feat__card:nth-child(1),
+    .hm-feat__track:not(.is-spread) .hm-feat__card:nth-child(2),
+    .hm-feat__track:not(.is-spread) .hm-feat__card:nth-child(3),
+    .hm-feat__track:not(.is-spread) .hm-feat__card:nth-child(4) {
+        transform: none;
+        z-index: auto;
+    }
+    .hm-feat__track:not(.is-spread) .hm-feat__card { pointer-events: auto; }
+
+    .hm-feat__eyes { bottom: 40px; }
+    .hm-feat__eye { width: 52px; height: 88px; }
+    .hm-feat__eye::after { width: 28px; height: 28px; }
+}
+
+/* Mobile — cards stack full width, each at its natural height */
+@media (max-width: 767.98px) {
+    .hm-feat { padding: 64px 0 72px; }
+    .hm-feat__lead { font-size: 16px; }
+
+    .hm-feat__track {
+        flex-direction: column;
+        max-width: 420px;
+        gap: 14px;
+    }
+
+    .hm-feat__card {
+        flex: none;
+        height: 300px;
+    }
+    .hm-feat__card--purple { height: 353px; }
+
+    .hm-feat__eyes { bottom: 34px; }
+}
+
+/* ---------------------------- Reduced motion ---------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    .hm-feat__deco img,
+    .hm-feat__dots { animation: none !important; }
+    .hm-feat__card,
+    .hm-feat__text,
+    .hm-feat__eyes { transition: none !important; }
+}
+
+/* ==========================================================================
+   OUR LEARNING APPROACH — concentric rings + centre photo + orbiting pills
+   Background is the page-wide aurora (#main-content::before); the section
+   stays transparent rather than declaring its own.
+   ========================================================================== */
+.hm-appr {
+    position: relative;
+    overflow: hidden;          /* crops the rings, as in the reference */
+    background: transparent;
+    padding: 120px 0;
+}
+
+.hm-appr__container {
+    position: relative;
+    z-index: 2;
+    max-width: 1320px;
+}
+
+/* ---------------------------- Decorations ---------------------------- */
+.hm-appr__deco {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.hm-appr__deco img,
+.hm-appr__dots {
+    position: absolute;
+    height: auto;
+    animation: hm-purpose-float 7s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+.hm-appr__ring-deco { top: 10%; left: 3%; width: 82px; }
+.hm-appr__star      { bottom: 12%; right: 6%; width: 32px; animation-delay: -3s; }
+
+.hm-appr__dots {
+    top: 14%;
+    right: 3%;
+    width: 74px;
+    height: 62px;
+    opacity: .7;
+    background-image: radial-gradient(var(--hm-gold, #E9A320) 1.4px, transparent 1.6px);
+    background-size: 9px 9px;
+    animation-delay: -4s;
+}
+
+/* ------------------------------ Header ------------------------------ */
+.hm-appr__head {
+    text-align: center;
+    margin-bottom: 44px;
+}
+
+.hm-appr__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #B45A17;
+}
+
+.hm-appr__label-sq {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    background: var(--hm-mark, #FFB31A);
+}
+
+.hm-appr__title {
+    margin: 0 0 18px;
+    font-size: clamp(30px, 3.6vw, 48px);
+    font-weight: 700;
+    line-height: 1.2;
+    color: #1D1D1F;
+}
+
+.hm-appr__lead {
+    max-width: 700px;
+    margin: 0 auto;
+    font-size: 18px;
+    line-height: 1.8;
+    color: #666;
+}
+
+/* ------------------------------- Stage ------------------------------- */
+.hm-appr__stage {
+    position: relative;
+    height: 560px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Concentric rings — perfect circles, unfilled. They overrun the stage and are
+   cropped by the section, which is what gives the arcs in the reference. */
+.hm-appr__ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border: 1px solid rgba(29, 29, 31, .07);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.hm-appr__ring--1 { width: 480px; height: 480px; }
+.hm-appr__ring--2 { width: 650px; height: 650px; }
+.hm-appr__ring--3 { width: 820px; height: 820px; }
+
+/* ---------------------------- Centre photo ---------------------------- */
+.hm-appr__figure {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 420px;
+    height: 420px;
+    margin: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    transform: translate(-50%, -50%);
+    box-shadow:
+        0 2px 10px rgba(29, 29, 31, .06),
+        0 16px 40px rgba(29, 29, 31, .12),
+        0 34px 80px rgba(29, 29, 31, .14);
+    transition: transform .5s ease, box-shadow .5s ease;
+    will-change: transform;
+}
+
+.hm-appr__figure img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hm-appr__figure:hover {
+    transform: translate(-50%, -50%) scale(1.03);
+    box-shadow:
+        0 4px 14px rgba(29, 29, 31, .08),
+        0 24px 56px rgba(29, 29, 31, .16),
+        0 48px 100px rgba(29, 29, 31, .2);
+}
+
+/* ------------------------------- Pills ------------------------------- */
+.hm-appr__pills {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* li = placement only (never animated) */
+.hm-appr__pill {
+    position: absolute;
+    transform: translateY(-50%);
+}
+
+.hm-appr__pill--lt { top: 25%; left: 8%; }
+.hm-appr__pill--lm { top: 48%; left: 1%; }
+.hm-appr__pill--lb { top: 73%; left: 10%; }
+.hm-appr__pill--rt { top: 25%; right: 8%; }
+.hm-appr__pill--rm { top: 48%; right: 1%; }
+.hm-appr__pill--rb { top: 73%; right: 8%; }
+
+/* drift = the float + faint orbit, so it never fights the hover transform */
+.hm-appr__drift {
+    display: block;
+    animation: hm-appr-drift 5s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+/* Each pill drifts on its own clock — they must never move together. */
+.hm-appr__pill--lt .hm-appr__drift { animation-duration: 5.2s; animation-delay: -0.4s; }
+.hm-appr__pill--lm .hm-appr__drift { animation-duration: 6s;   animation-delay: -1.9s; }
+.hm-appr__pill--lb .hm-appr__drift { animation-duration: 4.4s; animation-delay: -3.1s; }
+.hm-appr__pill--rt .hm-appr__drift { animation-duration: 5.6s; animation-delay: -2.4s; }
+.hm-appr__pill--rm .hm-appr__drift { animation-duration: 4.8s; animation-delay: -0.9s; }
+.hm-appr__pill--rb .hm-appr__drift { animation-duration: 6.2s; animation-delay: -3.7s; }
+
+/* Float and a ~10px sideways arc in one keyframe — reads as a slow orbit,
+   never as a loader. */
+@keyframes hm-appr-drift {
+    0%   { transform: translate(0, -8px); }
+    50%  { transform: translate(10px, 0); }
+    100% { transform: translate(0, 8px); }
+}
+
+.hm-appr__chip {
+    display: inline-block;
+    height: 58px;
+    line-height: 58px;
+    padding: 0 28px;
+    border-radius: 999px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1D1D1F;
+    white-space: nowrap;
+    cursor: default;
+    box-shadow:
+        0 2px 6px rgba(29, 29, 31, .05),
+        0 10px 24px rgba(29, 29, 31, .08);
+    transition: transform .35s ease, box-shadow .35s ease, background .35s ease;
+    will-change: transform;
+}
+
+.hm-appr__chip:hover,
+.hm-appr__chip:focus-visible {
+    transform: translateY(-8px) scale(1.05);
+    box-shadow:
+        0 4px 10px rgba(29, 29, 31, .07),
+        0 18px 40px rgba(29, 29, 31, .14);
+}
+
+.hm-appr__chip:focus-visible {
+    outline: 3px solid rgba(29, 29, 31, .35);
+    outline-offset: 3px;
+}
+
+/* Pastels — the hover shade is a touch brighter than the rest state. */
+.hm-appr__chip--blue   { background: #DCE8FB; }
+.hm-appr__chip--blue:hover,
+.hm-appr__chip--blue:focus-visible { background: #E9F1FE; }
+
+.hm-appr__chip--pink   { background: #FBDCDC; }
+.hm-appr__chip--pink:hover,
+.hm-appr__chip--pink:focus-visible { background: #FEEAEA; }
+
+.hm-appr__chip--beige  { background: #EBE0CB; }
+.hm-appr__chip--beige:hover,
+.hm-appr__chip--beige:focus-visible { background: #F5EEE1; }
+
+.hm-appr__chip--green  { background: #C8EFD7; }
+.hm-appr__chip--green:hover,
+.hm-appr__chip--green:focus-visible { background: #DBF6E5; }
+
+.hm-appr__chip--yellow { background: #FAEEBE; }
+.hm-appr__chip--yellow:hover,
+.hm-appr__chip--yellow:focus-visible { background: #FDF6D6; }
+
+/* ------------------------------ Responsive ------------------------------ */
+/* Tablet — smaller circle, pills pulled in proportionally */
+@media (max-width: 991.98px) {
+    .hm-appr { padding: 90px 0; }
+    .hm-appr__stage { height: 460px; max-width: 720px; }
+    .hm-appr__figure { width: 320px; height: 320px; }
+    .hm-appr__ring--1 { width: 380px; height: 380px; }
+    .hm-appr__ring--2 { width: 510px; height: 510px; }
+    .hm-appr__ring--3 { width: 640px; height: 640px; }
+    .hm-appr__chip { height: 48px; line-height: 48px; padding: 0 18px; font-size: 14px; }
+    .hm-appr__pill--lt, .hm-appr__pill--lb { left: 0; }
+    .hm-appr__pill--rt, .hm-appr__pill--rb { right: 0; }
+    .hm-appr__pill--lm { left: -2%; }
+    .hm-appr__pill--rm { right: -2%; }
+}
+
+/* Mobile — image first, then the pills in a plain 2-column grid */
+@media (max-width: 767.98px) {
+    .hm-appr { padding: 64px 0 72px; }
+    .hm-appr__lead { font-size: 16px; }
+
+    .hm-appr__stage {
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 30px;
+    }
+
+    /* Rings and absolute placement make no sense once it stacks. */
+    .hm-appr__ring { display: none; }
+
+    .hm-appr__figure {
+        position: static;
+        width: min(280px, 76vw);
+        height: min(280px, 76vw);
+        transform: none;
+    }
+    .hm-appr__figure:hover { transform: scale(1.03); }
+
+    .hm-appr__pills {
+        position: static;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .hm-appr__pill {
+        position: static;
+        transform: none;
+        display: flex;
+        justify-content: center;
+    }
+
+    .hm-appr__drift { animation: none; }   /* no orbit in a fixed grid */
+
+    .hm-appr__chip {
+        height: auto;
+        line-height: 1.4;
+        padding: 12px 14px;
+        font-size: 13.5px;
+        text-align: center;
+        white-space: normal;
+    }
+}
+
+/* ---------------------------- Reduced motion ---------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    .hm-appr__deco img,
+    .hm-appr__dots,
+    .hm-appr__drift { animation: none !important; }
+    .hm-appr__figure,
+    .hm-appr__chip { transition: none !important; }
+}
+
