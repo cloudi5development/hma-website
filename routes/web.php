@@ -24,4 +24,7 @@ Route::controller(HomeController::class)->name('frontend.')->group(function () {
        Route::get('/blog-details', 'blogDetails')->name('blog-details');
     Route::get('/contact-us', 'contactUs')->name('contact-us');
      Route::get('/testimonials', 'testimonials')->name('testimonials');
+      Route::get('/courses', 'courses')->name('courses');
+       // Slug-based, so every course card links with route('frontend.course-details', $slug)
+       Route::get('/course/{slug}', 'courseDetails')->name('course-details');
 });

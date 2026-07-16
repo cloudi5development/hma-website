@@ -1,0 +1,234 @@
+/* ==========================================================================
+   Hire Minds Academy - Career Success / reel slider (shared section)
+   Markup: resources/views/frontend/partials/career-success.blade.php
+   Pushed by any page that includes the partial (home, testimonials).
+   Self-contained: the tokens fall back, so this works without home.css.
+   ========================================================================== */
+
+.hm-reels {
+    position: relative;
+    padding: 100px 0 50px;
+    overflow: hidden;
+}
+.hm-reels__bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 150vmax;
+    height: 150vmax;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+}
+.hm-reels__bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: .12;
+    filter: blur(60px);
+    animation: hm-spin 90s linear infinite;
+    will-change: transform;
+}
+.hm-reels__deco {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    opacity: .5;
+    animation: hm-twinkle 6s ease-in-out infinite;
+}
+.hm-reels__deco--star1 { top: 90px;  left: 6%;  width: 30px; }
+.hm-reels__deco--star2 { top: 140px; right: 7%; width: 24px; animation-delay: -2.5s; }
+.hm-reels__container {
+    position: relative;
+    z-index: 1;
+}
+
+/* Header */
+.hm-reels__head {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.hm-reels__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.hm-reels__label-icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, var(--hm-yellow), var(--hm-gold-dark));
+}
+.hm-reels__label-text {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #843D21;
+}
+.hm-reels__title {
+    margin: 0 0 14px;
+    font-size: 34px;
+    font-weight: 700;
+    color: #222222;
+}
+.hm-reels__desc {
+    max-width: 620px;
+    margin: 0 auto;
+    font-size: 15px;
+    line-height: 1.8;
+    color: #6D6357;
+}
+.hm-reels__handle {
+    font-weight: 700;
+    color: #843D21;
+    text-decoration: none;
+    transition: color .25s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+.hm-reels__handle i { color: #E1306C; }
+.hm-reels__handle:hover { color: #E1306C; }
+
+/* Swiper — vertical padding gives room for the hover-lift + shadow */
+.hm-reels__swiper {
+    padding: 30px 4px 20px;
+    margin-top: 20px;
+}
+.hm-reels__slide { height: auto; }
+
+/* Floating wrapper (float) → card (hover). Separate elements avoid transform clashes. */
+.hm-reel-float {
+    animation: hm-reel-float 7s ease-in-out infinite;
+    will-change: transform;
+}
+@keyframes hm-reel-float {
+    0%, 100% { transform: translateY(-8px); }
+    50%      { transform: translateY(8px); }
+}
+.hm-reels__slide:nth-child(5n+1) .hm-reel-float { animation-delay: 0s; }
+.hm-reels__slide:nth-child(5n+2) .hm-reel-float { animation-delay: -1.4s; }
+.hm-reels__slide:nth-child(5n+3) .hm-reel-float { animation-delay: -2.8s; }
+.hm-reels__slide:nth-child(5n+4) .hm-reel-float { animation-delay: -4.2s; }
+.hm-reels__slide:nth-child(5n+5) .hm-reel-float { animation-delay: -5.6s; }
+
+.hm-reel {
+    position: relative;
+    width: 100%;
+    height: 420px;
+    border-radius: 22px;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 16px 40px rgba(42, 29, 20, .12);
+    transition: transform .35s ease, box-shadow .35s ease;
+}
+.hm-reel:hover,
+.hm-reel:focus-visible {
+    transform: translateY(-10px);
+    box-shadow: 0 30px 60px rgba(42, 29, 20, .22);
+    outline: none;
+}
+.hm-reel__img,
+.hm-reel__video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #16100b;          /* shown while the poster/video loads */
+    transition: transform .5s ease;
+}
+.hm-reel:hover .hm-reel__img,
+.hm-reel:focus-visible .hm-reel__img,
+.hm-reel:hover .hm-reel__video,
+.hm-reel:focus-visible .hm-reel__video { transform: scale(1.08); }
+
+/* Once the clip is rolling the play badge is redundant — fade it out. */
+.hm-reel.is-playing .hm-reel__play { opacity: 0; }
+.hm-reel.is-playing:hover .hm-reel__play,
+.hm-reel.is-playing:focus-visible .hm-reel__play { opacity: 1; }
+
+.hm-reel__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, .65), rgba(0, 0, 0, .10));
+    opacity: 0;
+    transition: opacity .35s ease;
+}
+.hm-reel:hover .hm-reel__overlay,
+.hm-reel:focus-visible .hm-reel__overlay { opacity: 1; }
+
+.hm-reel__play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(.7);
+    width: 62px;
+    height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    color: #843D21;
+    border-radius: 50%;
+    font-size: 20px;
+    padding-left: 3px;
+    opacity: 0;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .25);
+    transition: opacity .35s ease, transform .35s ease;
+}
+.hm-reel:hover .hm-reel__play,
+.hm-reel:focus-visible .hm-reel__play {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+.hm-reel__badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .9);
+    color: #843D21;
+    font-size: 11px;
+    font-weight: 600;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+.hm-reel__badge i { color: #E1306C; }
+
+/* Navigation */
+.hm-reels__nav {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 20px;
+}
+.hm-reels__navbtn {
+    width: 54px;
+    height: 54px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform .25s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), box-shadow .25s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), background .25s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+.hm-reels__navbtn--prev { background: #FBEDC7; color: #843D21; }
+.hm-reels__navbtn--next { background: linear-gradient(135deg, var(--hm-gold-2), var(--hm-gold-dark)); color: #fff; }
+.hm-reels__navbtn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 12px 26px rgba(180, 140, 40, .32);
+}
+.hm-reels__navbtn.swiper-button-disabled { opacity: .5; cursor: default; }
+
+/* Reduced motion — hold the rotating background + card float still */
+@media (prefers-reduced-motion: reduce) {
+    .hm-reels__bg img,
+    .hm-reels__deco,
+    .hm-reel-float { animation: none !important; }
+}

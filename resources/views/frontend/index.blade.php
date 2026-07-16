@@ -8,6 +8,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" crossorigin="anonymous">
     {{-- Poppins — used only for the Upcoming Events heading (per its design spec) --}}
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap">
+    {{-- Shared sections (also used on the About / Contact pages) --}}
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/partners.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/counters.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/testimonials.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/faq.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/contact-form.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/career-success.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/courses.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/frontend/home.css') }}">
 @endpush
 
@@ -124,45 +132,8 @@
     </section>
 
     {{-- ============================ TRUSTED PARTNERS ============================ --}}
-    @php
-        // Logos live in public/assets/images/partners-section/. Add a row here
-        // (e.g. ['img' => 'flipkart.webp', 'name' => 'Flipkart']) once the image
-        // exists and it will appear in the marquee automatically.
-        $partners = [
-            ['img' => 'amason.webp',    'name' => 'Amazon'],
-            ['img' => 'google.webp',    'name' => 'Google'],
-            ['img' => 'microsoft.webp', 'name' => 'Microsoft'],
-            ['img' => 'tech.webp',      'name' => 'Tech'],
-        ];
-    @endphp
-    <section class="hm-partners" aria-labelledby="hmPartnersTitle">
-        <div class="container">
-            <h2 class="hm-partners__title" id="hmPartnersTitle">Our Trusted Partners</h2>
-        </div>
-
-        {{-- Full-bleed marquee so the edge-fade sits at the screen edges. Two
-             identical groups + translateX(-50%) = seamless infinite loop. --}}
-        <div class="hm-partners__marquee">
-            <div class="hm-partners__track">
-                @for ($group = 0; $group < 2; $group++)
-                    <ul class="hm-partners__group" @if ($group === 1) aria-hidden="true" @endif>
-                        {{-- Each group repeats the set a few times so it always spans wider
-                             than the viewport (no blank gap on large screens). --}}
-                        @for ($repeat = 0; $repeat < 3; $repeat++)
-                            @foreach ($partners as $partner)
-                                <li class="hm-partners__item">
-                                    <img class="hm-partners__logo"
-                                         src="{{ asset('assets/images/partners-section/'.$partner['img']) }}"
-                                         alt="{{ $partner['name'] }} Partner Logo"
-                                         height="40" loading="lazy" draggable="false">
-                                </li>
-                            @endforeach
-                        @endfor
-                    </ul>
-                @endfor
-            </div>
-        </div>
-    </section>
+    {{-- Shared with the About page — markup in partials/partners.blade.php --}}
+    @include('frontend.partials.partners')
 
     {{-- ============================ ABOUT US ============================ --}}
     <section class="hm-about" id="about" data-io aria-labelledby="hmAboutTitle">
@@ -221,24 +192,8 @@
             </div>
 
             {{-- ------------------------- STATISTICS ------------------------- --}}
-            <div class="row hm-about__stats" role="list">
-                <div class="col-6 col-lg-3 hm-stat hm-anim hm-anim--up hm-anim--d1" role="listitem">
-                    <div class="hm-stat__num" data-target="2.5" data-decimals="1" data-suffix="K+">2.5K+</div>
-                    <div class="hm-stat__label">Students Trained</div>
-                </div>
-                <div class="col-6 col-lg-3 hm-stat hm-anim hm-anim--up hm-anim--d2" role="listitem">
-                    <div class="hm-stat__num" data-target="150" data-decimals="0" data-suffix="+">150+</div>
-                    <div class="hm-stat__label">Industry-Focused Courses</div>
-                </div>
-                <div class="col-6 col-lg-3 hm-stat hm-anim hm-anim--up hm-anim--d3" role="listitem">
-                    <div class="hm-stat__num" data-target="95" data-decimals="0" data-suffix="%">95%</div>
-                    <div class="hm-stat__label">Learner Satisfaction</div>
-                </div>
-                <div class="col-6 col-lg-3 hm-stat hm-anim hm-anim--up hm-anim--d4" role="listitem">
-                    <div class="hm-stat__num" data-target="50" data-decimals="0" data-suffix="+">50+</div>
-                    <div class="hm-stat__label">Hiring &amp; Training Partners</div>
-                </div>
-            </div>
+            {{-- Shared with the About page — markup in partials/counters.blade.php --}}
+            @include('frontend.partials.counters')
         </div>
     </section>
 
@@ -486,10 +441,10 @@
     @php
         // Thumbnails live in public/assets/images/courses/ (each is a composed image).
         $courses = [
-            ['img' => 'course-1.webp', 'badge' => 'Development',     'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5'],
-            ['img' => 'course-2.png',  'badge' => 'Corporate',       'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5'],
-            ['img' => 'course-3.png',  'badge' => 'Team Leadership',  'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5'],
-            ['img' => 'course-4.webp', 'badge' => 'Career Readiness', 'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5'],
+            ['img' => 'course-1.webp', 'badge' => 'Development',     'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-development')],
+            ['img' => 'course-2.png',  'badge' => 'Corporate',       'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-corporate')],
+            ['img' => 'course-3.png',  'badge' => 'Team Leadership',  'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-leadership')],
+            ['img' => 'course-4.webp', 'badge' => 'Career Readiness', 'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-career')],
         ];
     @endphp
     <section class="hm-courses" id="courses" data-io aria-labelledby="hmCoursesTitle">
@@ -501,16 +456,16 @@
 
         {{-- Decorative dotted / striped shapes --}}
         <img class="hm-courses__deco hm-courses__deco--tl" aria-hidden="true"
-             src="{{ asset('assets/images/courses/Component 34.png') }}" alt="" loading="lazy">
+             src="{{ asset('assets/images/courses/dots.png') }}" alt="" loading="lazy">
         <img class="hm-courses__deco hm-courses__deco--br" aria-hidden="true"
-             src="{{ asset('assets/images/courses/Group (4).png') }}" alt="" loading="lazy">
+             src="{{ asset('assets/images/courses/pattern.png') }}" alt="" loading="lazy">
 
         <div class="container hm-courses__container">
 
             {{-- Header --}}
             <div class="hm-courses__head">
                 <img class="hm-courses__float" aria-hidden="true"
-                     src="{{ asset('assets/images/courses/Group 258.png') }}" alt="" loading="lazy">
+                     src="{{ asset('assets/images/courses/js-badge.png') }}" alt="" loading="lazy">
 
                 <span class="hm-courses__label hm-anim hm-anim--up">
                     <span class="hm-courses__label-icon" aria-hidden="true"></span>
@@ -530,40 +485,9 @@
             <div class="row g-4">
                 @foreach ($courses as $i => $course)
                     <div class="col-lg-3 col-md-6">
-                        <article class="hm-course hm-anim hm-anim--up hm-anim--d{{ ($i % 4) + 1 }}">
-                            <div class="hm-course__thumb">
-                                <img src="{{ asset('assets/images/courses/'.$course['img']) }}"
-                                     alt="{{ $course['title'] }} course thumbnail" loading="lazy">
-                            </div>
-                            <div class="hm-course__body">
-                                <div class="hm-course__tags">
-                                    <span class="hm-course__badge">{{ $course['badge'] }}</span>
-                                    <span class="hm-course__rating">
-                                        <img src="{{ asset('assets/images/courses/noto_star (1).png') }}" alt="" aria-hidden="true"> {{ $course['rating'] }}
-                                    </span>
-                                </div>
-                                <h3 class="hm-course__title">{{ $course['title'] }}</h3>
-                                <ul class="hm-course__meta">
-                                    <li class="hm-course__meta-row">
-                                        <span class="hm-course__meta-item">
-                                            <img src="{{ asset('assets/images/courses/iconamoon_clock-light.png') }}" alt="" aria-hidden="true"> 3 months
-                                        </span>
-                                        <span class="hm-course__meta-item">
-                                            <img src="{{ asset('assets/images/courses/school.png') }}" alt="" aria-hidden="true"> On-Campus Learning
-                                        </span>
-                                    </li>
-                                    <li class="hm-course__meta-row">
-                                        <span class="hm-course__meta-item">
-                                            <i class="fa-regular fa-circle-check" aria-hidden="true"></i> Industry Certificate
-                                        </span>
-                                    </li>
-                                </ul>
-                                <a class="hm-course__btn" href="#">
-                                    <span>View Course</span>
-                                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-                                </a>
-                            </div>
-                        </article>
+                        {{-- Shared with the courses listing page — markup in
+                             partials/course-card.blade.php, CSS in courses.css. --}}
+                        @include('frontend.partials.course-card', ['course' => $course, 'i' => $i])
                     </div>
                 @endforeach
             </div>
@@ -697,386 +621,23 @@
     </section>
 
     {{-- ============================ TESTIMONIALS ============================ --}}
-    @php
-        // 12-strong pool (the 6 images repeat). The stage shows 9 at a time and the
-        // nav arrows page through the pool. Full image URLs so the JS can reuse them.
-        $rimg = fn ($n) => asset('assets/images/review/customer-'.$n.'.png');
-        $pool = [
-            ['img' => $rimg(1), 'name' => 'Crystal Maiden', 'role' => 'UI/UX Designer',    'review' => "The mentorship here is on another level. Every project pushed me to think like a real designer, and the feedback was honest and practical. I landed my dream role within weeks of finishing."],
-            ['img' => $rimg(2), 'name' => 'Arjun Mehta',    'role' => 'Software Developer', 'review' => "I came in knowing almost nothing and left building full applications with confidence. The hands-on approach and constant support made all the difference in my career."],
-            ['img' => $rimg(3), 'name' => 'Priya Nair',     'role' => 'Data Analyst',       'review' => "What stood out was how industry-focused everything felt. Real datasets, real problems, real interviews. I felt prepared from day one when I stepped into my new job."],
-            ['img' => $rimg(4), 'name' => 'Rahul Verma',    'role' => 'Frontend Engineer',  'review' => "The trainers genuinely care about your growth. They answered every doubt and helped me polish my portfolio until it truly stood out to recruiters."],
-            ['img' => $rimg(5), 'name' => 'Sneha Kapoor',   'role' => 'Product Manager',    'review' => "From resume reviews to mock interviews, the career guidance was incredible. I switched fields completely and still felt supported every single step of the way."],
-            ['img' => $rimg(6), 'name' => 'Vikram Singh',   'role' => 'DevOps Engineer',    'review' => "Practical, intense, and worth every minute. The projects mirror exactly what companies expect, so the transition into my first role felt seamless and natural."],
-            ['img' => $rimg(1), 'name' => 'Ananya Rao',     'role' => 'Business Analyst',    'review' => "I joined unsure of my direction and left with a clear path and a job offer. The structured roadmap and mentor check-ins kept me motivated the whole way through."],
-            ['img' => $rimg(2), 'name' => 'Karan Malhotra', 'role' => 'Cloud Engineer',     'review' => "The labs felt exactly like a real workplace. By the time I interviewed, nothing surprised me — I had already solved similar problems dozens of times here."],
-            ['img' => $rimg(3), 'name' => 'Meera Iyer',     'role' => 'QA Engineer',        'review' => "Supportive community, sharp instructors, and projects that actually matter. I rebuilt my confidence and my resume at the same time, and it paid off quickly."],
-            ['img' => $rimg(4), 'name' => 'Rohan Das',      'role' => 'Backend Developer',  'review' => "Every doubt I raised got a thoughtful answer. The pace was challenging but fair, and the placement team stayed with me until I signed my offer letter."],
-            ['img' => $rimg(5), 'name' => 'Divya Menon',    'role' => 'Digital Marketer',   'review' => "They don't just teach tools, they teach how to think. That mindset shift is what got me hired over candidates with far more experience than me."],
-            ['img' => $rimg(6), 'name' => 'Aditya Joshi',   'role' => 'ML Engineer',        'review' => "From fundamentals to deployment, everything connected. I walked into my first role already comfortable shipping real features to real users."],
-        ];
-    @endphp
-    <section class="hm-tst" id="testimonials" data-io aria-labelledby="hmTstTitle">
-
-        {{-- Same slow-rotating hero background (shows faintly through the panel) --}}
-        <div class="hm-tst__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/Hero-section/hero-bg.png') }}" alt="" role="presentation" loading="lazy">
-        </div>
-
-        <div class="container">
-            <div class="hm-tst__panel">
-
-                {{-- Decorative striped / dotted graphics --}}
-                <span class="hm-tst__deco hm-tst__deco--stripe-tl" aria-hidden="true"></span>
-                <span class="hm-tst__deco hm-tst__deco--dots-tr"  aria-hidden="true"></span>
-                <span class="hm-tst__deco hm-tst__deco--dots-bl"  aria-hidden="true"></span>
-                <span class="hm-tst__deco hm-tst__deco--stripe-br" aria-hidden="true"></span>
-                <span class="hm-tst__deco hm-tst__deco--stripe-c" aria-hidden="true"></span>
-
-                {{-- Header --}}
-                <div class="hm-tst__head">
-                    <span class="hm-tst__label hm-anim hm-anim--up">
-                        <span class="hm-tst__label-icon" aria-hidden="true"></span>
-                        <span class="hm-tst__label-text">Testimonials</span>
-                    </span>
-                    <h2 class="hm-tst__title hm-anim hm-anim--up hm-anim--d1" id="hmTstTitle">Voices of Career Transformation</h2>
-
-                    <div class="hm-tst__badge hm-anim hm-anim--up hm-anim--d2">
-                        <span class="hm-tst__badge-avatars">
-                            @foreach (array_slice($pool, 0, 4) as $t)
-                                <img src="{{ $t['img'] }}" alt="" aria-hidden="true">
-                            @endforeach
-                        </span>
-                        <span class="hm-tst__badge-text">2k+ Learner</span>
-                        <span class="hm-tst__badge-sep" aria-hidden="true"></span>
-                        <span class="hm-tst__badge-rating"><i class="fa-solid fa-star" aria-hidden="true"></i> 4.8/5</span>
-                        <span class="hm-tst__badge-sep" aria-hidden="true"></span>
-                        <span class="hm-tst__badge-rating"><img class="hm-tst__badge-google" src="{{ asset('assets/images/Hero-section/google.png') }}" alt="Google"> 4.8/5</span>
-                    </div>
-                </div>
-
-                {{-- Stage: 9 scattered profiles (positions in CSS) + the pop-up review card --}}
-                <div class="hm-tst__stage" id="hmTstStage">
-                    @for ($i = 0; $i < 9; $i++)
-                        @php $t = $pool[$i % count($pool)]; @endphp
-                        <button type="button"
-                                class="hm-tst__profile hm-tst__profile--{{ $i + 1 }} hm-anim"
-                                data-slot="{{ $i }}"
-                                data-name="{{ $t['name'] }}"
-                                data-role="{{ $t['role'] }}"
-                                data-review="{{ $t['review'] }}"
-                                aria-label="Show review from {{ $t['name'] }}">
-                            <span class="hm-tst__profile-img">
-                                <img src="{{ $t['img'] }}" alt="{{ $t['name'] }}" loading="lazy">
-                            </span>
-                        </button>
-                    @endfor
-
-                    {{-- Review card — pops up next to the active / hovered profile --}}
-                    <div class="hm-tst__card-wrap" id="hmTstCardWrap">
-                        <div class="hm-tst__card is-swap" id="hmTstCard">
-                            <div class="hm-tst__card-top">
-                                <img class="hm-tst__card-avatar" id="hmTstAvatar" src="{{ $pool[0]['img'] }}" alt="{{ $pool[0]['name'] }}">
-                                <div>
-                                    <div class="hm-tst__card-name" id="hmTstName">{{ $pool[0]['name'] }}</div>
-                                    <div class="hm-tst__card-role" id="hmTstRole">{{ $pool[0]['role'] }}</div>
-                                </div>
-                            </div>
-                            <p class="hm-tst__card-text" id="hmTstText">{{ $pool[0]['review'] }}</p>
-                            <div class="hm-tst__card-stars" aria-label="Rated 5 out of 5">
-                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Full pool the arrows page through (data only) --}}
-                    <script type="application/json" id="hmTstData">@json($pool)</script>
-                </div>
-
-                {{-- Navigation --}}
-                <div class="hm-tst__nav hm-anim hm-anim--up hm-anim--d3">
-                    <button type="button" class="hm-tst__navbtn hm-tst__navbtn--prev" id="hmTstPrev" aria-label="Previous review">
-                        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-                    </button>
-                    <button type="button" class="hm-tst__navbtn hm-tst__navbtn--next" id="hmTstNext" aria-label="Next review">
-                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
+    {{-- Shared with the About page — markup in partials/testimonials.blade.php --}}
+    @include("frontend.partials.testimonials")
 
     {{-- ============================ FAQ ============================ --}}
-    @php
-        $faqs = [
-            ['q' => 'What courses does Hire Minds Academy offer?', 'a' => 'Our courses span in-demand fields like software development, data & AI, cloud & DevOps, cyber security, and professional skills. Every program is designed by industry experts and blends practical learning, live projects, interview preparation, and dedicated placement support so you graduate genuinely job-ready.'],
-            ['q' => 'How long are the training programs?', 'a' => 'Most tracks run between three and six months depending on the depth you choose. We offer flexible weekday and weekend batches along with self-paced modules, so you can learn effectively whether you are a student, a working professional, or switching careers.'],
-            ['q' => 'Will I receive placement assistance?', 'a' => 'Yes. Every learner gets end-to-end placement support including resume building, mock interviews, portfolio reviews, and direct referrals to our hiring partners. Our career team stays with you from your very first module until you sign your offer letter.'],
-            ['q' => 'Do I receive a course certificate?', 'a' => 'Absolutely. On successful completion of your program and final projects, you receive an industry-recognized certificate from Hire Minds Academy that you can add to your resume and LinkedIn to showcase your verified, job-ready skills to recruiters.'],
-            ['q' => 'Can beginners join these courses?', 'a' => 'Definitely. Our programs are structured to take complete beginners from the fundamentals all the way to advanced, real-world skills. With mentor support, hands-on labs, and a friendly community, no prior experience is required to get started.'],
-        ];
-    @endphp
-    <section class="hm-faq" id="faq" data-io aria-labelledby="hmFaqTitle">
-
-        {{-- Same slow-rotating hero background + soft warm overlay --}}
-        <div class="hm-faq__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/Hero-section/hero-bg.png') }}" alt="" role="presentation" loading="lazy">
-        </div>
-        <div class="hm-faq__overlay" aria-hidden="true"></div>
-
-        <div class="container hm-faq__container">
-            <div class="row align-items-center g-5">
-
-                {{-- Left: heading + description + illustration --}}
-                <div class="col-lg-5 hm-faq__left hm-anim hm-anim--left">
-                    <span class="hm-faq__label">
-                        <span class="hm-faq__label-icon" aria-hidden="true"></span>
-                        <span class="hm-faq__label-text">FAQ</span>
-                    </span>
-                    <h2 class="hm-faq__title" id="hmFaqTitle">Frequently Asking Questions</h2>
-                    <p class="hm-faq__desc">
-                        Gain practical skills, learn from industry experts, and receive career guidance
-                        that prepares you for real-world opportunities.
-                    </p>
-
-                    <div class="hm-faq__visual">
-                        <img class="hm-faq__deco hm-faq__deco--star1" src="{{ asset('assets/images/faq/star.png') }}" alt="" aria-hidden="true" loading="lazy">
-                        <img class="hm-faq__deco hm-faq__deco--star2" src="{{ asset('assets/images/faq/star.png') }}" alt="" aria-hidden="true" loading="lazy">
-                        <img class="hm-faq__deco hm-faq__deco--dots" src="{{ asset('assets/images/faq/component.png') }}" alt="" aria-hidden="true" loading="lazy">
-                        <span class="hm-faq__deco hm-faq__deco--stripe" aria-hidden="true"></span>
-                        <img class="hm-faq__img" src="{{ asset('assets/images/faq/faq-img.png') }}"
-                             alt="A learner considering the Hire Minds Academy programs" loading="lazy">
-                    </div>
-                </div>
-
-                {{-- Right: Bootstrap accordion --}}
-                <div class="col-lg-7 hm-faq__right">
-                    <div class="accordion hm-faq__accordion" id="hmFaqAccordion">
-                        @foreach ($faqs as $i => $faq)
-                            @php $open = $i === 2; @endphp
-                            <div class="accordion-item hm-faq__item hm-anim hm-anim--up hm-anim--d{{ $i + 1 }}">
-                                <h3 class="accordion-header">
-                                    <button class="accordion-button {{ $open ? '' : 'collapsed' }}" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#hmFaqBody{{ $i }}"
-                                            aria-expanded="{{ $open ? 'true' : 'false' }}" aria-controls="hmFaqBody{{ $i }}">
-                                        {{ $faq['q'] }}
-                                    </button>
-                                </h3>
-                                <div id="hmFaqBody{{ $i }}" class="accordion-collapse collapse {{ $open ? 'show' : '' }}"
-                                     data-bs-parent="#hmFaqAccordion">
-                                    <div class="accordion-body">{{ $faq['a'] }}</div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+    {{-- Shared with the About page — markup in partials/faq.blade.php --}}
+    @include("frontend.partials.faq")
 
     {{-- ============================ CONTACT / ENQUIRY ============================ --}}
-    <section class="hm-contact" id="contact" data-io aria-labelledby="hmContactTitle">
-
-        {{-- Same slow-rotating hero background --}}
-        <div class="hm-contact__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/Hero-section/hero-bg.png') }}" alt="" role="presentation" loading="lazy">
-        </div>
-
-        <div class="container hm-contact__container">
-            <div class="hm-contact__card">
-                {{-- Subtle decorations --}}
-                <img class="hm-contact__deco hm-contact__deco--star" src="{{ asset('assets/images/faq/star.png') }}" alt="" aria-hidden="true" loading="lazy">
-                <span class="hm-contact__deco hm-contact__deco--glow" aria-hidden="true"></span>
-
-                <div class="row g-5 align-items-stretch">
-
-                    {{-- Left: information --}}
-                    <div class="col-lg-5 hm-contact__info hm-anim hm-anim--left">
-                        <span class="hm-contact__label">
-                            <span class="hm-contact__label-icon" aria-hidden="true"></span>
-                            <span class="hm-contact__label-text">Let's Connect</span>
-                        </span>
-                        <h2 class="hm-contact__title" id="hmContactTitle">Let's Start Your Career Journey Together</h2>
-                        <p class="hm-contact__desc">
-                            Have questions about our programs or career support? Fill out the form and our
-                            team will get back to you within 24 hours.
-                        </p>
-
-                        <h3 class="hm-contact__subtitle">Office Information</h3>
-                        <ul class="hm-contact__list">
-                            <li class="hm-contact__item">
-                                <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/heroicons_map-pin.png') }}" alt=""></span>
-                                <div class="hm-contact__item-body">
-                                    <div class="hm-contact__item-title">Chennai Branch :</div>
-                                    <p class="hm-contact__item-text">No 22 / 97, KGEYES VEDA RANGA NIVAS 4th Floor, 4th Avenue, Ashok Nagar, Chennai – 33</p>
-                                </div>
-                            </li>
-                            <li class="hm-contact__item">
-                                <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/heroicons_map-pin.png') }}" alt=""></span>
-                                <div class="hm-contact__item-body">
-                                    <div class="hm-contact__item-title">Coimbatore Branch :</div>
-                                    <p class="hm-contact__item-text">339, Chinnasamy Naidu Rd, Siddhapudur, Balasundaram Layout, B.K.R Nagar, Coimbatore, Tamil Nadu 641044</p>
-                                </div>
-                            </li>
-                            <li class="hm-contact__item">
-                                <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/proicons_call.png') }}" alt=""></span>
-                                <div class="hm-contact__item-body">
-                                    <div class="hm-contact__item-title">Phone Number :</div>
-                                    <p class="hm-contact__item-text"><a href="tel:+917824094044">+91 78240 94044</a></p>
-                                </div>
-                            </li>
-                            <li class="hm-contact__item">
-                                <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/heroicons-outline_mail.png') }}" alt=""></span>
-                                <div class="hm-contact__item-body">
-                                    <div class="hm-contact__item-title">Email :</div>
-                                    <p class="hm-contact__item-text"><a href="mailto:info@hiremindsacademy.com">info@hiremindsacademy.com</a></p>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {{-- Right: enquiry form --}}
-                    <div class="col-lg-7 hm-contact__formcol hm-anim hm-anim--right">
-                        <form class="hm-contact__form needs-validation" id="hmContactForm" method="POST" action="#" novalidate>
-                            @csrf
-
-                            <div class="hm-field">
-                                <label class="hm-field__label" for="cfName">Full Name</label>
-                                <input type="text" class="form-control hm-input" id="cfName" name="name" placeholder="Alex Johnson" required>
-                                <div class="invalid-feedback">Please enter your full name.</div>
-                            </div>
-
-                            <div class="hm-field">
-                                <label class="hm-field__label" for="cfEmail">Email</label>
-                                <input type="email" class="form-control hm-input" id="cfEmail" name="email" placeholder="example@gmail.com" required>
-                                <div class="invalid-feedback">Please enter a valid email address.</div>
-                            </div>
-
-                            <div class="hm-field">
-                                <label class="hm-field__label" for="cfPhone">Phone Number</label>
-                                <div class="hm-phone">
-                                    <span class="hm-phone__code">+91</span>
-                                    <input type="tel" class="form-control hm-input hm-phone__input" id="cfPhone" name="phone"
-                                           placeholder="Mobile Number" inputmode="numeric" pattern="[0-9]{10}" required>
-                                    <div class="invalid-feedback">Enter a valid 10-digit mobile number.</div>
-                                </div>
-                            </div>
-
-                            <div class="hm-field">
-                                <label class="hm-field__label" for="cfLooking">What are you looking for?</label>
-                                <select class="form-select hm-input hm-select" id="cfLooking" name="looking_for" required>
-                                    <option value="" disabled selected hidden>Select the looking</option>
-                                    <option>Course Information</option>
-                                    <option>Placement Support</option>
-                                    <option>Corporate Training</option>
-                                    <option>Student Support</option>
-                                    <option>General Enquiry</option>
-                                </select>
-                                <div class="invalid-feedback">Please choose an option.</div>
-                            </div>
-
-                            <div class="hm-field">
-                                <label class="hm-field__label" for="cfInterest">Area of interest</label>
-                                <select class="form-select hm-input hm-select" id="cfInterest" name="interest" required>
-                                    <option value="" disabled selected hidden>Select the interest</option>
-                                    <option>Data Analytics</option>
-                                    <option>Full Stack Development</option>
-                                    <option>HR Training</option>
-                                    <option>Digital Marketing</option>
-                                    <option>UI/UX Design</option>
-                                    <option>AI &amp; Machine Learning</option>
-                                </select>
-                                <div class="invalid-feedback">Please choose an area of interest.</div>
-                            </div>
-
-                            <div class="hm-field">
-                                <label class="hm-field__label" for="cfMessage">Message</label>
-                                <textarea class="form-control hm-input hm-textarea" id="cfMessage" name="message" placeholder="Tell us how we can help you..."></textarea>
-                            </div>
-
-                            <button type="submit" class="hm-contact__submit">
-                                <span class="hm-btn__label">Send Enquiry <i class="fa-solid fa-paper-plane" aria-hidden="true"></i></span>
-                            </button>
-
-                            <p class="hm-contact__note" id="hmContactNote" role="status" hidden>
-                                Thanks! Your enquiry has been received — our team will get back to you within 24 hours.
-                            </p>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+    {{-- Contact — shared with the contact page. Its validation JS ships with
+         the partial; its CSS is contact-form.css, linked above. --}}
+    @include('frontend.partials.contact-form')
 
     {{-- ============================ OUR JOURNEY / REELS ============================ --}}
-    @php
-        // Covers live in public/assets/images/our-journey/. Replace the 'url'
-        // values with the real Instagram Reel links whenever they are ready.
-        $reels = [
-            ['image' => 'reel-1.webp', 'url' => 'https://www.instagram.com/hireminds_academy/', 'title' => 'A mentoring session at Hire Minds Academy'],
-            ['image' => 'reel-2.webp', 'url' => 'https://www.instagram.com/hireminds_academy/', 'title' => 'Inside a Hire Minds Academy classroom'],
-            ['image' => 'reel-3.webp', 'url' => 'https://www.instagram.com/hireminds_academy/', 'title' => 'Learners collaborating on a live project'],
-            ['image' => 'reel-4.webp', 'url' => 'https://www.instagram.com/hireminds_academy/', 'title' => 'A hands-on workshop moment'],
-            ['image' => 'reel-5.webp', 'url' => 'https://www.instagram.com/hireminds_academy/', 'title' => 'Talent Acquisition and HR Recruitment training'],
-        ];
-    @endphp
-    <section class="hm-reels" id="our-journey" data-io aria-labelledby="hmReelsTitle">
-
-        {{-- Same slow-rotating hero background --}}
-        <div class="hm-reels__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/Hero-section/hero-bg.png') }}" alt="" role="presentation" loading="lazy">
-        </div>
-        <img class="hm-reels__deco hm-reels__deco--star1" src="{{ asset('assets/images/faq/star.png') }}" alt="" aria-hidden="true" loading="lazy">
-        <img class="hm-reels__deco hm-reels__deco--star2" src="{{ asset('assets/images/faq/star.png') }}" alt="" aria-hidden="true" loading="lazy">
-
-        <div class="container hm-reels__container">
-
-            {{-- Header --}}
-            <div class="hm-reels__head">
-                <span class="hm-reels__label hm-anim hm-anim--up">
-                    <span class="hm-reels__label-icon" aria-hidden="true"></span>
-                    <span class="hm-reels__label-text">Our Journey</span>
-                </span>
-                <h2 class="hm-reels__title hm-anim hm-anim--up hm-anim--d1" id="hmReelsTitle">Watch Our Learning Journey</h2>
-                <p class="hm-reels__desc hm-anim hm-anim--up hm-anim--d2">
-                    Catch the latest classroom moments, workshops, and success stories.<br>
-                    Follow <a class="hm-reels__handle" href="https://www.instagram.com/hireminds_academy/" target="_blank" rel="noopener"><i class="fa-brands fa-instagram" aria-hidden="true"></i> @hireminds_academy</a> for more exclusive updates.
-                </p>
-            </div>
-
-            {{-- Swiper slider --}}
-            <div class="swiper hm-reels__swiper hm-anim hm-anim--up hm-anim--d3">
-                <div class="swiper-wrapper">
-                    {{-- Rendered twice so there are more slides than are visible — this
-                         gives the arrows / loop somewhere to advance to (5 images only). --}}
-                    @foreach (array_merge($reels, $reels) as $reel)
-                        <div class="swiper-slide hm-reels__slide">
-                            <div class="hm-reel-float">
-                                <div class="hm-reel" data-instagram="{{ $reel['url'] }}" role="link" tabindex="0"
-                                     aria-label="Watch on Instagram: {{ $reel['title'] }}">
-                                    <img class="hm-reel__img" src="{{ asset('assets/images/our-journey/'.$reel['image']) }}"
-                                         alt="{{ $reel['title'] }}" loading="lazy">
-                                    <span class="hm-reel__badge" aria-hidden="true"><i class="fa-brands fa-instagram"></i> Instagram Reel</span>
-                                    <span class="hm-reel__overlay" aria-hidden="true"></span>
-                                    <span class="hm-reel__play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- Navigation --}}
-            <div class="hm-reels__nav hm-anim hm-anim--up hm-anim--d4">
-                <button type="button" class="hm-reels__navbtn hm-reels__navbtn--prev" id="hmReelsPrev" aria-label="Previous reels">
-                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-                </button>
-                <button type="button" class="hm-reels__navbtn hm-reels__navbtn--next" id="hmReelsNext" aria-label="Next reels">
-                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-                </button>
-            </div>
-        </div>
-    </section>
+    {{-- Shared with the testimonials page, which passes its own header copy.
+         Markup in partials/career-success.blade.php; CSS is career-success.css,
+         linked above; the Swiper init ships with the partial. --}}
+    @include('frontend.partials.career-success')
 
 @endsection
 
@@ -1084,223 +645,33 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
     <script src="{{ asset('assets/js/frontend/home.js') }}" defer></script>
 
-    {{-- Entrance reveals (About + Categories) + one-time stat counters (vanilla JS) --}}
+    {{-- Entrance reveals — adds .is-in to each [data-io] section as it scrolls in.
+         (The stat counters ship with partials/counters.blade.php.) --}}
     <script>
         (function () {
             'use strict';
             var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             var hasIO = 'IntersectionObserver' in window;
 
-            /* ---- Entrance reveals: add .is-in to each [data-io] section in view ---- */
             var ioSections = document.querySelectorAll('[data-io]');
+            if (!ioSections.length) return;
+
             if (reduce || !hasIO) {
                 ioSections.forEach(function (s) { s.classList.add('is-in'); });
-            } else {
-                var revealIO = new IntersectionObserver(function (entries, obs) {
-                    entries.forEach(function (e) {
-                        if (e.isIntersecting) { e.target.classList.add('is-in'); obs.unobserve(e.target); }
-                    });
-                }, { threshold: 0.15 });
-                ioSections.forEach(function (s) { revealIO.observe(s); });
+                return;
             }
 
-            /* ---- Count-up statistics (About) — runs once, then holds the final value ---- */
-            var about = document.getElementById('about');
-            if (!about) return;
-            var nums = about.querySelectorAll('.hm-stat__num');
-
-            function format(value, decimals, suffix) {
-                return value.toFixed(decimals) + suffix;
-            }
-
-            function runCounters() {
-                nums.forEach(function (el) {
-                    var target = parseFloat(el.getAttribute('data-target')) || 0;
-                    var decimals = parseInt(el.getAttribute('data-decimals') || '0', 10);
-                    var suffix = el.getAttribute('data-suffix') || '';
-
-                    if (reduce) { el.textContent = format(target, decimals, suffix); return; }
-
-                    var duration = 1800, startTime = null;
-                    function tick(now) {
-                        if (startTime === null) startTime = now;
-                        var p = Math.min((now - startTime) / duration, 1);
-                        var eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
-                        el.textContent = format(target * eased, decimals, suffix);
-                        if (p < 1) {
-                            requestAnimationFrame(tick);
-                        } else {
-                            el.textContent = format(target, decimals, suffix); // snap to exact final
-                        }
-                    }
-                    requestAnimationFrame(tick);
+            var revealIO = new IntersectionObserver(function (entries, obs) {
+                entries.forEach(function (e) {
+                    if (e.isIntersecting) { e.target.classList.add('is-in'); obs.unobserve(e.target); }
                 });
-            }
-
-            var stats = about.querySelector('.hm-about__stats');
-            if (!stats || reduce || !hasIO) {
-                runCounters();
-            } else {
-                new IntersectionObserver(function (entries, obs) {
-                    entries.forEach(function (e) {
-                        if (e.isIntersecting) { runCounters(); obs.disconnect(); }
-                    });
-                }, { threshold: 0.4 }).observe(stats);
-            }
+            }, { threshold: 0.15 });
+            ioSections.forEach(function (s) { revealIO.observe(s); });
         })();
     </script>
 
-    {{-- Testimonials: hover a profile → review card pops up beside it;
-         arrows page 9 new people in from the pool --}}
-    <script>
-        (function () {
-            'use strict';
-            var stage = document.getElementById('hmTstStage');
-            var cardWrap = document.getElementById('hmTstCardWrap');
-            var card = document.getElementById('hmTstCard');
-            if (!stage || !cardWrap || !card) return;
 
-            var pool = [];
-            var dataEl = document.getElementById('hmTstData');
-            try { pool = JSON.parse(dataEl.textContent); } catch (e) { pool = []; }
 
-            var slots = Array.prototype.slice.call(stage.querySelectorAll('.hm-tst__profile'));
-            var avatar = document.getElementById('hmTstAvatar');
-            var nameEl = document.getElementById('hmTstName');
-            var roleEl = document.getElementById('hmTstRole');
-            var textEl = document.getElementById('hmTstText');
-            var prevBtn = document.getElementById('hmTstPrev');
-            var nextBtn = document.getElementById('hmTstNext');
-            var offset = 0, active = 0;
-
-            function poolAt(i) { return pool.length ? pool[(offset + i) % pool.length] : null; }
-
-            // Repopulate the 9 slots from the current pool window (used by the arrows)
-            function renderSlots() {
-                slots.forEach(function (btn, i) {
-                    var t = poolAt(i);
-                    if (!t) return;
-                    var img = btn.querySelector('img');
-                    if (img) { img.src = t.img; img.alt = t.name; }
-                    btn.dataset.name = t.name;
-                    btn.dataset.role = t.role;
-                    btn.dataset.review = t.review;
-                    btn.setAttribute('aria-label', 'Show review from ' + t.name);
-                });
-            }
-
-            // Position the card right next to the given profile (clamped to the stage)
-            function placeCard(btn) {
-                var sw = stage.clientWidth, sh = stage.clientHeight;
-                var cw = cardWrap.offsetWidth, ch = cardWrap.offsetHeight;
-                var left = btn.offsetLeft + btn.offsetWidth / 2 - cw * 0.16;
-                var top = btn.offsetTop + btn.offsetHeight * 0.55;
-                left = Math.max(0, Math.min(left, Math.max(0, sw - cw)));
-                top = Math.max(0, Math.min(top, Math.max(0, sh - ch)));
-                cardWrap.style.left = left + 'px';
-                cardWrap.style.top = top + 'px';
-            }
-
-            function activate(i) {
-                var btn = slots[i];
-                if (!btn) return;
-                active = i;
-                var img = btn.querySelector('img');
-                card.classList.remove('is-swap'); void card.offsetWidth; card.classList.add('is-swap');
-                if (img && avatar) { avatar.src = img.src; avatar.alt = btn.dataset.name || ''; }
-                if (nameEl) nameEl.textContent = btn.dataset.name || '';
-                if (roleEl) roleEl.textContent = btn.dataset.role || '';
-                if (textEl) textEl.textContent = btn.dataset.review || '';
-                slots.forEach(function (b, idx) { b.classList.toggle('is-active', idx === i); });
-                placeCard(btn);
-                cardWrap.classList.add('is-shown');
-            }
-
-            function paginate(dir) {
-                if (!pool.length) return;
-                offset = ((offset + dir * slots.length) % pool.length + pool.length) % pool.length;
-                stage.classList.add('is-paging');
-                renderSlots();
-                activate(0);
-                setTimeout(function () { stage.classList.remove('is-paging'); }, 70);
-            }
-
-            slots.forEach(function (btn, i) {
-                btn.addEventListener('mouseenter', function () { activate(i); });
-                btn.addEventListener('focus', function () { activate(i); });
-                btn.addEventListener('click', function () { activate(i); });
-            });
-            if (nextBtn) nextBtn.addEventListener('click', function () { paginate(1); });
-            if (prevBtn) prevBtn.addEventListener('click', function () { paginate(-1); });
-            window.addEventListener('resize', function () { if (slots[active]) placeCard(slots[active]); });
-
-            renderSlots();
-            activate(0);
-        })();
-    </script>
-
-    {{-- Contact form: Bootstrap-style validation, no page reload --}}
-    <script>
-        (function () {
-            'use strict';
-            var form = document.getElementById('hmContactForm');
-            if (!form) return;
-            var note = document.getElementById('hmContactNote');
-
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
-                if (!form.checkValidity()) {
-                    form.classList.add('was-validated');
-                    var firstInvalid = form.querySelector(':invalid');
-                    if (firstInvalid) firstInvalid.focus();
-                    return;
-                }
-                // Valid — no backend yet, so acknowledge and reset in-place.
-                form.classList.remove('was-validated');
-                form.reset();
-                if (note) {
-                    note.hidden = false;
-                    clearTimeout(note._t);
-                    note._t = setTimeout(function () { note.hidden = true; }, 6000);
-                }
-            });
-        })();
-    </script>
-
-    {{-- Our Journey reels — Swiper slider + click-to-open Instagram --}}
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" crossorigin="anonymous" defer></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var swiperEl = document.querySelector('.hm-reels__swiper');
-            if (!swiperEl || typeof Swiper === 'undefined') return;
-
-            new Swiper(swiperEl, {
-                slidesPerView: 1.2,
-                spaceBetween: 20,
-                loop: true,
-                speed: 1000,
-                grabCursor: true,
-                autoplay: { delay: 4000, disableOnInteraction: false, pauseOnMouseEnter: true },
-                navigation: { prevEl: '#hmReelsPrev', nextEl: '#hmReelsNext' },
-                breakpoints: {
-                    768:  { slidesPerView: 3, spaceBetween: 20 },
-                    1200: { slidesPerView: 5, spaceBetween: 20 }
-                }
-            });
-
-            // Whole card is clickable → open its Instagram Reel in a new tab.
-            // Delegation covers Swiper's loop-cloned slides too.
-            swiperEl.addEventListener('click', function (e) {
-                var reel = e.target.closest('.hm-reel[data-instagram]');
-                if (reel && reel.dataset.instagram) window.open(reel.dataset.instagram, '_blank', 'noopener');
-            });
-            swiperEl.addEventListener('keydown', function (e) {
-                if (e.key !== 'Enter' && e.key !== ' ') return;
-                var reel = e.target.closest('.hm-reel[data-instagram]');
-                if (reel && reel.dataset.instagram) { e.preventDefault(); window.open(reel.dataset.instagram, '_blank', 'noopener'); }
-            });
-        });
-    </script>
 
     {{-- Why Choose HireMinds — pinned stacked-card storytelling (GSAP ScrollTrigger) --}}
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" crossorigin="anonymous" defer></script>

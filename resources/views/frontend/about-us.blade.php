@@ -9,6 +9,8 @@
     {{-- Shared sections (also used on the home page) --}}
     <link rel="stylesheet" href="{{ asset('assets/css/frontend/partners.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/frontend/counters.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/testimonials.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/faq.css') }}">
     {{-- ?v=<file mtime> busts the browser cache whenever about.css changes,
          so edits are never masked by a stale copy. --}}
     <link rel="stylesheet"
@@ -192,21 +194,24 @@
 
     <section class="hm-story" id="our-story" aria-labelledby="hmStoryHeading">
 
-        {{-- Same slow-rotating hero background (reused, not recreated) --}}
-        <div class="hm-story__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/Hero-section/hero-bg.png') }}" alt="" role="presentation" loading="lazy">
-        </div>
-
-        {{-- Decorations --}}
-        <div class="hm-story__deco" aria-hidden="true">
-            <img class="hm-story__deco-dots"    src="{{ asset('assets/images/about-page/component-1.png') }}" alt="">
-            <img class="hm-story__deco-spiral"  src="{{ asset('assets/images/about-page/component-3.png') }}" alt="">
-            <img class="hm-story__deco-strokes" src="{{ asset('assets/images/about-page/component-2.png') }}" alt="">
-            <img class="hm-story__deco-star-a"  src="{{ asset('assets/images/about-page/element-star.png') }}" alt="">
-            <img class="hm-story__deco-star-b"  src="{{ asset('assets/images/about-page/star.png') }}" alt="">
-        </div>
-
         <div class="hm-story__pin" id="hmStoryPin">
+
+            {{-- The background and decorations live INSIDE the pinned element on
+                 purpose. GSAP pins this div, so anything outside it keeps
+                 scrolling while the pin holds — which made the stars drift up
+                 and away during the story. Pinned with it, they stay put. --}}
+            <div class="hm-story__bg" aria-hidden="true">
+                <img src="{{ asset('assets/images/Hero-section/hero-bg.png') }}" alt="" role="presentation" loading="lazy">
+            </div>
+
+            <div class="hm-story__deco" aria-hidden="true">
+                <img class="hm-story__deco-dots"    src="{{ asset('assets/images/about-page/component-1.png') }}" alt="">
+                <img class="hm-story__deco-spiral"  src="{{ asset('assets/images/about-page/component-3.png') }}" alt="">
+                <img class="hm-story__deco-strokes" src="{{ asset('assets/images/about-page/component-2.png') }}" alt="">
+                <img class="hm-story__deco-star-a"  src="{{ asset('assets/images/about-page/element-star.png') }}" alt="">
+                <img class="hm-story__deco-star-b"  src="{{ asset('assets/images/about-page/star.png') }}" alt="">
+            </div>
+
             <div class="container">
                 <h2 class="visually-hidden" id="hmStoryHeading">Our Story</h2>
 
@@ -405,9 +410,94 @@
         </div>
     </section>
 
+    {{-- ======================== OUR LEARNING APPROACH ======================== --}}
+    @php
+        // 'pos' places the pill around the circle, 'tone' picks its pastel.
+        // Each drifts on its own delay so they never move in lockstep.
+        $approachPills = [
+            ['pos' => 'lt', 'tone' => 'blue',   'label' => 'Industry-Aligned Curriculum'],
+            ['pos' => 'lm', 'tone' => 'pink',   'label' => 'Hands-On Projects'],
+            ['pos' => 'lb', 'tone' => 'beige',  'label' => 'Classroom Learning'],
+            ['pos' => 'rt', 'tone' => 'green',  'label' => 'Hands-On Projects'],
+            ['pos' => 'rm', 'tone' => 'yellow', 'label' => 'Career Guidance'],
+            ['pos' => 'rb', 'tone' => 'blue',   'label' => 'Placement Support'],
+        ];
+    @endphp
+
+    <section class="hm-appr" id="our-approach" aria-labelledby="hmApprTitle">
+
+        {{-- Decorations --}}
+        <div class="hm-appr__deco" aria-hidden="true">
+            <img class="hm-appr__ring-deco" src="{{ asset('assets/images/about-page/component-3.png') }}" alt="">
+            <img class="hm-appr__star" src="{{ asset('assets/images/about-page/star.png') }}" alt="">
+            <span class="hm-appr__dots"></span>
+        </div>
+
+        <div class="container hm-appr__container" data-abt-io>
+
+            <header class="hm-appr__head">
+                <span class="hm-appr__label hm-abt-anim">
+                    <span class="hm-appr__label-sq" aria-hidden="true"></span> Our Approach
+                </span>
+                <h2 class="hm-appr__title hm-abt-anim hm-abt-anim--d1" id="hmApprTitle">
+                    Our Learning Approach
+                </h2>
+                <p class="hm-appr__lead hm-abt-anim hm-abt-anim--d2">
+                    From classroom sessions to career guidance, every step of our training is designed to
+                    prepare learners for real-world opportunities.
+                </p>
+            </header>
+
+            {{-- Circular composition: concentric rings + centre photo + orbiting pills --}}
+            <div class="hm-appr__stage hm-abt-anim hm-abt-anim--d3">
+
+                {{-- Three concentric rings — the "learning ecosystem" --}}
+                <span class="hm-appr__ring hm-appr__ring--1" aria-hidden="true"></span>
+                <span class="hm-appr__ring hm-appr__ring--2" aria-hidden="true"></span>
+                <span class="hm-appr__ring hm-appr__ring--3" aria-hidden="true"></span>
+
+                {{-- our-approach.png is a 9:16 portrait — a 1:1 circle can only keep
+                     56% of its height, which sliced her head off. -square is the same
+                     image padded out to 1080->1920 square, with the orange backdrop
+                     extended sideways, so the circle crops nothing. --}}
+                <figure class="hm-appr__figure">
+                    <img src="{{ asset('assets/images/about-page/our-approach-square.png') }}"
+                         alt="A HireMinds Academy learner working through a course on her laptop"
+                         width="420" height="420" loading="lazy">
+                </figure>
+
+                {{-- Pills — a real list, positioned around the circle --}}
+                <ul class="hm-appr__pills">
+                    @foreach ($approachPills as $pill)
+                        <li @class(['hm-appr__pill', 'hm-appr__pill--'.$pill['pos']])>
+                            {{-- Three layers keep the animations apart:
+                                 li = placement · drift = float+orbit · chip = hover --}}
+                            <span class="hm-appr__drift">
+                                <span @class(['hm-appr__chip', 'hm-appr__chip--'.$pill['tone']])
+                                      tabindex="0">{{ $pill['label'] }}</span>
+                            </span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    {{-- ============================ TESTIMONIALS ============================ --}}
+    {{-- Shared with the home page — markup in partials/testimonials.blade.php --}}
+    @include('frontend.partials.testimonials')
+
+    {{-- ================================ FAQ ================================ --}}
+    {{-- Shared with the home page — markup in partials/faq.blade.php --}}
+    @include('frontend.partials.faq')
+
 @endsection
 
 @push('scripts')
+    {{-- Bootstrap bundle — the shared FAQ partial's accordion is built on
+         data-bs-toggle="collapse", so it is dead without this. --}}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
+
     {{-- About hero — entrance animations via IntersectionObserver (no libraries) --}}
     <script>
         (function () {

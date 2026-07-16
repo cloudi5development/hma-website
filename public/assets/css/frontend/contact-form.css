@@ -1,0 +1,301 @@
+/* ==========================================================================
+   Hire Minds Academy - Contact section (office info + enquiry form)
+   Markup: resources/views/frontend/partials/contact-form.blade.php
+   Pushed by any page that includes the partial (home, contact-us).
+   Self-contained: the tokens fall back, so this works without home.css.
+   ========================================================================== */
+
+.hm-contact {
+    position: relative;
+    padding: 100px 0 50px;
+    overflow: hidden;
+}
+.hm-contact__bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 150vmax;
+    height: 150vmax;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+}
+.hm-contact__bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: .14;
+    filter: blur(60px);
+    animation: hm-spin 90s linear infinite;
+    will-change: transform;
+}
+.hm-contact__container {
+    position: relative;
+    z-index: 1;
+}
+
+/* The floating card (warm tint on the left, white on the form side) */
+.hm-contact__card {
+    position: relative;
+    overflow: hidden;
+    padding: 50px;
+    border-radius: 32px;
+    background: linear-gradient(105deg, #FCF1E9 0%, #FDF6F0 24%, #FFFFFF 48%);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, .08);
+}
+.hm-contact__deco { position: absolute; pointer-events: none; z-index: 0; }
+.hm-contact__deco--star {
+    top: 26px; left: 40%; width: 26px; opacity: .55;
+    animation: hm-twinkle 6s ease-in-out infinite;
+}
+.hm-contact__deco--glow {
+    top: -60px; right: -40px; width: 240px; height: 240px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(233, 163, 32, .12), transparent 70%);
+}
+
+/* ------------------------------ Left info ------------------------------ */
+.hm-contact__info { position: relative; z-index: 1; }
+.hm-contact__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.hm-contact__label-icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, #A85A2E, #843D21);
+}
+.hm-contact__label-text {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #843D21;
+}
+.hm-contact__title {
+    max-width: 520px;
+    margin: 0 0 16px;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #222222;
+}
+.hm-contact__desc {
+    max-width: 460px;
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.8;
+    color: #6D6357;
+}
+.hm-contact__subtitle {
+    margin: 40px 0 22px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #23180F;
+}
+.hm-contact__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+.hm-contact__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+.hm-contact__icon {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #843D21;
+    color: #fff;
+    font-size: 17px;
+    transition: transform .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), box-shadow .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+.hm-contact__item:hover .hm-contact__icon {
+    transform: scale(1.08) rotate(-6deg);
+    box-shadow: 0 10px 22px rgba(132, 61, 33, .3);
+}
+.hm-contact__icon-img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+.hm-contact__item-title {
+    margin-bottom: 4px;
+    font-size: 15.5px;
+    font-weight: 700;
+    color: #23180F;
+}
+.hm-contact__item-text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #6D6357;
+    max-width: 340px;
+}
+.hm-contact__item-text a {
+    color: #6D6357;
+    text-decoration: none;
+    transition: color .25s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+.hm-contact__item-text a:hover { color: #843D21; }
+
+/* ------------------------------ Right form ------------------------------ */
+.hm-field { margin-bottom: 18px; }
+.hm-field__label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #23180F;
+}
+.hm-input {
+    height: 56px;
+    padding: 16px;
+    border: 1px solid #ECECEC;
+    border-radius: 12px;
+    font-size: 15px;
+    color: #23180F;
+    background-color: #fff;
+    box-shadow: none;
+    transition: border-color .25s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), box-shadow .25s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+.hm-input::placeholder { color: #A9A9A9; }
+.hm-input:focus {
+    border-color: #843D21;
+    box-shadow: 0 0 0 3px rgba(132, 61, 33, .12);
+    outline: none;
+}
+.hm-textarea {
+    height: 140px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+/* Phone group: fixed +91 code + input inside one bordered box */
+.hm-phone {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    height: 56px;
+    border: 1px solid #ECECEC;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color .25s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), box-shadow .25s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+.hm-phone:focus-within {
+    border-color: #843D21;
+    box-shadow: 0 0 0 3px rgba(132, 61, 33, .12);
+}
+.hm-phone__code {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 14px;
+    color: #6D6357;
+    font-size: 15px;
+    border-right: 1px solid #ECECEC;
+}
+.hm-phone__input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: none !important;
+    border-radius: 0;
+    box-shadow: none !important;
+}
+.hm-phone .invalid-feedback { flex-basis: 100%; }
+
+/* Custom select: gray placeholder while nothing is chosen */
+.hm-select { color: #23180F; }
+.hm-select:invalid { color: #A9A9A9; }
+.hm-select option { color: #23180F; }
+.hm-select:focus { border-color: #843D21; box-shadow: 0 0 0 3px rgba(132, 61, 33, .12); }
+
+/* Show the phone feedback even though the input is nested */
+.was-validated .hm-phone:has(.form-control:invalid) ~ .invalid-feedback,
+.was-validated .hm-phone .form-control:invalid ~ .invalid-feedback { display: block; }
+
+/* Submit button — brand brown pill with the hero's continuous shimmer */
+.hm-contact__submit {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 60px;
+    margin-top: 6px;
+    border: none;
+    border-radius: 999px;
+    background: #843D21;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), box-shadow .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), background .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+.hm-contact__submit .hm-btn__label { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 10px; }
+.hm-contact__submit i { transition: transform .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)); }
+.hm-contact__submit::before {
+    content: "";
+    position: absolute;
+    top: -20%;
+    left: -160%;
+    width: 55%;
+    height: 140%;
+    background: linear-gradient(to right,
+            transparent 44%,
+            rgba(255, 255, 255, .5) 45%,
+            rgba(255, 255, 255, .5) 49%,
+            transparent 50%,
+            transparent 51%,
+            rgba(255, 255, 255, .5) 52%,
+            rgba(255, 255, 255, .5) 56%,
+            transparent 57%);
+    transform: skewX(-20deg);
+    animation: hm-shimmer 6s linear infinite;
+}
+.hm-contact__submit:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 36px rgba(132, 61, 33, .34);
+    background: #6f3319;
+}
+.hm-contact__submit:hover i { transform: translateX(4px); }
+
+.hm-contact__note {
+    margin: 16px 0 0;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: #EAF6E4;
+    color: #2f6b26;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* ------------------------------ Responsive ------------------------------ */
+@media (max-width: 991.98px) {
+    .hm-contact { padding: 70px 0; }
+    .hm-contact__card { padding: 36px 26px; }
+    /* Even warm tint once columns stack */
+    .hm-contact__card { background: linear-gradient(160deg, #FCF1E9 0%, #FFFFFF 40%); }
+    .hm-contact__deco--star { left: auto; right: 24px; }
+}
+@media (max-width: 575.98px) {
+    .hm-contact { padding: 56px 0; }
+    .hm-contact__card { padding: 28px 18px; }
+}
+
+/* Reduced motion — hold the rotating background + shimmer still */
+@media (prefers-reduced-motion: reduce) {
+    .hm-contact__bg img,
+    .hm-contact__deco--star,
+    .hm-contact__submit::before { animation: none !important; }
+}

@@ -1,0 +1,227 @@
+/* ==========================================================================
+   Hire Minds Academy — FAQ (shared section)
+   Markup: resources/views/frontend/partials/faq.blade.php
+   Pushed by any page that includes the partial (home, about, …).
+   Self-contained: tokens fall back, so this works without home.css.
+   ========================================================================== */
+/* ============================== FAQ ============================== */
+.hm-faq {
+    position: relative;
+    padding: 100px 0 50px;
+    overflow: hidden;
+}
+.hm-faq__bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 150vmax;
+    height: 150vmax;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+}
+.hm-faq__bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: .16;
+    filter: blur(60px);
+    animation: hm-spin 90s linear infinite;
+    will-change: transform;
+}
+/* Soft warm overlay on top of the rotating background */
+.hm-faq__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(135deg, rgba(255, 248, 225, .75), rgba(255, 255, 255, .65));
+    pointer-events: none;
+}
+.hm-faq__container {
+    position: relative;
+    z-index: 2;
+}
+
+/* ------------------------------ Left ------------------------------ */
+.hm-faq__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.hm-faq__label-icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, var(--hm-yellow, #F7B500), var(--hm-gold-dark, #C6851A));
+}
+.hm-faq__label-text {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #843D21;
+}
+.hm-faq__title {
+    margin: 0 0 16px;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #222222;
+}
+.hm-faq__desc {
+    max-width: 480px;
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.8;
+    color: #6D6357;
+}
+
+/* Illustration (person + blob baked into the image) with decorations */
+.hm-faq__visual {
+    position: relative;
+    max-width: 440px;
+    margin-top: 34px;
+}
+.hm-faq__img {
+    position: relative;
+    z-index: 2;
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    /* animation: hm-faq-float 8s ease-in-out infinite;
+    will-change: transform; */
+}
+@keyframes hm-faq-float {
+    0%, 100% { transform: translateY(-8px); }
+    50%      { transform: translateY(8px); }
+}
+.hm-faq__deco {
+    position: absolute;
+    z-index: 1;
+    pointer-events: none;
+}
+.hm-faq__deco--star1 {
+    top: -8%;
+    left: 4%;
+    width: 34px;
+    animation: hm-twinkle 5s ease-in-out infinite;
+}
+.hm-faq__deco--star2 {
+    bottom: -4%;
+    right: 8%;
+    width: 26px;
+    animation: hm-twinkle 6s ease-in-out infinite;
+    animation-delay: -2s;
+}
+.hm-faq__deco--dots {
+    top: -16%;
+    right: -8%;
+    width: 120px;
+    opacity: .7;
+    animation: hm-tst-float 10s ease-in-out infinite;
+}
+.hm-faq__deco--stripe {
+    bottom: -8%;
+    left: -10%;
+    width: 118px;
+    height: 118px;
+    border-radius: 50%;
+    background: repeating-linear-gradient(45deg, transparent 0 6px, rgba(220, 150, 40, .3) 6px 7px);
+    -webkit-mask-image: radial-gradient(circle at 0 100%, #000 60%, transparent 62%);
+            mask-image: radial-gradient(circle at 0 100%, #000 60%, transparent 62%);
+    opacity: .5;
+    animation: hm-tst-float 12s ease-in-out infinite;
+}
+
+/* ------------------------------ Accordion ------------------------------ */
+.hm-faq__item {
+    background: #fff;
+    border: none;
+    border-radius: 20px;
+    margin-bottom: 18px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(42, 29, 20, .06);
+    transition: transform .35s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), box-shadow .35s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), background .35s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+.hm-faq__item:last-child { margin-bottom: 0; }
+/* Lift a closed item on hover */
+.hm-faq__item:has(.accordion-button.collapsed):hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(180, 140, 40, .14);
+}
+/* Expanded item — soft cream + stronger shadow */
+.hm-faq__item:has(.accordion-button:not(.collapsed)) {
+    box-shadow: 0 20px 46px rgba(180, 140, 40, .18);
+}
+
+.hm-faq__accordion .accordion-button {
+    padding: 20px 24px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #23180F;
+    background: transparent;
+    border-radius: 20px;
+    box-shadow: none;
+}
+.hm-faq__accordion .accordion-button:focus {
+    box-shadow: none;
+    border-color: transparent;
+}
+/* Cream fill when open (button + revealed body), robust without :has.
+   The bottom corners must go square: the button sits directly on top of the
+   body, so rounding them lets the item's white background show through as a
+   notch at each end of the seam. The item's own radius + overflow: hidden
+   still shapes the outer corners. */
+.hm-faq__accordion .accordion-button:not(.collapsed) {
+    color: #23180F;
+    background: #FFF7D6;
+    border-radius: 20px 20px 0 0;
+    box-shadow: none;
+}
+.hm-faq__accordion .accordion-collapse.show {
+    background: #FFF7D6;
+}
+
+/* Font Awesome chevron instead of Bootstrap's default SVG */
+.hm-faq__accordion .accordion-button::after {
+    content: "\f078";              /* chevron-down */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    background-image: none;
+    width: auto;
+    height: auto;
+    font-size: .85rem;
+    color: #843D21;
+    transition: transform .35s ease;
+}
+.hm-faq__accordion .accordion-button:not(.collapsed)::after {
+    transform: rotate(180deg);     /* chevron-up */
+}
+.hm-faq__accordion .accordion-body {
+    padding: 0 24px 22px;
+    font-size: 14.5px;
+    line-height: 1.8;
+    color: #6B6357;
+}
+
+/* ------------------------------ Responsive ------------------------------ */
+@media (max-width: 991.98px) {
+    .hm-faq { padding: 70px 0; }
+    .hm-faq__desc { max-width: 100%; }
+    .hm-faq__visual { margin: 40px auto 8px; }
+}
+@media (max-width: 575.98px) {
+    .hm-faq { padding: 56px 0; }
+    .hm-faq__accordion .accordion-button { padding: 16px 18px; font-size: 15.5px; }
+    .hm-faq__accordion .accordion-body { padding: 0 18px 18px; }
+}
+
+/* Reduced motion — hold background/illustration/decor still */
+@media (prefers-reduced-motion: reduce) {
+    .hm-faq__bg img,
+    .hm-faq__img,
+    .hm-faq__deco { animation: none !important; }
+}
+

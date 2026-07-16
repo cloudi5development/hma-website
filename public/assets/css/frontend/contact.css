@@ -1,0 +1,347 @@
+/* ==========================================================================
+   Hire Minds Academy — Contact page
+   Markup: resources/views/frontend/contact-us.blade.php
+   Loaded only on /contact-us, so it is safe to reshape #main-content here and
+   to override the shared contact section's page-level spacing near the bottom.
+
+   The contact card + enquiry form itself is NOT styled here — it is the shared
+   component in contact-form.css (partials/contact-form.blade.php), and the FAQ
+   is faq.css. This file holds only what is unique to this page: the banner, the
+   map, and the handful of overrides that fit the shared section to this layout.
+   ========================================================================== */
+
+/* The shared layout centres #main-content with flex and caps its height; this
+   page needs the full canvas, exactly like the About and Blog pages. */
+#main-content {
+    position: relative;
+    display: block;
+    min-height: auto;
+    padding: 0;
+    text-align: left;
+    background: #FFFDFB;
+}
+
+/* Page-wide aurora — the identical block the home, about and blog pages use, so
+   the contact page carries the same continuous animated background (blue / pink
+   / yellow / violet at very low opacity). Fixed, so it never boxes a section. */
+#main-content::before {
+    content: "";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 150vmax;
+    height: 150vmax;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 50% 30%, rgba(150, 120, 255, .30), transparent 26%),
+        radial-gradient(circle at 70% 50%, rgba(255, 205, 95, .30), transparent 26%),
+        radial-gradient(circle at 50% 70%, rgba(255, 150, 195, .30), transparent 26%),
+        radial-gradient(circle at 30% 50%, rgba(120, 178, 255, .30), transparent 26%);
+    filter: blur(64px);
+    opacity: .55;
+    animation: hm-spin 55s linear infinite;
+}
+
+@keyframes hm-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* ============================== PAGE SHELL ============================== */
+.hm-cnt {
+    position: relative;
+    z-index: 1;                 /* above the aurora */
+    background: transparent;
+    /* 70px of breathing room as specced, offset clear of the floating navbar
+       (top: 22px + ~72px tall = 94px) — a bare 70px would tuck the banner
+       underneath it. */
+    padding-top: calc(94px + 70px);
+}
+
+/* Pin the container to 1320px, overriding the global .container (style.css caps
+   it at 1140). The horizontal padding is a real side gutter — not just the
+   max-width centring — so content never hugs the screen edge when the viewport
+   is at or below 1320 (a 1920 monitor at 150% Windows scaling renders ~1280 CSS
+   px, where a bare max-width would leave no margin at all). */
+.hm-cnt .container,
+.hm-cnt-map .container,
+.hm-contact .container {
+    max-width: 1320px;
+    margin-inline: auto;
+    padding-inline: clamp(20px, 3.5vw, 48px);
+}
+
+/* ================================= BANNER ================================= */
+.hm-cnt__banner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 220px;
+    padding: 0 60px;
+    border-radius: 24px;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+/* The contact icons are baked into the photograph, so the banner is a single
+   image — nothing is overlaid on the right. */
+.hm-cnt__banner-img {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Dark scrim so the white title always clears the photo underneath */
+.hm-cnt__banner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: rgba(0, 0, 0, .45);
+}
+
+.hm-cnt__banner-title {
+    margin: 0 0 10px;
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: .01em;
+    color: #FFFFFF;
+    text-transform: uppercase;
+}
+
+.hm-cnt__crumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+    color: rgba(255, 255, 255, .8);
+}
+
+.hm-cnt__crumbs a {
+    color: inherit;
+    text-decoration: none;
+    transition: opacity .25s ease;
+}
+
+.hm-cnt__crumbs a:hover,
+.hm-cnt__crumbs a:focus-visible { opacity: .7; }
+
+.hm-cnt__crumb-sep { opacity: .7; }
+
+.hm-cnt__crumbs li[aria-current="page"] { color: #FFFFFF; }
+
+/* ====================== SHARED CONTACT SECTION FITS ======================
+   The section is the shared component; on the home page it opens a chapter and
+   carries 100px of lead-in plus its own rotating backdrop. Here it sits right
+   under the banner, and the page-wide aurora is already behind it — so drop
+   both. contact.css loads after contact-form.css, so these win.               */
+.hm-contact {
+    padding: 30px 0 0;
+    overflow: visible;          /* nothing to clip once the local bg is gone */
+}
+
+.hm-contact__bg { display: none; }
+
+/* Card hover — a subtle lift, matching the map card below it. */
+.hm-contact__card {
+    transition:
+        transform .4s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)),
+        box-shadow .4s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+
+.hm-contact__card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 28px 60px rgba(42, 29, 20, .16);
+}
+
+/* ================================== MAP ================================== */
+.hm-cnt-map {
+    position: relative;
+    z-index: 1;
+    padding: 40px 0 0;
+    background: transparent;
+}
+
+.hm-cnt-map__card {
+    position: relative;
+    border-radius: 28px;
+    overflow: hidden;
+    background: #FFFFFF;
+    box-shadow: 0 10px 30px rgba(42, 29, 20, .08);
+    transition:
+        transform .4s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)),
+        box-shadow .4s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+
+.hm-cnt-map__card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 24px 54px rgba(42, 29, 20, .14);
+}
+
+/* The iframe is the card's only content, so the card's radius does the
+   rounding — hence overflow: hidden above rather than a radius here. */
+.hm-cnt-map__frame {
+    display: block;
+    width: 100%;
+    height: 520px;
+    border: 0;
+}
+
+/* ---- Branch switch — floats over the top-left of the map ---- */
+.hm-cnt-map__switch {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.hm-cnt-map__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #843D21;
+    background: #FFFFFF;
+    border: 1px solid #843D21;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(42, 29, 20, .12);
+    transition:
+        transform .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)),
+        background .3s ease,
+        color .3s ease,
+        box-shadow .3s ease;
+}
+
+.hm-cnt-map__btn:hover { transform: translateY(-2px); }
+
+/* Selected branch — brown fill, white label */
+.hm-cnt-map__btn[aria-pressed="true"] {
+    color: #FFFFFF;
+    background: #843D21;
+    box-shadow: 0 10px 24px rgba(132, 61, 33, .34);
+}
+
+/* The pin ships white, so it only reads on the filled (selected) button. */
+.hm-cnt-map__btn-icon {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+    opacity: 0;
+    transition: opacity .3s ease;
+}
+
+.hm-cnt-map__btn[aria-pressed="true"] .hm-cnt-map__btn-icon { opacity: 1; }
+
+/* ---- Layers affordance — decorative, mirrors the design's top-right chip ---- */
+.hm-cnt-map__layers {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: #FFFFFF;
+    border: 0;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(42, 29, 20, .16);
+    transition: transform .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+
+.hm-cnt-map__layers:hover { transform: scale(1.08); }
+
+.hm-cnt-map__layers img {
+    width: 17px;
+    height: 17px;
+    object-fit: contain;
+}
+
+/* ============================ SHARED FAQ FITS ============================
+   faq.css opens the section with 100px of lead-in for the home page; here it
+   follows the map, so it only needs the standard rhythm. contact.css loads
+   after faq.css, so this wins.                                               */
+.hm-faq {
+    padding: 70px 0 100px;
+}
+
+/* =============================== DECOR =============================== */
+.hm-cnt__deco {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    /* Only transform animates — never top/left. */
+    animation: hm-cnt-float 6s ease-in-out infinite alternate;
+}
+
+.hm-cnt__deco--star-a { top: 12%; right: 4%;  width: 26px; }
+.hm-cnt__deco--star-b { bottom: 8%; left: 3%; width: 20px; animation-delay: -3s; }
+
+@keyframes hm-cnt-float {
+    from { transform: translateY(-8px); }
+    to   { transform: translateY(8px); }
+}
+
+/* ============================== RESPONSIVE ============================== */
+@media (max-width: 991.98px) {
+    .hm-cnt { padding-top: calc(94px + 48px); }
+    .hm-cnt__banner { min-height: 190px; padding: 0 36px; }
+    .hm-cnt__banner-title { font-size: 34px; }
+
+    .hm-cnt-map__frame { height: 420px; }
+    .hm-faq { padding: 56px 0 80px; }
+}
+
+@media (max-width: 767.98px) {
+    .hm-cnt { padding-top: calc(94px + 36px); }
+    .hm-cnt__banner { min-height: 160px; padding: 0 24px; border-radius: 18px; }
+    .hm-cnt__banner-title { font-size: 26px; }
+
+    .hm-cnt-map__card { border-radius: 20px; }
+    .hm-cnt-map__frame { height: 340px; }
+
+    /* Branch buttons centre and sit above the map rather than over it, so they
+       never cover the map on a small screen. */
+    .hm-cnt-map__switch {
+        position: static;
+        justify-content: center;
+        padding: 14px 14px 0;
+    }
+
+    .hm-cnt-map__layers { display: none; }
+
+    .hm-cnt__deco { display: none; }
+}
+
+/* Reduced motion — hold the aurora and the float, keep every state. */
+@media (prefers-reduced-motion: reduce) {
+    #main-content::before,
+    .hm-cnt__deco { animation: none; }
+
+    .hm-contact__card,
+    .hm-cnt-map__card,
+    .hm-cnt-map__btn,
+    .hm-cnt-map__layers { transition: none; }
+
+    .hm-contact__card:hover,
+    .hm-cnt-map__card:hover,
+    .hm-cnt-map__btn:hover,
+    .hm-cnt-map__layers:hover { transform: none; }
+}

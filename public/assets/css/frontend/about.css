@@ -746,7 +746,10 @@
 .hm-story__deco-star-a  { top: 8%;    left: 30%; width: 32px;  animation-duration: 8s;   animation-delay: -2s; }
 .hm-story__deco-star-b  { bottom: 16%; left: 24%; width: 28px; animation-duration: 9.5s; animation-delay: -4s; }
 
-/* ------------------------------ Pin shell ------------------------------ */
+/* ------------------------------ Pin shell ------------------------------
+   The background and decorations are nested inside this element so GSAP pins
+   them along with the copy — anything left outside keeps scrolling while the
+   pin holds, which sent the stars drifting up and off screen mid-story.       */
 .hm-story__pin {
     position: relative;
     z-index: 2;
@@ -754,6 +757,14 @@
     display: flex;
     align-items: center;
     padding: 64px 0;
+}
+
+/* The pin's z-index makes it a stacking context, so the deco's z-index:1 is now
+   scoped to it. An unpositioned .container paints below any positioned child,
+   which would drop the story text behind the decorations — lift it explicitly. */
+.hm-story__pin > .container {
+    position: relative;
+    z-index: 2;
 }
 
 /* ------------------------------- Layout -------------------------------
@@ -1551,7 +1562,7 @@
 
 .hm-appr__title {
     margin: 0 0 18px;
-    font-size: clamp(30px, 3.6vw, 48px);
+    font-size:34px;
     font-weight: 700;
     line-height: 1.2;
     color: #1D1D1F;
@@ -1560,16 +1571,18 @@
 .hm-appr__lead {
     max-width: 700px;
     margin: 0 auto;
-    font-size: 18px;
+    font-size: 16px;
     line-height: 1.8;
     color: #666;
 }
 
 /* ------------------------------- Stage ------------------------------- */
+/* --hm-appr-r is the circle's radius; every pill offset is derived from it. */
 .hm-appr__stage {
+    --hm-appr-r: 210px;
     position: relative;
     height: 560px;
-    max-width: 1000px;
+    max-width: 1100px;      /* room for the outermost pills at -1.95r / +1.83r */
     margin: 0 auto;
 }
 
@@ -1632,18 +1645,27 @@
     list-style: none;
 }
 
-/* li = placement only (never animated) */
+/* li = placement only (never animated).
+   Anchored from the circle's centre, not the stage edges: each margin pair is
+   the design's own offset scaled to our 210px radius. Centre-anchoring matters
+   because the pills have different text lengths — positioning by left/right
+   edge would let each one's centre drift off the intended point. */
 .hm-appr__pill {
     position: absolute;
-    transform: translateY(-50%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
-.hm-appr__pill--lt { top: 25%; left: 8%; }
-.hm-appr__pill--lm { top: 48%; left: 1%; }
-.hm-appr__pill--lb { top: 73%; left: 10%; }
-.hm-appr__pill--rt { top: 25%; right: 8%; }
-.hm-appr__pill--rm { top: 48%; right: 1%; }
-.hm-appr__pill--rb { top: 73%; right: 8%; }
+/* Offsets are multiples of the circle's radius (--hm-appr-r), taken straight
+   from the design. Shrink the circle on tablet and the whole constellation
+   rescales with it — no second set of numbers to keep in sync. */
+.hm-appr__pill--lt { margin-left: calc(-1.50 * var(--hm-appr-r)); margin-top: calc(-0.77 * var(--hm-appr-r)); }
+.hm-appr__pill--lm { margin-left: calc(-1.95 * var(--hm-appr-r)); margin-top: calc( 0.04 * var(--hm-appr-r)); }
+.hm-appr__pill--lb { margin-left: calc(-1.41 * var(--hm-appr-r)); margin-top: calc( 1.01 * var(--hm-appr-r)); }
+.hm-appr__pill--rt { margin-left: calc( 1.42 * var(--hm-appr-r)); margin-top: calc(-0.78 * var(--hm-appr-r)); }
+.hm-appr__pill--rm { margin-left: calc( 1.83 * var(--hm-appr-r)); margin-top: calc( 0.04 * var(--hm-appr-r)); }
+.hm-appr__pill--rb { margin-left: calc( 1.42 * var(--hm-appr-r)); margin-top: calc( 1.01 * var(--hm-appr-r)); }
 
 /* drift = the float + faint orbit, so it never fights the hover transform */
 .hm-appr__drift {
@@ -1724,16 +1746,17 @@
 /* Tablet — smaller circle, pills pulled in proportionally */
 @media (max-width: 991.98px) {
     .hm-appr { padding: 90px 0; }
-    .hm-appr__stage { height: 460px; max-width: 720px; }
+    /* Only the radius changes — every pill offset follows it automatically. */
+    .hm-appr__stage {
+        --hm-appr-r: 160px;
+        height: 460px;
+        max-width: 860px;
+    }
     .hm-appr__figure { width: 320px; height: 320px; }
     .hm-appr__ring--1 { width: 380px; height: 380px; }
     .hm-appr__ring--2 { width: 510px; height: 510px; }
     .hm-appr__ring--3 { width: 640px; height: 640px; }
     .hm-appr__chip { height: 48px; line-height: 48px; padding: 0 18px; font-size: 14px; }
-    .hm-appr__pill--lt, .hm-appr__pill--lb { left: 0; }
-    .hm-appr__pill--rt, .hm-appr__pill--rb { right: 0; }
-    .hm-appr__pill--lm { left: -2%; }
-    .hm-appr__pill--rm { right: -2%; }
 }
 
 /* Mobile — image first, then the pills in a plain 2-column grid */
@@ -1768,9 +1791,12 @@
         width: 100%;
     }
 
+    /* margin MUST be reset too — the orbit offsets are margins, and they would
+       otherwise drag each pill out of its grid cell. */
     .hm-appr__pill {
         position: static;
         transform: none;
+        margin: 0;
         display: flex;
         justify-content: center;
     }
@@ -1795,4 +1821,11 @@
     .hm-appr__figure,
     .hm-appr__chip { transition: none !important; }
 }
+
+
+
+
+
+
+
 

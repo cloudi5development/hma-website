@@ -33,4 +33,18 @@ class HomeController extends Controller
     {
         return view('frontend.testimonials');
     }
+    public function courses()
+    {
+        return view('frontend.courses');
+    }
+
+    /**
+     * The slug is captured so the card links already point at a real course URL.
+     * Nothing looks it up yet — swap in the Course model when it lands and the
+     * view keeps working, since it only reads the $course array's keys.
+     */
+    public function courseDetails(string $slug)
+    {
+        return view('frontend.course-details', compact('slug'));
+    }
 }

@@ -1,0 +1,531 @@
+/* ==========================================================================
+   Hire Minds Academy - Courses
+
+   Two things live here:
+     1. The COURSE CARD - a shared component (partials/course-card.blade.php)
+        that the home page and the courses page both render. Lifted out of
+        home.css so a page can use the card without pulling in all of home.
+     2. The COURSES PAGE itself (banner, toolbar, grid shell).
+
+   Because this file is shared, the page-shell rules hang off
+   :has(.hm-crs-page) - a bare #main-content rule here would also fire on
+   the home page and fight the aurora it already defines. The gate means
+   they simply never match elsewhere, whatever order the sheets load in.
+   (:has() is already load-bearing in faq.css, so the baseline supports it.)
+   ========================================================================== */
+
+/* ==========================================================================
+   COURSE CARD (shared - home + courses page)
+   ========================================================================== */
+/* ------------------------------ Course card ------------------------------ */
+.hm-course {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 14px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 12px 34px rgba(42, 29, 20, .07);
+    transition: transform .35s ease, box-shadow .35s ease;
+}
+
+.hm-course:hover {
+    transform: translateY(-12px);
+    box-shadow: 0 30px 60px rgba(42, 29, 20, .16);
+}
+
+/* Inset thumbnail, rounded on all sides, landscape crop — like the reference */
+.hm-course__thumb {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    margin-bottom: 14px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.hm-course__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .5s ease;
+}
+
+.hm-course:hover .hm-course__thumb img {
+    transform: scale(1.05);
+}
+
+.hm-course__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    padding: 0 2px;
+}
+
+.hm-course__tags {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.hm-course__badge {
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: #FFF4B8;
+    color: #843D21;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+.hm-course__rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #23180F;
+}
+
+.hm-course__rating img {
+    width: 15px;
+    height: 15px;
+    object-fit: contain;
+}
+
+.hm-course__title {
+    margin: 0 0 14px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #1E1E1E;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.hm-course__meta {
+    list-style: none;
+    margin: 0 0 20px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Row 1 keeps "3 months" + "On-Campus Learning" together; row 2 has the rest */
+.hm-course__meta-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.hm-course__meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    color: #6D6357;
+    white-space: nowrap;
+}
+
+.hm-course__meta-item img {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+}
+
+.hm-course__meta-item i {
+    width: 14px;
+    font-size: 12px;
+    color: #A79C90;
+    text-align: center;
+}
+
+/* CTA — golden pill with the hero's continuous shimmer */
+.hm-course__btn {
+    position: relative;
+    overflow: hidden;
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 14px 22px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #F8B01C 0%, #FECA45 100%);
+    ;
+    color: #23180F;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+
+}
+
+.hm-course__btn span,
+.hm-course__btn i {
+    position: relative;
+    z-index: 1;
+}
+
+.hm-course__btn i {
+    font-size: .85rem;
+    transition: transform .3s ease;
+}
+
+.hm-course:hover .hm-course__btn,
+.hm-course__btn:hover {
+    background: linear-gradient(135deg, var(--hm-gold), var(--hm-gold-dark));
+}
+
+.hm-course__btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 14px 30px rgba(233, 163, 32, .42);
+}
+
+.hm-course__btn:hover i {
+    transform: translateX(4px);
+}
+
+/* ---- Responsive (lifted out of home.css's shared course blocks) ---- */
+@media (max-width: 575.98px) {
+    .hm-course__title { font-size: 20px; }
+}
+
+/* Reduced motion — hold the button shimmer still */
+@media (prefers-reduced-motion: reduce) {
+    .hm-course__btn::before { animation: none !important; }
+}
+
+/* ==========================================================================
+   COURSES LISTING PAGE
+   Markup: resources/views/frontend/courses.blade.php
+   Everything above is the shared card; everything below is this page only,
+   gated behind :has(.hm-crs-page) — see the note at the top of this file.
+   ========================================================================== */
+
+/* The shared layout centres #main-content with flex and caps its height; this
+   page needs the full canvas, exactly like the About / Blog / Contact pages. */
+#main-content:has(.hm-crs-page) {
+    position: relative;
+    display: block;
+    min-height: auto;
+    padding: 0;
+    text-align: left;
+    background: #FFFDFB;
+}
+
+/* Page-wide aurora — the identical block the rest of the site uses, so this
+   page carries the same continuous animated background. Fixed, so it never
+   boxes a section. */
+#main-content:has(.hm-crs-page)::before {
+    content: "";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 150vmax;
+    height: 150vmax;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 50% 30%, rgba(150, 120, 255, .30), transparent 26%),
+        radial-gradient(circle at 70% 50%, rgba(255, 205, 95, .30), transparent 26%),
+        radial-gradient(circle at 50% 70%, rgba(255, 150, 195, .30), transparent 26%),
+        radial-gradient(circle at 30% 50%, rgba(120, 178, 255, .30), transparent 26%);
+    filter: blur(64px);
+    opacity: .55;
+    animation: hm-crs-spin 55s linear infinite;
+}
+
+/* Named apart from the hm-spin in home.css: this file loads alongside it, and
+   two @keyframes of the same name would have the last one win for both. */
+@keyframes hm-crs-spin {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ============================== PAGE SHELL ============================== */
+.hm-crs-page {
+    position: relative;
+    z-index: 1;                 /* above the aurora */
+    background: transparent;
+    /* 70px of breathing room as specced, offset clear of the floating navbar
+       (top: 22px + ~72px tall = 94px) — a bare 70px would tuck the banner
+       underneath it. */
+    padding: calc(94px + 70px) 0 100px;
+}
+
+/* Pin the container to 1320px, overriding the global .container (style.css
+   caps it at 1140). The horizontal padding is a real side gutter — not just
+   max-width centring — so content never hugs the screen edge when the viewport
+   is at or below 1320 (a 1920 monitor at 150% Windows scaling renders ~1280
+   CSS px, where a bare max-width would leave no margin at all). */
+.hm-crs-page .container {
+    max-width: 1320px;
+    margin-inline: auto;
+    padding-inline: clamp(20px, 3.5vw, 48px);
+}
+
+/* ================================= BANNER =================================
+   The hero cut-out is bottom-aligned and taller than the banner, so the banner
+   must not clip it — hence no overflow: hidden here. The dotted panel is given
+   its own corner radius instead. */
+.hm-crs-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 260px;
+    padding: 34px 60px;
+    border-radius: 28px;
+    background: linear-gradient(135deg, #FFEFB8, #FFD972);
+    isolation: isolate;
+}
+
+/* ---- Decorations ---- */
+.hm-crs-hero__deco {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    /* Only transform animates — never top/left. */
+    animation: hm-crs-float 6s ease-in-out infinite alternate;
+}
+
+.hm-crs-hero__deco--dots {
+    top: 0;
+    right: 0;
+    width: 150px;
+    opacity: .55;
+    animation: none;                 /* the dotted panel stays put */
+    border-top-right-radius: 28px;   /* follows the banner corner it sits in */
+}
+
+.hm-crs-hero__deco--c1 { top: 16%;    right: 34%; width: 34px; opacity: .85; }
+.hm-crs-hero__deco--c2 { bottom: 14%; right: 44%; width: 22px; opacity: .7;  animation-delay: -2s; }
+.hm-crs-hero__deco--c3 { top: 46%;    left: 52%;  width: 46px; opacity: .5;  animation-delay: -4s; }
+
+@keyframes hm-crs-float {
+    from { transform: translateY(-8px); }
+    to   { transform: translateY(8px); }
+}
+
+/* ---- Left copy ---- */
+.hm-crs-hero__body {
+    position: relative;
+    z-index: 2;
+    max-width: 560px;
+}
+
+.hm-crs-hero__crumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 14px;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    color: #843D21;
+}
+
+.hm-crs-hero__crumbs a {
+    color: inherit;
+    text-decoration: none;
+    transition: opacity .25s ease;
+}
+
+.hm-crs-hero__crumbs a:hover,
+.hm-crs-hero__crumbs a:focus-visible { opacity: .7; }
+
+.hm-crs-hero__crumb-sep { opacity: .6; }
+
+.hm-crs-hero__title {
+    margin: 0 0 14px;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #23180F;
+}
+
+.hm-crs-hero__desc {
+    max-width: 520px;
+    margin: 0 0 22px;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #555555;
+}
+
+/* ---- CTA — the same brown pill the rest of the site uses ---- */
+.hm-crs-hero__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #FFFFFF;
+    text-decoration: none;
+    background: #843D21;
+    border-radius: 999px;
+    box-shadow: 0 10px 24px rgba(132, 61, 33, .28);
+    transition:
+        transform .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)),
+        box-shadow .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+
+.hm-crs-hero__cta:hover,
+.hm-crs-hero__cta:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 32px rgba(132, 61, 33, .36);
+}
+
+.hm-crs-hero__cta i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+    color: #843D21;
+    background: #FFFFFF;
+    border-radius: 50%;
+    transition: transform .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+
+.hm-crs-hero__cta:hover i { transform: translateX(3px); }
+
+/* ---- Right cut-out ----
+   Bottom-aligned and allowed to sit against the banner edge, as designed.
+   object-fit: contain keeps the figure undistorted. */
+.hm-crs-hero__figure {
+    position: absolute;
+    right: 26px;
+    bottom: 0;
+    z-index: 1;
+    width: 46%;
+    max-width: 520px;
+    margin: 0;
+    pointer-events: none;
+}
+
+.hm-crs-hero__figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 300px;
+    object-fit: contain;
+    object-position: bottom right;
+}
+
+/* ================================ TOOLBAR ================================ */
+.hm-crs-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin: 40px 0 28px;
+}
+
+.hm-crs-bar__search {
+    position: relative;
+    width: 300px;
+}
+
+.hm-crs-bar__input {
+    width: 100%;
+    height: 42px;
+    padding: 0 44px 0 16px;
+    font-size: 14px;
+    color: #23180F;
+    background: #FFFFFF;
+    border: 1px solid #E4E4E7;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color .25s ease, box-shadow .25s ease;
+}
+
+.hm-crs-bar__input::placeholder { color: #9A9A9A; }
+
+.hm-crs-bar__input:focus {
+    border-color: var(--hm-gold, #E9A320);
+    box-shadow: 0 0 0 3px rgba(233, 163, 32, .14);
+}
+
+/* Decorative — the input already carries the accessible label */
+.hm-crs-bar__icon {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    width: 18px;
+    height: 18px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    opacity: .55;
+}
+
+.hm-crs-bar__count {
+    margin: 0;
+    font-size: 14px;
+    color: #6B7280;
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* ================================= GRID ================================= */
+.hm-crs-grid {
+    --bs-gutter-x: 28px;
+    --bs-gutter-y: 28px;
+}
+
+/* ============================== RESPONSIVE ============================== */
+@media (max-width: 1199.98px) {
+    .hm-crs-hero__title { font-size: 30px; }
+    .hm-crs-hero__figure { width: 42%; }
+}
+
+@media (max-width: 991.98px) {
+    .hm-crs-page { padding: calc(94px + 48px) 0 72px; }
+
+    /* Banner stacks: copy first, cut-out beneath, everything centred. */
+    .hm-crs-hero {
+        flex-direction: column;
+        text-align: center;
+        padding: 30px 26px 0;
+    }
+
+    .hm-crs-hero__body { max-width: 100%; }
+    .hm-crs-hero__crumbs { justify-content: center; }
+    .hm-crs-hero__desc { margin-inline: auto; }
+
+    .hm-crs-hero__figure {
+        position: static;
+        width: 100%;
+        max-width: 420px;
+        margin: 18px auto 0;
+    }
+
+    .hm-crs-hero__figure img { max-height: 240px; object-position: bottom center; }
+
+    .hm-crs-hero__deco--c1,
+    .hm-crs-hero__deco--c2,
+    .hm-crs-hero__deco--c3 { display: none; }
+}
+
+@media (max-width: 767.98px) {
+    .hm-crs-page { padding: calc(94px + 36px) 0 64px; }
+    .hm-crs-hero { border-radius: 20px; }
+    .hm-crs-hero__title { font-size: 24px; }
+
+    .hm-crs-bar { flex-wrap: wrap; }
+    .hm-crs-bar__search { width: 100%; }
+    .hm-crs-bar__count { width: 100%; text-align: left; }
+}
+
+/* Reduced motion — hold the aurora and the float, keep every state. */
+@media (prefers-reduced-motion: reduce) {
+    #main-content:has(.hm-crs-page)::before,
+    .hm-crs-hero__deco { animation: none; }
+
+    .hm-crs-hero__cta { transition: none; }
+    .hm-crs-hero__cta:hover { transform: none; }
+}

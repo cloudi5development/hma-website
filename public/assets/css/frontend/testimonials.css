@@ -1,0 +1,517 @@
+/* ==========================================================================
+   Hire Minds Academy — Testimonials (shared section)
+   Markup: resources/views/frontend/partials/testimonials.blade.php
+   Pushed by any page that includes the partial (home, about, …).
+   Self-contained: tokens fall back, so this works without home.css.
+   ========================================================================== */
+/* ============================== TESTIMONIALS ============================== */
+.hm-tst {
+    position: relative;
+    padding: 100px 0 50px;
+    overflow: hidden;
+}
+.hm-tst__bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 150vmax;
+    height: 150vmax;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+}
+.hm-tst__bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: .12;
+    filter: blur(60px);
+    animation: hm-spin 90s linear infinite;
+    will-change: transform;
+}
+
+/* Soft yellow rounded panel (slightly translucent so the bg shows faintly through) */
+.hm-tst__panel {
+    position: relative;
+    z-index: 1;
+    border-radius: 36px;
+    padding: 70px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #FFF9DD 0%, #FFF8E7 55%, #FFFCEB 100%);
+    box-shadow: 0 30px 80px rgba(180, 140, 40, .12);
+}
+
+/* Decorative graphics — striped circles + dotted patterns, gently floating */
+.hm-tst__deco {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    opacity: .5;
+    animation: hm-tst-float 11s ease-in-out infinite;
+}
+.hm-tst__deco--stripe-tl {
+    top: 34px; left: 34px; width: 92px; height: 92px; border-radius: 50%;
+    background: repeating-linear-gradient(45deg, transparent 0 5px, rgba(220, 150, 40, .28) 5px 6px);
+}
+.hm-tst__deco--dots-tr {
+    top: 54px; right: 48px; width: 150px; height: 120px;
+    background: radial-gradient(rgba(230, 150, 40, .55) 1.4px, transparent 1.7px) 0 0 / 14px 14px;
+    -webkit-mask-image: linear-gradient(135deg, #000, transparent);
+            mask-image: linear-gradient(135deg, #000, transparent);
+    animation-delay: -3s;
+}
+.hm-tst__deco--dots-bl {
+    bottom: 44px; left: 44px; width: 160px; height: 130px;
+    background: radial-gradient(rgba(230, 150, 40, .55) 1.4px, transparent 1.7px) 0 0 / 14px 14px;
+    -webkit-mask-image: linear-gradient(-45deg, #000, transparent);
+            mask-image: linear-gradient(-45deg, #000, transparent);
+    animation-delay: -6s;
+}
+.hm-tst__deco--stripe-br {
+    bottom: 30px; right: 30px; width: 96px; height: 96px; border-radius: 50%;
+    background: repeating-linear-gradient(-45deg, transparent 0 5px, rgba(220, 150, 40, .26) 5px 6px);
+    -webkit-mask-image: radial-gradient(circle at 100% 100%, #000 60%, transparent 62%);
+            mask-image: radial-gradient(circle at 100% 100%, #000 60%, transparent 62%);
+    animation-delay: -4s;
+}
+.hm-tst__deco--stripe-c {
+    top: 48%; left: 42%; width: 58px; height: 58px; border-radius: 50%;
+    background: repeating-linear-gradient(45deg, transparent 0 4px, rgba(220, 150, 40, .2) 4px 5px);
+    animation-delay: -8s;
+}
+
+/* Header */
+.hm-tst__head {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    margin-bottom: 26px;
+}
+.hm-tst__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.hm-tst__label-icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, var(--hm-yellow, #F7B500), var(--hm-gold-dark, #C6851A));
+}
+.hm-tst__label-text {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #843D21;
+}
+.hm-tst__title {
+    margin: 0 0 22px;
+    font-size: 34px;
+    font-weight: 700;
+    color: #222222;
+}
+
+/* Review summary capsule */
+.hm-tst__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(180, 140, 40, .15);
+    font-size: 14px;
+    font-weight: 600;
+    color: #23180F;
+}
+.hm-tst__badge-avatars { display: inline-flex; }
+.hm-tst__badge-avatars img {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    object-fit: cover;
+    margin-left: -9px;
+}
+.hm-tst__badge-avatars img:first-child { margin-left: 0; }
+.hm-tst__badge-sep { width: 1px; height: 16px; background: rgba(0, 0, 0, .12); }
+.hm-tst__badge-rating { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.hm-tst__badge-rating i { color: #F5A623; }
+.hm-tst__badge-google { width: 15px; height: 15px; object-fit: contain; }
+
+/* Stage: scattered profiles + card */
+.hm-tst__stage {
+    position: relative;
+    z-index: 2;
+    min-height: 540px;
+}
+
+/* Floating profile buttons (position + size per --N; hover/active on the inner img) */
+.hm-tst__profile {
+    position: absolute;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    z-index: 3;
+    animation: hm-tst-float 8s ease-in-out infinite;
+    will-change: transform;
+}
+.hm-tst__profile-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid #fff;
+    box-shadow: 0 12px 30px rgba(180, 140, 40, .22);
+    transition: transform .35s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), box-shadow .35s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+.hm-tst__profile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.hm-tst__profile:hover,
+.hm-tst__profile:focus-visible { z-index: 7; outline: none; }
+.hm-tst__profile:hover .hm-tst__profile-img,
+.hm-tst__profile:focus-visible .hm-tst__profile-img {
+    transform: scale(1.08) rotate(3deg);
+    box-shadow: 0 18px 40px rgba(180, 140, 40, .35);
+}
+.hm-tst__profile.is-active { z-index: 6; }
+.hm-tst__profile.is-active .hm-tst__profile-img {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 4px rgba(233, 163, 32, .35), 0 20px 46px rgba(233, 163, 32, .45);
+}
+
+/* Scatter positions + individual float timing */
+.hm-tst__profile--1 { width: 92px;  height: 92px;  top: 38%; left: 10%; animation-duration: 7s;    animation-delay: -1s; }
+.hm-tst__profile--2 { width: 110px; height: 110px; top: 24%; left: 27%; animation-duration: 9s;    animation-delay: -3s; }
+.hm-tst__profile--3 { width: 100px; height: 100px; top: 34%; left: 46%; animation-duration: 8s;    animation-delay: -5s; }
+.hm-tst__profile--4 { width: 108px; height: 108px; top: 26%; left: 70%; animation-duration: 10s;   animation-delay: -2s; }
+.hm-tst__profile--5 { width: 88px;  height: 88px;  top: 48%; left: 58%; animation-duration: 7.5s;  animation-delay: -6s; }
+.hm-tst__profile--6 { width: 112px; height: 112px; top: 50%; left: 80%; animation-duration: 9.5s;  animation-delay: -4s; }
+.hm-tst__profile--7 { width: 92px;  height: 92px;  top: 66%; left: 14%; animation-duration: 8.5s;  animation-delay: -2.5s; }
+.hm-tst__profile--8 { width: 90px;  height: 90px;  top: 68%; left: 44%; animation-duration: 7.8s;  animation-delay: -5.5s; }
+.hm-tst__profile--9 { width: 118px; height: 118px; top: 68%; left: 66%; animation-duration: 10.5s; animation-delay: -3.5s; }
+
+/* Review card — a pop-up positioned by JS next to the active/hovered profile */
+.hm-tst__card-wrap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 420px;
+    max-width: 88%;
+    z-index: 10;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px) scale(.98);
+    transition: opacity .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), transform .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), top .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), left .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+.hm-tst__card-wrap.is-shown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+.hm-tst__card {
+    background: #fff;
+    border-radius: 24px;
+    padding: 30px;
+    box-shadow: 0 30px 60px rgba(180, 140, 40, .2);
+}
+.hm-tst__card.is-swap { animation: hm-tst-swap .4s ease; }
+@keyframes hm-tst-swap { from { opacity: .3; } to { opacity: 1; } }
+.hm-tst__card-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.hm-tst__card-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.hm-tst__card-name { font-size: 17px; font-weight: 700; color: #1E1E1E; }
+.hm-tst__card-role { font-size: 13px; color: #6D6357; }
+.hm-tst__card-text {
+    margin: 0 0 16px;
+    font-size: 14.5px;
+    line-height: 1.8;
+    color: #4A4A4A;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.hm-tst__card-stars { display: flex; gap: 4px; color: #F5A623; font-size: 15px; }
+
+/* Navigation buttons */
+.hm-tst__nav {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 40px;
+}
+.hm-tst__navbtn {
+    width: 54px;
+    height: 54px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform .25s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), box-shadow .25s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), background .25s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+.hm-tst__navbtn--prev { background: #FBEDC7; color: #843D21; }
+.hm-tst__navbtn--next { background: linear-gradient(135deg, var(--hm-gold-2, #F6B72B), var(--hm-gold-dark, #C6851A)); color: #fff; }
+.hm-tst__navbtn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 12px 26px rgba(180, 140, 40, .32);
+}
+
+/* ------------------------------ Responsive ------------------------------ */
+@media (max-width: 991.98px) {
+    .hm-tst { padding: 70px 0 80px; }
+    .hm-tst__panel { padding: 44px 24px; }
+    .hm-tst__stage { min-height: 640px; }
+    .hm-tst__card-wrap { width: 360px; }
+    /* Pull the outermost profiles inward a touch */
+    .hm-tst__profile--1 { left: 3%; }
+    .hm-tst__profile--4 { left: 72%; }
+    .hm-tst__profile--6 { left: 78%; }
+}
+@media (max-width: 575.98px) {
+    .hm-tst__panel { padding: 34px 16px; }
+    .hm-tst__stage { min-height: 500px; }
+    .hm-tst__card-wrap { width: 90%; max-width: 340px; }
+    /* Show only a few profiles on phones (card is the focus) */
+    .hm-tst__profile--4,
+    .hm-tst__profile--5,
+    .hm-tst__profile--6,
+    .hm-tst__profile--7,
+    .hm-tst__profile--9 { display: none; }
+    .hm-tst__profile--1 { top: 8%;  left: 4%;  width: 78px; height: 78px; }
+    .hm-tst__profile--2 { top: 4%;  left: 60%; width: 84px; height: 84px; }
+    .hm-tst__profile--3 { top: 42%; left: 30%; width: 80px; height: 80px; }
+    .hm-tst__profile--8 { top: 72%; left: 8%;  width: 74px; height: 74px; }
+}
+
+/* Reduced motion — no rotate/float (slider still works via arrows/hover) */
+@media (prefers-reduced-motion: reduce) {
+    .hm-tst__bg img,
+    .hm-tst__deco,
+    .hm-tst__profile,
+    .hm-tst__card-wrap { animation: none !important; }
+}
+
+
+/* ==========================================================================
+   TESTIMONIALS PAGE
+   Markup: resources/views/frontend/testimonials.blade.php
+
+   Everything above is the shared "Voices of Career Transformation" section,
+   which the home and about pages also load. Everything below belongs to the
+   /testimonials page only.
+
+   That is why the page-shell rules hang off :has(.hm-tst-page) — this file is
+   NOT page-scoped, so a bare `#main-content { display: block }` here would
+   also fire on home and about, and its ::before would fight the aurora those
+   pages already define. The :has() gate means these rules simply do not match
+   anywhere else, whatever order the stylesheets happen to load in.
+   (:has() is already load-bearing in faq.css, so the baseline supports it.)
+   ========================================================================== */
+
+/* The shared layout centres #main-content with flex and caps its height; this
+   page needs the full canvas, exactly like the About / Blog / Contact pages. */
+#main-content:has(.hm-tst-page) {
+    position: relative;
+    display: block;
+    min-height: auto;
+    padding: 0;
+    text-align: left;
+    background: #FFFDFB;
+}
+
+/* Page-wide aurora — the identical block the home, about, blog and contact
+   pages use, so this page carries the same continuous animated background
+   (blue / pink / yellow / violet at very low opacity). Fixed, so it never
+   boxes a section. */
+#main-content:has(.hm-tst-page)::before {
+    content: "";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 150vmax;
+    height: 150vmax;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 50% 30%, rgba(150, 120, 255, .30), transparent 26%),
+        radial-gradient(circle at 70% 50%, rgba(255, 205, 95, .30), transparent 26%),
+        radial-gradient(circle at 50% 70%, rgba(255, 150, 195, .30), transparent 26%),
+        radial-gradient(circle at 30% 50%, rgba(120, 178, 255, .30), transparent 26%);
+    filter: blur(64px);
+    opacity: .55;
+    animation: hm-tst-spin 55s linear infinite;
+}
+
+/* Named apart from home.css's hm-spin: this file loads alongside it, and two
+   @keyframes of the same name would have the last one win for both. */
+@keyframes hm-tst-spin {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ============================== PAGE SHELL ============================== */
+.hm-tst-page {
+    position: relative;
+    z-index: 1;                 /* above the aurora */
+    background: transparent;
+    /* 70px of breathing room as specced, offset clear of the floating navbar
+       (top: 22px + ~72px tall = 94px) — a bare 70px would tuck the banner
+       underneath it. */
+    padding-top: calc(94px + 70px);
+}
+
+/* Pin the container to 1320px, overriding the global .container (style.css
+   caps it at 1140). The horizontal padding is a real side gutter — not just
+   the max-width centring — so content never hugs the screen edge when the
+   viewport is at or below 1320 (a 1920 monitor at 150% Windows scaling
+   renders ~1280 CSS px, where a bare max-width would leave no margin). */
+.hm-tst-page .container,
+.hm-tst-page__counters .container {
+    max-width: 1320px;
+    margin-inline: auto;
+    padding-inline: clamp(20px, 3.5vw, 48px);
+}
+
+/* ================================= BANNER ================================= */
+.hm-tst-page__banner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 230px;
+    padding: 0 60px;
+    border-radius: 24px;
+    overflow: hidden;           /* clips the hover zoom */
+    isolation: isolate;
+}
+
+.hm-tst-page__banner-img {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .5s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+
+.hm-tst-page__banner:hover .hm-tst-page__banner-img { transform: scale(1.02); }
+
+/* Dark scrim so the white title always clears the photo underneath */
+.hm-tst-page__banner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: rgba(0, 0, 0, .45);
+}
+
+.hm-tst-page__banner-title {
+    margin: 0 0 10px;
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: .01em;
+    color: #FFFFFF;
+    text-transform: uppercase;
+}
+
+.hm-tst-page__crumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+    color: rgba(255, 255, 255, .8);
+}
+
+.hm-tst-page__crumbs a {
+    color: inherit;
+    text-decoration: none;
+    transition: opacity .25s ease;
+}
+
+.hm-tst-page__crumbs a:hover,
+.hm-tst-page__crumbs a:focus-visible { opacity: .7; }
+
+.hm-tst-page__crumb-sep { opacity: .7; }
+
+.hm-tst-page__crumbs li[aria-current="page"] { color: #FFFFFF; }
+
+/* ======================= SHARED SECTION FITS =======================
+   On the home page each of these opens a chapter and carries its own ~100px
+   lead-in plus a rotating backdrop. Here they stack directly under the banner
+   and the page aurora is already behind them, so trim the lead-in and drop the
+   local backdrops. Scoped to the page wrapper, so home and about keep theirs.  */
+.hm-tst-page ~ .hm-reels,
+.hm-tst-page__counters + .hm-tst {
+    padding-top: 0;
+}
+
+.hm-tst-page ~ .hm-reels {
+    padding-bottom: 0;
+}
+
+.hm-tst-page ~ .hm-reels .hm-reels__bg { display: none; }
+
+/* Counters sit between the slider and the testimonials. */
+.hm-tst-page__counters {
+    position: relative;
+    z-index: 1;
+    padding: 10px 0 30px;
+    background: transparent;
+}
+
+/* The testimonials section closes the page — its own 100px bottom padding
+   already covers the specced page padding-bottom. */
+.hm-tst-page__counters + .hm-tst {
+    padding-bottom: 100px;
+}
+
+/* ============================== RESPONSIVE ============================== */
+@media (max-width: 991.98px) {
+    .hm-tst-page { padding-top: calc(94px + 48px); }
+    .hm-tst-page__banner { min-height: 190px; padding: 0 36px; }
+    .hm-tst-page__banner-title { font-size: 34px; }
+}
+
+@media (max-width: 767.98px) {
+    .hm-tst-page { padding-top: calc(94px + 36px); }
+    .hm-tst-page__banner { min-height: 160px; padding: 0 24px; border-radius: 18px; }
+    .hm-tst-page__banner-title { font-size: 26px; }
+}
+
+/* Reduced motion — hold the aurora and the banner zoom. */
+@media (prefers-reduced-motion: reduce) {
+    #main-content:has(.hm-tst-page)::before { animation: none; }
+
+    .hm-tst-page__banner-img { transition: none; }
+    .hm-tst-page__banner:hover .hm-tst-page__banner-img { transform: none; }
+}

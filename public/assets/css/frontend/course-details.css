@@ -1,0 +1,874 @@
+/* ==========================================================================
+   Hire Minds Academy — Course details page
+   Markup: resources/views/frontend/course-details.blade.php
+
+   Page-only file: loaded on /course/{slug} and nowhere else, so #main-content
+   can be reshaped directly here (no :has() gate needed, unlike courses.css or
+   testimonials.css, which are shared with the home page).
+
+   The course cards, FAQ and contact form are reused components and are NOT
+   styled here — they come from courses.css, faq.css and contact-form.css.
+   ========================================================================== */
+
+/* The shared layout centres #main-content with flex and caps its height; this
+   page needs the full canvas, exactly like every other inner page. */
+#main-content {
+    position: relative;
+    display: block;
+    min-height: auto;
+    padding: 0;
+    text-align: left;
+    background: #FFFDFB;
+}
+
+/* Page-wide aurora — the identical block the rest of the site uses. Fixed, so
+   it never boxes a section. */
+#main-content::before {
+    content: "";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 150vmax;
+    height: 150vmax;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 50% 30%, rgba(150, 120, 255, .30), transparent 26%),
+        radial-gradient(circle at 70% 50%, rgba(255, 205, 95, .30), transparent 26%),
+        radial-gradient(circle at 50% 70%, rgba(255, 150, 195, .30), transparent 26%),
+        radial-gradient(circle at 30% 50%, rgba(120, 178, 255, .30), transparent 26%);
+    filter: blur(64px);
+    opacity: .55;
+    animation: hm-spin 55s linear infinite;
+}
+
+@keyframes hm-spin {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ============================== PAGE SHELL ============================== */
+.hm-cd {
+    position: relative;
+    z-index: 1;                 /* above the aurora */
+    background: transparent;
+    /* 70px of breathing room as specced, offset clear of the floating navbar
+       (top: 22px + ~72px tall = 94px) — a bare 70px would tuck the breadcrumb
+       underneath it. */
+    padding-top: calc(94px + 70px);
+}
+
+/* Pin the container to 1320px, overriding the global .container (style.css caps
+   it at 1140). The horizontal padding is a real side gutter — not just the
+   max-width centring — so content never hugs the screen edge when the viewport
+   is at or below 1320 (a 1920 monitor at 150% Windows scaling renders ~1280 CSS
+   px, where a bare max-width would leave no margin at all). */
+.hm-cd .container,
+.hm-contact .container,
+.hm-faq__container {
+    max-width: 1320px;
+    margin-inline: auto;
+    padding-inline: clamp(20px, 3.5vw, 48px);
+}
+
+/* ============================== BREADCRUMB ============================== */
+.hm-cd__crumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 22px;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    color: #6B7280;
+}
+
+.hm-cd__crumbs a {
+    color: inherit;
+    text-decoration: none;
+    transition: color .25s ease;
+}
+
+.hm-cd__crumbs a:hover,
+.hm-cd__crumbs a:focus-visible { color: #843D21; }
+
+.hm-cd__crumb-sep { opacity: .6; }
+
+.hm-cd__crumbs li[aria-current="page"] { color: #23180F; font-weight: 600; }
+
+/* ================================= HERO ================================= */
+.hm-cd-hero {
+    align-items: center;
+    --bs-gutter-x: 40px;
+    --bs-gutter-y: 32px;
+}
+
+.hm-cd-hero__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #843D21;
+}
+
+/* Same pulsing gradient square as the site's other section labels */
+.hm-cd-hero__label-icon {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    border-radius: 3px;
+    background: linear-gradient(135deg, var(--hm-yellow, #F7B500), var(--hm-gold-dark, #C6851A));
+}
+
+.hm-cd-hero__title {
+    margin: 0 0 14px;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #17161A;
+}
+
+.hm-cd-hero__desc {
+    max-width: 520px;
+    margin: 0 0 18px;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #555555;
+}
+
+/* ---- Meta row ---- */
+.hm-cd-hero__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 22px;
+    margin: 0 0 22px;
+    padding: 0;
+    list-style: none;
+}
+
+.hm-cd-hero__meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    color: #4B4B53;
+}
+
+.hm-cd-hero__meta-item img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    opacity: .75;
+}
+
+/* ---- Buttons ---- */
+.hm-cd-hero__actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.hm-cd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 999px;
+    cursor: pointer;
+    transition:
+        transform .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)),
+        box-shadow .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)),
+        background .3s ease,
+        color .3s ease;
+}
+
+.hm-cd-btn:hover,
+.hm-cd-btn:focus-visible { transform: translateY(-2px); }
+
+.hm-cd-btn--primary {
+    color: #FFFFFF;
+    background: #843D21;
+    border: 1px solid #843D21;
+    box-shadow: 0 10px 24px rgba(132, 61, 33, .28);
+}
+
+.hm-cd-btn--primary:hover,
+.hm-cd-btn--primary:focus-visible {
+    color: #FFFFFF;
+    box-shadow: 0 16px 32px rgba(132, 61, 33, .36);
+}
+
+/* White circular chip around the arrow, as designed */
+.hm-cd-btn--primary i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+    color: #843D21;
+    background: #FFFFFF;
+    border-radius: 50%;
+    transition: transform .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+
+.hm-cd-btn--primary:hover i { transform: translateX(6px); }
+
+.hm-cd-btn--ghost {
+    color: #843D21;
+    background: #FFFFFF;
+    border: 1px solid #843D21;
+}
+
+.hm-cd-btn--ghost:hover,
+.hm-cd-btn--ghost:focus-visible {
+    color: #843D21;
+    box-shadow: 0 12px 26px rgba(132, 61, 33, .16);
+}
+
+.hm-cd-btn--ghost i { font-size: 12px; transition: transform .3s ease; }
+.hm-cd-btn--ghost:hover i { transform: translateY(2px); }
+
+/* ---- Hero banner ----
+   The orange composition, its icon tile, the pills and the figure are all baked
+   into the one image, so this is a plain rounded frame around it. */
+.hm-cd-hero__figure {
+    margin: 0;
+    border-radius: 20px;
+    overflow: hidden;           /* clips the hover zoom */
+}
+
+.hm-cd-hero__figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    transition: transform .5s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+
+.hm-cd-hero__figure:hover img { transform: scale(1.02); }
+
+/* ============================== FEATURES ==============================
+   Five equal cards on one row — flex rather than the grid, since a 5-across
+   row has no Bootstrap column that divides evenly into 12.                  */
+.hm-cd-feats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 40px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.hm-cd-feat {
+    flex: 1 1 180px;            /* equal widths, wrapping before they get cramped */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #FFFFFF;
+    border: 1px solid #F0F0F2;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(42, 29, 20, .05);
+    transition:
+        transform .4s cubic-bezier(.22, .61, .36, 1),
+        box-shadow .4s cubic-bezier(.22, .61, .36, 1);
+}
+
+.hm-cd-feat:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(42, 29, 20, .12);
+}
+
+/* Colour comes from --tint on the modifier, so the tile and its glyph stay in
+   step without a rule per card. */
+.hm-cd-feat__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+    color: #FFFFFF;
+    background: var(--tint);
+    border-radius: 9px;
+}
+
+.hm-cd-feat__icon img {
+    width: 17px;
+    height: 17px;
+    object-fit: contain;
+    /* The asset icons are dark line art; invert so they read on the tile. */
+    filter: brightness(0) invert(1);
+}
+
+.hm-cd-feat--pink   { --tint: #F0508C; }
+.hm-cd-feat--blue   { --tint: #2C7BE5; }
+.hm-cd-feat--red    { --tint: #F4623A; }
+.hm-cd-feat--green  { --tint: #22A15A; }
+.hm-cd-feat--gold   { --tint: #B8860B; }
+
+.hm-cd-feat__title {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #17161A;
+}
+
+.hm-cd-feat__sub {
+    margin: 2px 0 0;
+    font-size: 11.5px;
+    color: #8A8A93;
+}
+
+/* ============================ SECTION BASICS ============================ */
+.hm-cd-sec { margin-top: 56px; }
+
+.hm-cd-sec__title {
+    margin: 0 0 10px;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #17161A;
+}
+
+.hm-cd-sec__desc {
+    max-width: 900px;
+    margin: 0 0 24px;
+    font-size: 14px;
+    line-height: 1.9;
+    color: #555555;
+}
+
+.hm-cd-sec__desc--about { max-width: 100%; }
+
+/* ============================== HIGHLIGHTS ==============================
+   Built here rather than reusing home's .hm-cat: that card carries a course
+   count and a 56px badge image this one does not have, and its CSS lives in
+   home.css — which this page cannot load. Same pastel tone palette, so the two
+   still read as one family. */
+.hm-cd-hls {
+    --bs-gutter-x: 20px;
+    --bs-gutter-y: 20px;
+}
+
+.hm-cd-hl {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    height: 100%;
+    padding: 16px 18px;
+    background: var(--tint-bg);
+    border-radius: 14px;
+    transition:
+        transform .4s cubic-bezier(.22, .61, .36, 1),
+        box-shadow .4s cubic-bezier(.22, .61, .36, 1);
+}
+
+.hm-cd-hl:hover {
+    transform: translateY(-8px) scale(1.03);
+    box-shadow: 0 18px 38px rgba(42, 29, 20, .12);
+}
+
+.hm-cd-hl__title {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: #17161A;
+}
+
+.hm-cd-hl__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+    color: #FFFFFF;
+    background: var(--tint);
+    border-radius: 9px;
+}
+
+/* Pastel card + saturated tile, one pair per tone. */
+.hm-cd-hl--red    { --tint-bg: #FEF0EE; --tint: #F4623A; }
+.hm-cd-hl--purple { --tint-bg: #F3EFFC; --tint: #7B5CD6; }
+.hm-cd-hl--teal   { --tint-bg: #E9F8F4; --tint: #17A98C; }
+.hm-cd-hl--pink   { --tint-bg: #FDEFF5; --tint: #E0489B; }
+.hm-cd-hl--blue   { --tint-bg: #EAF3FD; --tint: #2C7BE5; }
+.hm-cd-hl--gold   { --tint-bg: #FDF6E3; --tint: #D19A16; }
+.hm-cd-hl--peach  { --tint-bg: #FEF1EA; --tint: #E8703A; }
+.hm-cd-hl--green  { --tint-bg: #EBF8F0; --tint: #22A15A; }
+
+/* ================================ SKILLS ================================ */
+.hm-cd-skills {
+    --bs-gutter-x: 28px;
+    --bs-gutter-y: 20px;
+}
+
+.hm-cd-skill {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    height: 100%;
+    padding: 16px 18px;
+    background: #FFFFFF;
+    border-radius: 14px;
+    /* The left edge is a transparent border that colours on hover — animating a
+       colour, not a width, so nothing reflows. */
+    border-left: 3px solid transparent;
+    box-shadow: 0 8px 24px rgba(42, 29, 20, .05);
+    transition:
+        transform .4s cubic-bezier(.22, .61, .36, 1),
+        box-shadow .4s cubic-bezier(.22, .61, .36, 1),
+        border-left-color .3s ease;
+}
+
+.hm-cd-skill:hover {
+    transform: translateY(-4px);
+    border-left-color: var(--hm-gold, #E9A320);
+    box-shadow: 0 18px 38px rgba(42, 29, 20, .10);
+}
+
+.hm-cd-skill__num {
+    flex: 0 0 auto;
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1;
+    color: #F2C94C;
+}
+
+.hm-cd-skill__title {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #17161A;
+}
+
+.hm-cd-skill__desc {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #6B7280;
+}
+
+/* ========================= REUSED SECTION FITS =========================
+   On the home page the FAQ and the contact section each open a chapter with
+   ~100px of lead-in and their own rotating backdrop. Here they stack at the end
+   of a page whose aurora is already behind them, so trim the lead-in and drop
+   the local backdrop. course-details.css loads after faq.css / contact-form.css,
+   so these win.                                                              */
+.hm-cd-related { margin-top: 56px; }
+
+.hm-faq { padding: 56px 0 0; }
+
+.hm-contact {
+    padding: 56px 0 100px;
+    overflow: visible;
+}
+
+.hm-contact__bg { display: none; }
+
+/* ============================== RESPONSIVE ============================== */
+@media (max-width: 1199.98px) {
+    .hm-cd-hero__title { font-size: 30px; }
+    /* Five across gets cramped before the tablet break — go two rows early. */
+    .hm-cd-feat { flex-basis: 30%; }
+}
+
+@media (max-width: 991.98px) {
+    .hm-cd { padding-top: calc(94px + 48px); }
+    .hm-cd-feat { flex-basis: 45%; }
+    .hm-cd-sec { margin-top: 44px; }
+}
+
+@media (max-width: 767.98px) {
+    .hm-cd { padding-top: calc(94px + 36px); }
+    .hm-cd-hero__title { font-size: 24px; }
+    .hm-cd-sec__title { font-size: 21px; }
+
+    .hm-cd-feat { flex-basis: 100%; }
+
+    /* Buttons go full width, as designed. */
+    .hm-cd-hero__actions { flex-direction: column; align-items: stretch; }
+    .hm-cd-btn { justify-content: center; }
+}
+
+/* Reduced motion — hold the aurora and every travel, keep the states. */
+@media (prefers-reduced-motion: reduce) {
+    #main-content::before { animation: none; }
+
+    .hm-cd-hero__figure img,
+    .hm-cd-btn,
+    .hm-cd-feat,
+    .hm-cd-hl,
+    .hm-cd-skill { transition: none; }
+
+    .hm-cd-hero__figure:hover img,
+    .hm-cd-btn:hover,
+    .hm-cd-feat:hover,
+    .hm-cd-hl:hover,
+    .hm-cd-skill:hover { transform: none; }
+}
+
+/* ==========================================================================
+   ENQUIRE MODAL
+   Markup: the #hmEnquireModal block at the bottom of course-details.blade.php
+   Opened by the hero's "Enroll Now" button. Built on Bootstrap 5's modal (its
+   JS bundle is already loaded on this page for the FAQ accordion), with every
+   default surface restyled below.
+   ========================================================================== */
+
+.hm-enq .modal-dialog {
+    max-width: 1050px;
+    margin: 1.75rem auto;
+}
+
+/* Bootstrap's own .modal.fade .modal-dialog only translates; the design calls
+   for a scale, so the transition is redefined rather than added to. */
+.hm-enq.fade .modal-dialog {
+    opacity: 0;
+    transform: scale(.92);
+    transition:
+        transform .35s cubic-bezier(.22, .61, .36, 1),
+        opacity .35s cubic-bezier(.22, .61, .36, 1);
+}
+
+.hm-enq.show .modal-dialog {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.hm-enq .modal-content {
+    position: relative;
+    border: 0;
+    border-radius: 24px;
+    overflow: hidden;           /* lets the panels square off against the radius */
+    background: #FFFFFF;
+    box-shadow: 0 40px 90px rgba(42, 29, 20, .28);
+}
+
+.hm-enq .modal-backdrop.show { opacity: .45; }
+
+/* ---- Close ---- */
+.hm-enq__close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    font-size: 13px;
+    color: #23180F;
+    background: #FFFFFF;
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(42, 29, 20, .16);
+    transition: transform .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
+}
+
+.hm-enq__close:hover,
+.hm-enq__close:focus-visible { transform: rotate(90deg); }
+
+/* ---- Row: the two panels are equal height, so the cream runs full bleed ---- */
+.hm-enq__row {
+    --bs-gutter-x: 0;
+    --bs-gutter-y: 0;
+    min-height: 520px;
+}
+
+/* ============================== LEFT PANEL ============================== */
+.hm-enq__aside {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 36px 32px 0;
+    background: #FFF8EC;
+    overflow: hidden;           /* clips the decorations to the panel */
+}
+
+.hm-enq__logo {
+    width: 160px;
+    height: auto;
+    margin-bottom: 26px;
+}
+
+.hm-enq__title {
+    position: relative;
+    z-index: 2;
+    margin: 0 0 12px;
+    font-family: "Poppins", "Geist", system-ui, sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #17161A;
+}
+
+.hm-enq__desc {
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.75;
+    color: #6B6357;
+}
+
+/* ---- Decorations ---- */
+.hm-enq__deco {
+    position: absolute;
+    z-index: 1;
+    pointer-events: none;
+    /* Only transform animates — never top/left. */
+    animation: hm-enq-float 6s ease-in-out infinite alternate;
+}
+
+.hm-enq__deco--dots   { top: 0;     right: 0;   width: 96px;  opacity: .5; animation: none; }
+.hm-enq__deco--lines  { top: 45%;   left: -14px; width: 74px; opacity: .45; animation-delay: -3s; }
+.hm-enq__deco--star-a { top: 40%;   right: 26%;  width: 30px; opacity: .9; }
+.hm-enq__deco--star-b { top: 52%;   left: 16%;   width: 18px; opacity: .8; animation-delay: -2s; }
+
+@keyframes hm-enq-float {
+    from { transform: translateY(-6px); }
+    to   { transform: translateY(6px); }
+}
+
+/* ---- Support figure — bottom-aligned, never cropped or stretched ----
+   `margin: auto` on the top edge pushes it to the foot of the flex column; the
+   negative sides cancel the panel's 32px padding so the cut-out spans the panel
+   edge to edge, as designed. width + height:auto keeps its aspect ratio, so it
+   is never squashed, and nothing is cropped. */
+.hm-enq__figure {
+    position: relative;
+    z-index: 2;
+    margin: auto -32px 0;
+    padding-top: 16px;
+}
+
+.hm-enq__figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+/* ============================== RIGHT PANEL ============================== */
+.hm-enq__main {
+    padding: 36px 32px;
+    background: #FFFFFF;
+}
+
+.hm-enq__form .row {
+    --bs-gutter-x: 16px;
+    --bs-gutter-y: 0;
+}
+
+.hm-enq__field { margin-bottom: 14px; }
+
+.hm-enq__label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #23180F;
+}
+
+/* Every control shares one look — inputs, selects and the textarea. */
+.hm-enq__input {
+    width: 100%;
+    height: 46px;
+    padding: 0 14px;
+    font-size: 13.5px;
+    color: #23180F;
+    background: #FFFFFF;
+    border: 1px solid #E8E8E8;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color .25s ease, box-shadow .25s ease;
+}
+
+.hm-enq__input::placeholder { color: #A9A9A9; }
+
+.hm-enq__input:focus {
+    border-color: #E9A320;
+    box-shadow: 0 0 0 3px rgba(233, 163, 32, .14);
+}
+
+/* ---- Select — Bootstrap's default arrow removed for the design's chevron ---- */
+.hm-enq__select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 38px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2323180F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 14px;
+    cursor: pointer;
+}
+
+/* :invalid is the unchosen placeholder option, so it greys like a placeholder */
+.hm-enq__select:invalid { color: #A9A9A9; }
+.hm-enq__select option { color: #23180F; }
+
+/* ---- Phone — the +91 chip and the input read as one control ---- */
+.hm-enq__phone {
+    display: flex;
+    align-items: center;
+    height: 46px;
+    background: #FFFFFF;
+    border: 1px solid #E8E8E8;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color .25s ease, box-shadow .25s ease;
+}
+
+.hm-enq__phone:focus-within {
+    border-color: #E9A320;
+    box-shadow: 0 0 0 3px rgba(233, 163, 32, .14);
+}
+
+.hm-enq__phone-code {
+    display: inline-flex;
+    align-items: center;
+    align-self: stretch;
+    padding: 0 12px;
+    font-size: 13.5px;
+    color: #6B6357;
+    border-right: 1px solid #E8E8E8;
+}
+
+/* The wrapper already draws the border and the focus ring. */
+.hm-enq__phone .hm-enq__input {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.hm-enq__textarea {
+    height: 120px;
+    padding: 12px 14px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+/* ---- Inline validation ---- */
+.hm-enq__error {
+    display: none;
+    margin-top: 5px;
+    font-size: 11.5px;
+    color: #C0392B;
+}
+
+.hm-enq__field.is-invalid .hm-enq__error { display: block; }
+
+.hm-enq__field.is-invalid .hm-enq__input,
+.hm-enq__field.is-invalid .hm-enq__phone {
+    border-color: #C0392B;
+}
+
+.hm-enq__field.is-invalid .hm-enq__input:focus,
+.hm-enq__field.is-invalid .hm-enq__phone:focus-within {
+    box-shadow: 0 0 0 3px rgba(192, 57, 43, .12);
+}
+
+/* ---- Submit ---- */
+.hm-enq__submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    height: 48px;
+    margin-top: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #FFFFFF;
+    background: #7A2F0B;
+    border: 0;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(122, 47, 11, .26);
+    transition:
+        transform .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)),
+        background .3s ease,
+        box-shadow .3s ease;
+}
+
+.hm-enq__submit:hover,
+.hm-enq__submit:focus-visible {
+    transform: translateY(-2px);
+    background: #63250B;
+    box-shadow: 0 16px 32px rgba(122, 47, 11, .34);
+}
+
+.hm-enq__submit i { transition: transform .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)); }
+.hm-enq__submit:hover i { transform: translateX(6px); }
+
+/* ---- Success note ---- */
+.hm-enq__note {
+    margin: 14px 0 0;
+    padding: 11px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #2F6B26;
+    background: #EAF6E4;
+    border-radius: 10px;
+}
+
+/* ============================== RESPONSIVE ============================== */
+@media (max-width: 991.98px) {
+    /* Left panel stacks above the form. */
+    .hm-enq .modal-dialog { max-width: 95%; }
+    .hm-enq__row { min-height: 0; }
+
+    .hm-enq__aside {
+        padding: 28px 24px 0;
+        text-align: center;
+    }
+
+    .hm-enq__logo { margin-inline: auto; }
+    .hm-enq__desc { max-width: 460px; margin-inline: auto; }
+
+    .hm-enq__figure { max-width: 380px; margin: 18px auto 0; }
+
+    .hm-enq__main { padding: 28px 24px; }
+}
+
+@media (max-width: 575.98px) {
+    .hm-enq .modal-content { border-radius: 18px; }
+    .hm-enq__title { font-size: 21px; }
+    .hm-enq__deco--star-a,
+    .hm-enq__deco--star-b { display: none; }
+}
+
+/* Reduced motion — open plainly, hold the float, keep every state. */
+@media (prefers-reduced-motion: reduce) {
+    .hm-enq.fade .modal-dialog { transition: none; transform: none; }
+    .hm-enq__deco { animation: none; }
+
+    .hm-enq__close,
+    .hm-enq__submit { transition: none; }
+
+    .hm-enq__close:hover,
+    .hm-enq__submit:hover { transform: none; }
+}
