@@ -50,11 +50,25 @@
                 <li><a href="{{ route('frontend.index') }}" @class(['active' => request()->routeIs('frontend.index')])>Home</a></li>
                 <li><a href="{{ route('frontend.about-us') }}" @class(['active' => request()->routeIs('frontend.about-us')])>About Us</a></li>
 
-                {{-- Courses mega-dropdown (opens on click) --}}
+                {{-- Courses: the label is a real link to the courses page, and the
+                     caret beside it is what opens the mega-dropdown. It used to be
+                     a single <button>, so clicking "Courses" could only open the
+                     panel — it never went anywhere. --}}
                 <li class="hm-nav-item hm-nav-item--mega">
-                    <button type="button" class="hm-mega-toggle" id="hmCoursesToggle"
-                            aria-haspopup="true" aria-expanded="false" aria-controls="hmCoursesMenu">
-                        Courses <i class="fa-solid fa-chevron-down hm-mega-toggle__caret" aria-hidden="true"></i>
+                    {{-- One @class for both: a literal class="" alongside @class
+                         emits a second class attribute, and the browser keeps only
+                         the first — which silently dropped the active state. --}}
+                    <a @class([
+                           'hm-mega-toggle',
+                           'active' => request()->routeIs('frontend.courses')
+                                    || request()->routeIs('frontend.course-details'),
+                       ])
+                       href="{{ route('frontend.courses') }}">Courses</a>
+
+                    <button type="button" class="hm-mega-caret" id="hmCoursesToggle"
+                            aria-haspopup="true" aria-expanded="false" aria-controls="hmCoursesMenu"
+                            aria-label="Show course categories">
+                        <i class="fa-solid fa-chevron-down hm-mega-toggle__caret" aria-hidden="true"></i>
                     </button>
 
                     <div class="hm-mega" id="hmCoursesMenu" aria-label="Course categories">

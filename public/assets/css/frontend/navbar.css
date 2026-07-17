@@ -90,8 +90,13 @@
 .hm-navbar__links a:focus-visible,
 .hm-navbar__links a.active {
     color: #F9B11D;
-    font-weight: 700;
-
+    /* NOT font-weight: 700. Bold glyphs are wider than medium ones, so raising
+       the weight on hover re-measured the text, grew the link and shoved every
+       link after it sideways — the judder you feel sweeping across the bar.
+       Doubling a hairline shadow in the text's own colour thickens the strokes
+       to the same effect while leaving the metrics untouched, so nothing can
+       reflow. Paint only, no layout. */
+    text-shadow: 0 0 .55px currentColor, 0 0 .55px currentColor;
 }
 
 .hm-navbar__cta {
@@ -194,7 +199,12 @@
 
 /* ============================== COURSES MEGA MENU ============================== */
 /* Relative so the panel anchors to the Courses item (opens under it, not full width). */
-.hm-nav-item--mega { position: relative; }
+/* Holds the label and the caret on one line, and anchors the dropdown panel. */
+.hm-nav-item--mega {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
 
 .hm-mega-toggle {
     display: inline-flex;
@@ -211,11 +221,43 @@
     cursor: pointer;
     transition: color .2s;
 }
+/* The label is now an <a> living inside .hm-navbar__links, so it already picks
+   up that link styling — colour, size, weight and the shared hover. The rule
+   below only trims the right padding so the caret sits beside the word rather
+   than 16px away. It is written as .hm-navbar__links a.hm-mega-toggle because
+   the plain .hm-mega-toggle selector loses to .hm-navbar__links a on
+   specificity, and the padding would never apply. */
+.hm-navbar__links a.hm-mega-toggle {
+    padding-right: 2px !important;
+    text-decoration: none;
+}
+
 .hm-mega-toggle:hover,
 .hm-mega-toggle:focus-visible,
+.hm-mega-toggle.active,
 .hm-nav-item--mega.is-open .hm-mega-toggle {
     color: #F9B11D;
-    font-weight: 700;
+    /* Same reason as .hm-navbar__links a — see the note there. */
+    text-shadow: 0 0 .55px currentColor, 0 0 .55px currentColor;
+}
+
+/* The caret is its own control: the label navigates, this opens the panel. */
+.hm-mega-caret {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 10px 9px 2px;
+    color: rgba(255, 255, 255, .82);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    transition: color .25s var(--hm-ease);
+}
+
+.hm-mega-caret:hover,
+.hm-mega-caret:focus-visible,
+.hm-nav-item--mega.is-open .hm-mega-caret {
+    color: #F9B11D;
 }
 .hm-mega-toggle__caret {
     font-size: 11px;
