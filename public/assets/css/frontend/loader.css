@@ -1,0 +1,212 @@
+/* ==========================================================================
+   Hire Minds Academy — page loader
+   Markup: resources/views/frontend/layouts/loader.blade.php (site-wide)
+
+   The emblem is the real logo, not a redraw. favicon.png is built from
+   disconnected shapes, so it was split losslessly into five same-canvas layers
+   (144x162) that stack back to the original pixel for pixel:
+
+     wing-left.png   the left wreath branch
+     wing-right.png  the right wreath branch
+     body.png        the eagle's head, body and tail
+     shield.png      the shield
+     star.png        the star
+     badge.png       shield + star together — used ONLY to mask the shimmer
+
+   Only three things ever move: the two wings, the shield/star reveal, and one
+   light sweep. Everything else is the untouched artwork.
+
+   Timeline — deliberately compressed. It used to reveal over 4.5s, which meant
+   the loader had to be held that long or the emblem was torn away half-built.
+   The whole reveal now lands by 1.2s, so the loader can leave as soon as the
+   page is ready without ever showing an incomplete logo:
+     0.0-0.3s   the bird fades in (shield and star are not there yet)
+     0.3s->     the wings flutter, continuously and seamlessly, for as long as
+                the loader is up
+     0.45-1.0s  the shield rises into place
+     0.6-1.2s   the star follows it
+     0.9-2.0s   a shimmer crosses them, then repeats every 3s
+   ========================================================================== */
+
+.hm-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #FFFDFB;
+    /* Fades out on window.load; visibility keeps it off the a11y tree and out
+       of the way of clicks once hidden. */
+    transition: opacity .4s ease, visibility .4s ease;
+}
+
+.hm-loader.is-done {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Held by the loader's JS so the page underneath cannot be scrolled while it
+   is up. Removed with the loader. */
+body.hm-loading {
+    overflow: hidden;
+}
+
+/* ------------------------------ The emblem ------------------------------
+   144x162 is the artwork's native size — the only logo asset there is — so it
+   is rendered 1:1 rather than upscaled into softness. */
+.hm-loader__mark {
+    position: relative;
+    width: 144px;
+    height: 162px;
+    /* Phase 1. One-shot rather than part of a loop: the sequence ends fully
+       visible, so fading from 0 again each pass would strobe. */
+    opacity: 0;
+    animation: hm-loader-fade .3s ease-in-out forwards;
+}
+
+/* Every layer is the same full canvas, so they stack with no positioning maths
+   and land exactly as the original artwork. */
+.hm-loader__layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* --------------------------- The wing flutter ---------------------------
+   The wreath branches converge at (72,118) of the 144x162 canvas, right at the
+   bird's shoulders, so that point is the hinge: 72/144 = 50%, 118/162 = 72.8%.
+   Rotating there keeps the wing roots still and swings only the tips, which is
+   what makes it read as a wingbeat rather than a slide.
+
+   The two wings share one cycle but are offset a hair (see --d below) — a real
+   bird is never perfectly symmetrical, and that tiny lag is most of what stops
+   this looking mechanical. */
+.hm-loader__wing {
+    transform-origin: 50% 72.8%;
+    will-change: transform;
+    /* The sine-like curve is the point: each stroke eases out of one extreme
+       and into the next with no linear stretch between, so the beat glides. */
+    animation: hm-loader-wing 2.8s cubic-bezier(.42, 0, .58, 1) infinite;
+}
+
+.hm-loader__wing--r {
+    animation-name: hm-loader-wing-r;
+    animation-delay: .06s;
+}
+
+/* ------------------------ The shield + star reveal ------------------------
+   Origins are the shapes' own measured centres, so each grows from its own
+   middle instead of drifting in from the canvas centre.
+   `both` holds the from-state through the delay — that is what keeps them
+   absent while the bird flies, rather than flashing in at frame one. */
+.hm-loader__shield {
+    transform-origin: 50.3% 35%;
+    animation: hm-loader-rise .55s cubic-bezier(.22, .61, .36, 1) .45s both;
+}
+
+.hm-loader__star {
+    transform-origin: 50.2% 9.4%;
+    animation: hm-loader-rise .6s cubic-bezier(.22, .61, .36, 1) .6s both;
+}
+
+/* ------------------------------ The shimmer ------------------------------ */
+.hm-loader__badge {
+    /* Clips the sweep to the shield + star silhouette, so the light only ever
+       touches the metal and never spills into the space around it. */
+    -webkit-mask-image: url("../../images/branding/loader/badge.png");
+            mask-image: url("../../images/branding/loader/badge.png");
+    -webkit-mask-size: 100% 100%;
+            mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+    overflow: hidden;
+}
+
+.hm-loader__shine {
+    position: absolute;
+    /* Oversized so the band is fully clear of the badge at both ends of its
+       travel — that is what keeps it invisible between passes. */
+    inset: -60%;
+    pointer-events: none;
+    background: linear-gradient(135deg,
+        transparent 42%,
+        rgba(255, 255, 255, .10) 46%,
+        rgba(255, 250, 225, .85) 50%,
+        rgba(255, 255, 255, .10) 54%,
+        transparent 58%);
+    /* Lightens the gold and the dark shield instead of washing them flat, which
+       is what sells it as polished metal rather than a white overlay. */
+    mix-blend-mode: screen;
+    will-change: transform;
+    animation: hm-loader-shine 3s ease-in-out .9s infinite;
+}
+
+/* ================================ Keyframes ================================ */
+
+@keyframes hm-loader-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* A wingbeat, not a stretch: a deep downstroke, a light recovery, a shallower
+   second beat, then a settle. Starts and ends at 0deg, so it cycles forever
+   with no seam. Amplitudes stay inside 13deg — a glide, never a flap. */
+@keyframes hm-loader-wing {
+    0%   { transform: rotate(0deg); }
+    22%  { transform: rotate(-13deg); }
+    44%  { transform: rotate(-1.5deg); }
+    66%  { transform: rotate(-8.5deg); }
+    86%  { transform: rotate(-2.5deg); }
+    100% { transform: rotate(0deg); }
+}
+
+/* Mirrored, so the pair opens and closes together. */
+@keyframes hm-loader-wing-r {
+    0%   { transform: rotate(0deg); }
+    22%  { transform: rotate(13deg); }
+    44%  { transform: rotate(1.5deg); }
+    66%  { transform: rotate(8.5deg); }
+    86%  { transform: rotate(2.5deg); }
+    100% { transform: rotate(0deg); }
+}
+
+@keyframes hm-loader-rise {
+    from { opacity: 0; transform: scale(.86); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+/* Parked off the top-left, crosses to the bottom-right over the first 36% of
+   the cycle (1.8s), then waits off-badge. Both ends are out of sight, so the
+   restart is invisible. */
+@keyframes hm-loader-shine {
+    0%        { transform: translate3d(-130%, -130%, 0); }
+    36%, 100% { transform: translate3d(130%, 130%, 0); }
+}
+
+/* ------------------------------ Responsive ------------------------------ */
+@media (max-width: 575.98px) {
+    .hm-loader__mark { transform: scale(.85); }
+}
+
+/* Reduced motion — the whole emblem is simply present and still. No flight,
+   no reveal, no sweep. */
+@media (prefers-reduced-motion: reduce) {
+    .hm-loader__mark {
+        opacity: 1;
+        animation: none;
+    }
+
+    .hm-loader__wing,
+    .hm-loader__shield,
+    .hm-loader__star {
+        opacity: 1;
+        transform: none;
+        animation: none;
+    }
+
+    .hm-loader__shine { display: none; }
+}

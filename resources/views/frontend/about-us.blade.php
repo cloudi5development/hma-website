@@ -47,7 +47,7 @@
 
         {{-- Same slow-rotating background image as the home hero --}}
         <div class="hm-abt-hero__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/Hero-section/hero-bg.png') }}" alt="" role="presentation" fetchpriority="low">
+            <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" fetchpriority="low">
         </div>
 
         {{-- Decorative layer, behind the content --}}
@@ -201,7 +201,7 @@
                  scrolling while the pin holds — which made the stars drift up
                  and away during the story. Pinned with it, they stay put. --}}
             <div class="hm-story__bg" aria-hidden="true">
-                <img src="{{ asset('assets/images/Hero-section/hero-bg.png') }}" alt="" role="presentation" loading="lazy">
+                <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" loading="lazy">
             </div>
 
             <div class="hm-story__deco" aria-hidden="true">
@@ -456,12 +456,12 @@
                 <span class="hm-appr__ring hm-appr__ring--2" aria-hidden="true"></span>
                 <span class="hm-appr__ring hm-appr__ring--3" aria-hidden="true"></span>
 
-                {{-- our-approach.png is a 9:16 portrait — a 1:1 circle can only keep
+                {{-- our-approach.webp is a 9:16 portrait — a 1:1 circle can only keep
                      56% of its height, which sliced her head off. -square is the same
                      image padded out to 1080->1920 square, with the orange backdrop
                      extended sideways, so the circle crops nothing. --}}
                 <figure class="hm-appr__figure">
-                    <img src="{{ asset('assets/images/about-page/our-approach-square.png') }}"
+                    <img src="{{ asset('assets/images/about-page/our-approach-square.webp') }}"
                          alt="A HireMinds Academy learner working through a course on her laptop"
                          width="420" height="420" loading="lazy">
                 </figure>

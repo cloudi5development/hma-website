@@ -53,7 +53,7 @@
             {{-- ============================== BANNER ============================== --}}
             <header class="hm-blog__banner">
                 <img class="hm-blog__banner-img"
-                     src="{{ asset('assets/images/blog/blog-header.png') }}"
+                     src="{{ asset('assets/images/blog/blog-header.webp') }}"
                      alt="" role="presentation">
 
                 <div class="hm-blog__banner-content">

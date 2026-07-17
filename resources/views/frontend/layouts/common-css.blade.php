@@ -3,10 +3,19 @@
     stylesheet last so it can override them. Page-specific CSS should be pushed
     via @push('styles') from the page, not added here.
 --}}
-{{-- Geist font — site-wide typeface for the whole frontend --}}
+{{-- Page loader — first, and before the fonts, so the overlay is styled the
+     moment <body> parses and the page never flashes behind it. --}}
+<link rel="stylesheet" href="{{ asset('assets/css/frontend/loader.css') }}?v={{ filemtime(public_path('assets/css/frontend/loader.css')) }}">
+
+{{-- Geist — site-wide typeface.
+     The range is 400..900, not 100..900: nothing on the site uses a weight
+     below 400, and a narrower variable range is a smaller download.
+     display=swap keeps text painting in the fallback instead of blocking FCP.
+     preconnect warms both hosts; the stylesheet on fonts.googleapis.com is
+     render-blocking, so the DNS/TLS cost is paid up front rather than serially. --}}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400..900&display=swap">
 
 {{-- Vendor libraries (place library files in public/assets/vendors/) --}}
 {{-- <link rel="stylesheet" href="{{ asset('assets/vendors/bootstrap/css/bootstrap.min.css') }}"> --}}

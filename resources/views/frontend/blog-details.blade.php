@@ -66,7 +66,7 @@
                 ['type' => 'p', 'text' => 'So here goes my fellow SaaS marketing managers: Embrace technology enhancement tools responsibly, always keeping end-user perspectives focal while constantly striving towards better communication standards, offering insightful, pleasing reads across widespread digital platforms!'],
 
                 ['type' => 'heading', 'text' => 'Afterword: The AI Behind This Article'],
-                ['type' => 'figure', 'image' => 'blog-ai.png', 'alt' => 'AI-detector result: the article is reported as human by GPTZero, OpenAI, Writer, Crossplag, Copyleaks, Sapling, ContentAtScale and ZeroGPT'],
+                ['type' => 'figure', 'image' => 'blog-ai.webp', 'alt' => 'AI-detector result: the article is reported as human by GPTZero, OpenAI, Writer, Crossplag, Copyleaks, Sapling, ContentAtScale and ZeroGPT'],
                 ['type' => 'p', 'text' => '<strong>Let\'s be clear:</strong> ChatGPT wrote this article and generated the hero image. It combined my personal experience, knowledge, and research. From the initial notes to finish, it took just 37 minutes.'],
                 ['type' => 'p', 'text' => 'Even though it was made by AI, no detection tools could tell. The only thing used was OpenAI\'s Chat API, no other external tools.'],
                 ['type' => 'p', 'text' => 'It shows how AI can help in making content interesting and relevant. It\'s a new chapter in how we create and share information.'],
@@ -100,7 +100,7 @@
             {{-- ============================== BANNER ============================== --}}
             <header class="hm-blog__banner">
                 <img class="hm-blog__banner-img"
-                     src="{{ asset('assets/images/blog/blog-header.png') }}"
+                     src="{{ asset('assets/images/blog/blog-header.webp') }}"
                      alt="" role="presentation">
 
                 <div class="hm-blog__banner-content">

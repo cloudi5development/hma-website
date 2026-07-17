@@ -24,8 +24,8 @@
         $thumbs = [
             ['img' => 'course-1.webp', 'badge' => 'Development',      'slug' => 'learning-javascript-development'],
             ['img' => 'course-4.webp', 'badge' => 'Career Readiness', 'slug' => 'learning-javascript-career'],
-            ['img' => 'course-3.png',  'badge' => 'Team Leadership',  'slug' => 'learning-javascript-leadership'],
-            ['img' => 'course-2.png',  'badge' => 'Corporate',        'slug' => 'learning-javascript-corporate'],
+            ['img' => 'course-3.webp',  'badge' => 'Team Leadership',  'slug' => 'learning-javascript-leadership'],
+            ['img' => 'course-2.webp',  'badge' => 'Corporate',        'slug' => 'learning-javascript-corporate'],
         ];
 
         $courses = [];

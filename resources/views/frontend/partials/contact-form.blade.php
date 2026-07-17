@@ -24,7 +24,7 @@
 
         {{-- Same slow-rotating hero background --}}
         <div class="hm-contact__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/Hero-section/hero-bg.png') }}" alt="" role="presentation" loading="lazy">
+            <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" loading="lazy">
         </div>
 
         <div class="container hm-contact__container">

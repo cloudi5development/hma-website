@@ -30,7 +30,7 @@
         <div class="container">
             <header class="hm-tst-page__banner">
                 <img class="hm-tst-page__banner-img"
-                     src="{{ asset('assets/images/testimonials/testimonials-header.png') }}"
+                     src="{{ asset('assets/images/testimonials/testimonials-header.webp') }}"
                      alt="" role="presentation">
 
                 <div class="hm-tst-page__banner-content">

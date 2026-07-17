@@ -10,4 +10,8 @@
 <meta name="robots" content="@yield('meta_robots', 'index, follow')">
 
 <link rel="canonical" href="{{ url()->current() }}">
-<link rel="icon" type="image/png" href="{{ asset('assets/images/favicon.png') }}">
+
+{{-- Favicon. sizes="any" lets the browser scale the one PNG for every slot;
+     apple-touch-icon covers iOS home-screen bookmarks, which ignore rel="icon". --}}
+<link rel="icon" type="image/png" sizes="any" href="{{ asset('assets/images/branding/favicon.png') }}">
+<link rel="apple-touch-icon" href="{{ asset('assets/images/branding/favicon.png') }}">

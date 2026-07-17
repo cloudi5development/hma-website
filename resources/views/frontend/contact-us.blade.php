@@ -49,7 +49,7 @@
                 {{-- The contact icons are part of the photograph, so nothing is
                      overlaid on the right-hand side. --}}
                 <img class="hm-cnt__banner-img"
-                     src="{{ asset('assets/images/contact-us/contact-header.png') }}"
+                     src="{{ asset('assets/images/contact-us/contact-header.webp') }}"
                      alt="" role="presentation">
 
                 <div class="hm-cnt__banner-content">

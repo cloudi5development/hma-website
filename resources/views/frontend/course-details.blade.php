@@ -12,7 +12,7 @@
         'slug'        => $slug ?? 'full-stack-web-development',
         'title'       => 'Full-Stack Web Development Masterclass',
         'description' => 'Master modern web architecture from ground zero to production-ready applications. Learn React, Node.js, and Cloud deployment with industry experts.',
-        'image'       => 'course-hero.png',
+        'image'       => 'course-hero.webp',
         'date'        => '24/07/2024',
         'datetime'    => '2024-07-24',
         'students'    => '2,250 Students',
@@ -80,8 +80,8 @@
     // Related courses — the same shape the shared card partial reads.
     $thumbs = [
         ['img' => 'course-1.webp', 'badge' => 'Development',      'slug' => 'learning-javascript-development'],
-        ['img' => 'course-2.png',  'badge' => 'Corporate',        'slug' => 'learning-javascript-corporate'],
-        ['img' => 'course-3.png',  'badge' => 'Team Leadership',  'slug' => 'learning-javascript-leadership'],
+        ['img' => 'course-2.webp',  'badge' => 'Corporate',        'slug' => 'learning-javascript-corporate'],
+        ['img' => 'course-3.webp',  'badge' => 'Team Leadership',  'slug' => 'learning-javascript-leadership'],
         ['img' => 'course-4.webp', 'badge' => 'Career Readiness', 'slug' => 'learning-javascript-career'],
     ];
 

@@ -24,6 +24,9 @@
     @stack('styles')
 </head>
 <body>
+    {{-- First inside <body> so the overlay paints before anything behind it --}}
+    @include('frontend.layouts.loader')
+
     @include('frontend.layouts.header')
 
     <main id="main-content">

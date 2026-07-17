@@ -176,6 +176,8 @@
     display: inline-flex;
     align-items: center;
     gap: 14px;
+    font-size:16px;
+    font-weight:600;
 }
 
 /* White chevron chip on the primary button */
@@ -234,11 +236,11 @@
     padding: 16px 34px;
 }
 
-.hm-btn--ghost:hover {
+/* .hm-btn--ghost:hover {
     transform: translateY(-3px) scale(1.02);
     box-shadow: 0 14px 32px rgba(132, 61, 33, .22);
     color: #843D21;
-}
+} */
 
 /* Hero: Explore Course + Apply share the exact same width & height. Scoped to
    the hero so the About / Contact buttons keep their own sizing. */
@@ -1870,6 +1872,7 @@
 .hm-blog {
     position: relative;
     display: flex;
+    align-items: center;    /* centres the 165px thumb in the 174px inner height */
     gap: 18px;
     height: 210px;
     padding: 18px;
@@ -1882,15 +1885,18 @@
     transform: translateY(-10px) scale(1.02);
     box-shadow: 0 26px 52px rgba(42, 29, 20, .14);
 }
-.hm-blog--cream  { background: #FBF3E7; }
-.hm-blog--blue   { background: #EAF4FB; }
-.hm-blog--green  { background: #EBF6E9; }
-.hm-blog--purple { background: #F1ECFA; }
+
+/* Each tone is a top-to-bottom wash: near-white at the top settling into the
+   tint at the foot. Never a flat fill. */
+.hm-blog--cream  { background: linear-gradient(180deg, #FFFCF5 0%, #F8EEDC 100%); }
+.hm-blog--blue   { background: linear-gradient(180deg, #F7FBFE 0%, #E3F0FA 100%); }
+.hm-blog--green  { background: linear-gradient(180deg, #F8FCF7 0%, #E4F3E1 100%); }
+.hm-blog--purple { background: linear-gradient(180deg, #FAF8FE 0%, #ECE5F9 100%); }
 
 .hm-blog__thumb {
-    flex: 0 0 140px;
-    width: 140px;
-    height: 100%;
+    flex: 0 0 197px;
+    width: 197px;
+    height: 165px;
     border-radius: 16px;
     overflow: hidden;
 }
@@ -1976,6 +1982,9 @@
     .hm-blog {
         flex-direction: column;
         height: auto;
+        /* The row's align-items: center would centre on the horizontal axis once
+           the direction flips, shrinking the body to its content width. */
+        align-items: stretch;
     }
     .hm-blog__thumb {
         flex: none;
@@ -2013,6 +2022,12 @@
     position: relative;
     background: #FFFDFB;
     padding-bottom: 50px;
+    /* .hm-why__bg is 170vmax wide and absolutely positioned, so without this it
+       pushes ~35vw past each edge and the whole page scrolls sideways — every
+       other section already clips its backdrop, this one was the exception.
+       `clip` rather than `hidden`: hidden would make this a scroll container and
+       can break the GSAP ScrollTrigger pin inside it, whereas clip does not. */
+    overflow-x: clip;
 }
 
 /* Heading block — normal flow, scrolls away before the card area pins. */

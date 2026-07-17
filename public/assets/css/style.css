@@ -2,6 +2,23 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* The page never scrolls sideways.
+   Sections are full of oversized rotating backdrops (150-170vmax) and
+   decorations hung off negative offsets; each one is clipped at its own
+   section, but this is the backstop so a single stray element can never hand
+   the whole site a horizontal scrollbar again.
+
+   `clip` is doing real work here, and `hidden` is not a substitute: hidden
+   turns the element into a scroll container, which breaks position: sticky and
+   can stop the GSAP ScrollTrigger pin on the home page from holding. clip does
+   the same clipping without that side effect. The hidden line above it is only
+   a fallback for browsers predating clip (Safari < 16). */
+html,
+body {
+    overflow-x: hidden;
+    overflow-x: clip;
+}
+
 body {
     font-family: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
     color: #1f2937;

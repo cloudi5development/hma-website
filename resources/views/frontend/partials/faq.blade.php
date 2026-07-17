@@ -25,7 +25,7 @@
 
         {{-- Same slow-rotating hero background + soft warm overlay --}}
         <div class="hm-faq__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/Hero-section/hero-bg.png') }}" alt="" role="presentation" loading="lazy">
+            <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" loading="lazy">
         </div>
         <div class="hm-faq__overlay" aria-hidden="true"></div>
 
@@ -49,7 +49,7 @@
                         <img class="hm-faq__deco hm-faq__deco--star2" src="{{ asset('assets/images/faq/star.png') }}" alt="" aria-hidden="true" loading="lazy">
                         <img class="hm-faq__deco hm-faq__deco--dots" src="{{ asset('assets/images/faq/component.png') }}" alt="" aria-hidden="true" loading="lazy">
                         <span class="hm-faq__deco hm-faq__deco--stripe" aria-hidden="true"></span>
-                        <img class="hm-faq__img" src="{{ asset('assets/images/faq/faq-img.png') }}"
+                        <img class="hm-faq__img" src="{{ asset('assets/images/faq/faq-img.webp') }}"
                              alt="A learner considering the Hire Minds Academy programs" loading="lazy">
                     </div>
                 </div>

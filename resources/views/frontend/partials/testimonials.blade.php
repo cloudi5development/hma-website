@@ -34,7 +34,7 @@
 
         {{-- Same slow-rotating hero background (shows faintly through the panel) --}}
         <div class="hm-tst__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/Hero-section/hero-bg.png') }}" alt="" role="presentation" loading="lazy">
+            <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" loading="lazy">
         </div>
 
         <div class="container">

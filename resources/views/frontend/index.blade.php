@@ -4,6 +4,13 @@
 @section('meta_description', 'Hire Minds Academy turns ambition into a career. Master in-demand tech skills through hands-on projects, real practice and mentorship — from your first line of code to your first job offer.')
 
 @push('styles')
+    {{-- Preload the LCP image. Without this the browser cannot discover it until
+         it has parsed and applied the CSS above it, so the single largest paint
+         on the page starts late. This makes it a parse-time fetch. --}}
+    <link rel="preload" as="image" fetchpriority="high"
+          href="{{ asset('assets/images/Hero-section/hero-right-img.webp') }}"
+          type="image/webp">
+
     {{-- Bootstrap 5 + Font Awesome are loaded site-wide via layouts/common-css --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" crossorigin="anonymous">
     {{-- Poppins — used only for the Upcoming Events heading (per its design spec) --}}
@@ -31,7 +38,7 @@
 
         {{-- Slow-rotating holographic glow, blurred + low opacity, behind everything --}}
         <div class="hm-hero__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/Hero-section/hero-bg.png') }}" alt="" role="presentation" fetchpriority="low">
+            <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" fetchpriority="low">
         </div>
 
         <div class="container hm-hero__container">
@@ -66,10 +73,16 @@
                 <div class="col-lg-6 hm-hero__right">
                     <div class="hm-hero__visual" id="hmVisual">
 
+                        {{-- The LCP element. data-hm-hero-img is what the loader
+                             waits on — it dismisses once THIS has decoded rather
+                             than on window.load, which would block on every image
+                             further down the page. decoding="sync" so it paints
+                             with the rest of the hero instead of a frame later. --}}
                         <img class="hm-hero__student hm-reveal hm-reveal--fade" data-delay="200"
+                             data-hm-hero-img
                              src="{{ asset('assets/images/Hero-section/hero-right-img.webp') }}"
                              alt="Smiling Hire Minds Academy student holding a notebook"
-                             width="560" height="548" decoding="async" fetchpriority="high">
+                             width="560" height="548" decoding="sync" fetchpriority="high">
 
                         {{-- Google rating card --}}
                         <div class="hm-card hm-card--google hm-float-a hm-reveal hm-reveal--fade" data-delay="300">
@@ -140,7 +153,7 @@
 
         {{-- Same slow-rotating premium background as the hero --}}
         <div class="hm-about__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/about-us/hero-bg.png') }}" alt="" role="presentation" loading="lazy">
+            <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" loading="lazy">
         </div>
 
         <div class="container hm-about__container">
@@ -212,7 +225,7 @@
                 'pills'   => ['HR Professionals', 'Practical Sessions', 'Career Guidance'],
                 'tone'    => 'orange',
                 'reverse' => false,
-                'bg'      => 'bg-1.png', 'component' => 'component-1.png', 'person' => 'person-1.png', 'fit' => 'tall',
+                'bg'      => 'bg-1.png', 'component' => 'component-1.png', 'person' => 'person-1.webp', 'fit' => 'tall',
             ],
             [
                 'title'   => 'Career Support',
@@ -220,7 +233,7 @@
                 'pills'   => ['Resume Building', 'Mock Interviews', 'Placement Support'],
                 'tone'    => 'blue',
                 'reverse' => true,
-                'bg'      => 'bg-2.png', 'component' => 'component-2.png', 'person' => 'person-2.png', 'fit' => 'wide',
+                'bg'      => 'bg-2.png', 'component' => 'component-2.png', 'person' => 'person-2.webp', 'fit' => 'wide',
             ],
             [
                 'title'   => 'Hands-On Learning',
@@ -228,7 +241,7 @@
                 'pills'   => ['Live Projects', 'Practical Workshops', 'Case Studies'],
                 'tone'    => 'yellow',
                 'reverse' => false,
-                'bg'      => 'bg-3.png', 'component' => 'component-3.png', 'person' => 'person-3.png', 'fit' => 'tall',
+                'bg'      => 'bg-3.png', 'component' => 'component-3.png', 'person' => 'person-3.webp', 'fit' => 'tall',
             ],
             [
                 'title'   => 'Industry-Aligned Curriculum',
@@ -236,7 +249,7 @@
                 'pills'   => ['Latest Technologies', 'Updated Syllabus', 'In-Demand Skills'],
                 'tone'    => 'pink',
                 'reverse' => true,
-                'bg'      => 'bg-4.png', 'component' => 'component-4.png', 'person' => 'person-4.png', 'fit' => 'wide',
+                'bg'      => 'bg-4.png', 'component' => 'component-4.png', 'person' => 'person-4.webp', 'fit' => 'wide',
             ],
         ];
     @endphp
@@ -255,7 +268,7 @@
         <div class="hm-why__pin">
             {{-- Reused hero rotating background — same image / blur / opacity / 90s spin --}}
             <div class="hm-why__bg" aria-hidden="true">
-                <img src="{{ asset('assets/images/Hero-section/hero-bg.png') }}" alt="" role="presentation" loading="lazy">
+                <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" loading="lazy">
             </div>
 
             <div class="container hm-why__container">
@@ -303,7 +316,7 @@
                 'type'    => 'Live Event',
                 'price'   => '₹499/-',
                 'link'    => '#',
-                'person'  => 'person-2.png',
+                'person'  => 'person-2.webp',
                 'tone'    => 'purple',
             ],
             [
@@ -312,7 +325,7 @@
                 'type'    => 'Live Event',
                 'price'   => '₹499/-',
                 'link'    => '#',
-                'person'  => 'person-3.png',
+                'person'  => 'person-3.webp',
                 'tone'    => 'teal',
             ],
             [
@@ -321,14 +334,14 @@
                 'type'    => 'Live Event',
                 'price'   => '₹499/-',
                 'link'    => '#',
-                'person'  => 'person-1.png',
+                'person'  => 'person-1.webp',
                 'tone'    => 'green',
             ],
         ];
     @endphp
     <section class="hm-events" id="events" aria-labelledby="hmEventsTitle">
         <div class="hm-events__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/events/events-bg.png') }}" alt="" role="presentation" loading="lazy">
+            <img src="{{ asset('assets/images/events/events-bg.webp') }}" alt="" role="presentation" loading="lazy">
         </div>
 
         <div class="container hm-events__container">
@@ -396,7 +409,7 @@
 
         {{-- Same slow-rotating premium background as the hero --}}
         <div class="hm-cats__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/categories/hero-bg.png') }}" alt="" role="presentation" loading="lazy">
+            <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" loading="lazy">
         </div>
 
         <div class="container hm-cats__container">
@@ -442,8 +455,8 @@
         // Thumbnails live in public/assets/images/courses/ (each is a composed image).
         $courses = [
             ['img' => 'course-1.webp', 'badge' => 'Development',     'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-development')],
-            ['img' => 'course-2.png',  'badge' => 'Corporate',       'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-corporate')],
-            ['img' => 'course-3.png',  'badge' => 'Team Leadership',  'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-leadership')],
+            ['img' => 'course-2.webp',  'badge' => 'Corporate',       'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-corporate')],
+            ['img' => 'course-3.webp',  'badge' => 'Team Leadership',  'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-leadership')],
             ['img' => 'course-4.webp', 'badge' => 'Career Readiness', 'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-career')],
         ];
     @endphp
@@ -451,7 +464,7 @@
 
         {{-- Same slow-rotating premium background as the hero --}}
         <div class="hm-courses__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/Hero-section/hero-bg.png') }}" alt="" role="presentation" loading="lazy">
+            <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" loading="lazy">
         </div>
 
         {{-- Decorative dotted / striped shapes --}}
@@ -509,7 +522,7 @@
 
         {{-- Same slow-rotating premium background as the hero --}}
         <div class="hm-stories__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/Hero-section/hero-bg.png') }}" alt="" role="presentation" loading="lazy">
+            <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" loading="lazy">
         </div>
 
         <div class="container hm-stories__container">
@@ -571,7 +584,7 @@
 
         {{-- Same slow-rotating premium background as the hero --}}
         <div class="hm-blogs__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/Hero-section/hero-bg.png') }}" alt="" role="presentation" loading="lazy">
+            <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" loading="lazy">
         </div>
 
         <div class="container hm-blogs__container">

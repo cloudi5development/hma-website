@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(read -r ref)",
+      "Bash([ -f \"public/$ref\" ])"
+    ]
+  }
+}

@@ -7,11 +7,11 @@
 <meta property="og:description" content="@yield('og_description', '')">
 <meta property="og:type" content="@yield('og_type', 'website')">
 <meta property="og:url" content="{{ url()->current() }}">
-<meta property="og:image" content="@yield('og_image', asset('assets/images/logo.png'))">
+<meta property="og:image" content="@yield('og_image', asset('assets/images/branding/logo.png'))">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="@yield('og_title', config('app.name'))">
 <meta name="twitter:description" content="@yield('og_description', '')">
-<meta name="twitter:image" content="@yield('og_image', asset('assets/images/logo.png'))">
+<meta name="twitter:image" content="@yield('og_image', asset('assets/images/branding/logo.png'))">
 
 @stack('seo')
