@@ -7,7 +7,7 @@
 |   @include('frontend.partials.faq')
 |
 | Push its stylesheet from the page:
-|   <link rel="stylesheet" href="{{ asset('assets/css/frontend/faq.css') }}">
+|   <link rel="stylesheet" href="{{ asset('assets/css/frontend/faq.css') }}?v={{ filemtime(public_path('assets/css/frontend/faq.css')) }}">
 |
 | NOTE: the accordion uses Bootstrap's collapse (data-bs-toggle), so the page
 | MUST also load the Bootstrap JS bundle.
@@ -35,7 +35,7 @@
                 {{-- Left: heading + description + illustration --}}
                 <div class="col-lg-5 hm-faq__left hm-anim hm-anim--left">
                     <span class="hm-faq__label">
-                        <span class="hm-faq__label-icon" aria-hidden="true"></span>
+                        <span class="hm-cats__label-icon" aria-hidden="true"></span>
                         <span class="hm-faq__label-text">FAQ</span>
                     </span>
                     <h2 class="hm-faq__title" id="hmFaqTitle">Frequently Asking Questions</h2>

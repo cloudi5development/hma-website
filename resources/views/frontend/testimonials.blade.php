@@ -12,8 +12,8 @@
     {{-- Shared sections, also used on the home page. testimonials.css carries
          BOTH the shared "Voices" section and this page's own styles, so it goes
          last — its page rules fit the sections above it to this layout. --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/career-success.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/counters.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/career-success.css') }}?v={{ filemtime(public_path('assets/css/frontend/career-success.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/counters.css') }}?v={{ filemtime(public_path('assets/css/frontend/counters.css')) }}">
     {{-- ?v=<file mtime> busts the browser cache whenever testimonials.css
          changes, so edits are never masked by a stale copy. --}}
     <link rel="stylesheet"

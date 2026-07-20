@@ -1,10 +1,15 @@
 {{--
     Admin panel stylesheets — completely separate from the frontend assets.
-    Vendor/library CSS lives in public/backend/template/libs, the theme CSS in
-    public/backend/template/css. Page-specific CSS → @push('styles').
+    Page-specific CSS → @push('styles').
 --}}
-{{-- Libraries (public/backend/template/libs/) --}}
-{{-- <link rel="stylesheet" href="{{ asset('backend/template/libs/bootstrap/css/bootstrap.min.css') }}"> --}}
+{{-- Poppins — admin typeface (matches the public site) --}}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
 
-{{-- Admin theme stylesheet --}}
-<link rel="stylesheet" href="{{ asset('backend/template/css/style.css') }}">
+{{-- Bootstrap 5 — grid + utilities only; the look is admin.css --}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" crossorigin="anonymous">
+
+{{-- Admin theme. ?v=<mtime> so an edit is never masked by a cached copy. --}}
+<link rel="stylesheet"
+      href="{{ asset('backend/assets/css/admin.css') }}?v={{ filemtime(public_path('backend/assets/css/admin.css')) }}">

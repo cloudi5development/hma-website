@@ -10,7 +10,7 @@
 | and push its stylesheet from the page (the head is already rendered by the
 | time an @include runs, so @push('styles') cannot work from in here):
 |
-|   <link rel="stylesheet" href="{{ asset('assets/css/frontend/contact-form.css') }}">
+|   <link rel="stylesheet" href="{{ asset('assets/css/frontend/contact-form.css') }}?v={{ filemtime(public_path('assets/css/frontend/contact-form.css')) }}">
 |
 | The validation JS is pushed by this partial itself (see the bottom), so the
 | component carries its own behaviour wherever it is dropped in.
@@ -38,7 +38,7 @@
                     {{-- Left: information --}}
                     <div class="col-lg-5 hm-contact__info hm-anim hm-anim--left">
                         <span class="hm-contact__label">
-                            <span class="hm-contact__label-icon" aria-hidden="true"></span>
+                           <span class="hm-cats__label-icon" aria-hidden="true"></span>
                             <span class="hm-contact__label-text">Let's Connect</span>
                         </span>
                         <h2 class="hm-contact__title" id="hmContactTitle">Let's Start Your Career Journey Together</h2>

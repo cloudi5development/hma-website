@@ -9,7 +9,7 @@
 |
 | and push its stylesheet from the page:
 |
-|   <link rel="stylesheet" href="{{ asset('assets/css/frontend/partners.css') }}">
+|   <link rel="stylesheet" href="{{ asset('assets/css/frontend/partners.css') }}?v={{ filemtime(public_path('assets/css/frontend/partners.css')) }}">
 |
 --}}
 @php

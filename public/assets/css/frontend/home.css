@@ -77,7 +77,7 @@
 .hm-hero__container {
     position: relative;
     z-index: 2;
-    margin-bottom: 140px;
+
 }
 
 /* ============================== LEFT COLUMN ============================== */
@@ -256,6 +256,13 @@
 .hm-hero__actions .hm-btn--ghost { justify-content: center; }
 
 /* ============================== RIGHT VISUAL ============================== */
+/* Nudge the left column up. The row centres both columns against the tall hero
+   image; this lifts the text block so it reads higher in the first view.
+   transform, so nothing reflows. */
+.hm-hero__left {
+    transform: translateY(-28px);
+}
+
 .hm-hero__right {
     position: relative;
 }
@@ -287,7 +294,7 @@
     position: relative;
     z-index: 2;
     display: block;
-    width: 100%;
+    width: 93%;
     height: auto;
     object-fit: contain;
     filter: drop-shadow(0 30px 50px rgba(42, 29, 20, .18));
@@ -377,25 +384,26 @@
     object-fit: contain;
 }
 
+/* HTML icon floats beside the "Get Hired" end of the badge (top of the left
+   column). Positioned from the top now, not the bottom, so it reads against the
+   badge rather than the buttons. */
 .hm-tech--html {
-    left: 3%;
-    bottom: 12%;
+    left: 27%;
+    top: 6%;
 }
 
-/* lower-left, under the buttons */
+/* JS icon floats beside "Right Skills" — the end of the heading's second line. */
 .hm-tech--js {
-    left: 42%;
-    bottom: 28%;
+    left: 40%;
+    top: 34%;
 }
-
-/* higher, toward the centre */
 
 /* Scroll-down circular badge */
 .hm-scroll {
     position: absolute;
     z-index: 4;
-    right: 4%;
-    bottom: -2%;
+       right: -8%;
+    bottom: 20%;
     width: 104px;
     height: 104px;
     padding: 0;
@@ -694,9 +702,9 @@
 }
 
 .hm-b {
-    top: 97%;
-    left: 35%;
-
+      top: 30%;
+    left: 46%;
+    transform: rotate(334deg) !important;
 }
 
 /* .apply{
@@ -1192,22 +1200,35 @@
 }
 
 .hm-cat__icon {
+    position: relative;        /* stacking context for the blob + glyph */
     flex-shrink: 0;
     width: 56px;
     height: 56px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform .35s ease;
 }
 
-.hm-cat:hover .hm-cat__icon img {
+/* Coloured blob — fills the badge, sits behind the glyph, and is the ONLY part
+   that rotates. Hovering the icon (not the whole card) spins it. */
+.hm-cat__icon-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.hm-cat__icon:hover .hm-cat__icon-bg {
     animation: hm-spin 3.5s linear infinite;
 }
 
-.hm-cat__icon img {
-    width: 56px;
-    height: 56px;
+/* White glyph — centred on the blob, never moves. */
+.hm-cat__icon-glyph {
+    position: relative;
+    z-index: 1;
+    width: 28px;
+    height: 28px;
     object-fit: contain;
 }
 
@@ -1402,14 +1423,9 @@
 }
 
 /* Little floating JS card near "See all" */
-.hm-courses__float {
-    position: absolute;
-    top: -34px;
-    right: 26px;
-    width: 62px;
-    z-index: 2;
-    animation: hm-float-y 6s ease-in-out infinite;
-}
+/* .hm-courses__float (the floating JS badge) was removed from the markup; the
+   two `display: none` rules for it left in the responsive blocks below are inert
+   no-ops now, harmless to keep. */
 
 /* ---- Course card ----
    Moved to assets/css/frontend/courses.css - the card is now shared with
@@ -1643,8 +1659,8 @@
     z-index: 1;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    object-position: center top;
+    object-fit: contain;
+   
     transition: transform .4s ease;
 }
 
@@ -1838,7 +1854,7 @@
 .hm-blogs__title {
     max-width: 850px;
     margin: 0 auto 14px;
-    font-size: clamp(30px, 4vw, 48px);
+    font-size: 34px;
     font-weight: 700;
     line-height: 1.25;
     color: #222222;
@@ -2090,7 +2106,7 @@
 .hm-why__eyebrow i { font-size: 8px; color: var(--hm-gold, #E9A320); }
 .hm-why__title {
     margin: 0 0 14px;
-    font-size: clamp(26px, 3.4vw, 40px);
+    font-size: 34px;
     font-weight: 800;
     line-height: 1.15;
     color: var(--hm-ink, #23180F);
@@ -2397,7 +2413,7 @@
 .hm-events__title {
     font-family: 'Poppins', 'Geist', sans-serif;
     margin: 0 0 16px;
-    font-size: clamp(30px, 4vw, 50px);
+    font-size: 34px;
     font-weight: 700;
     line-height: 1.15;
     color: #222222;

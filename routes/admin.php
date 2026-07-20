@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Backend\AuthController;
+use App\Http\Controllers\Backend\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,16 +20,23 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('backend.')->group(function () {
 
-    // Guest auth routes (login form for now; add POST login + forgot/reset
-    // password here once authentication is wired up).
+    // Guest auth — login form + credential check + logout.
     Route::controller(AuthController::class)->name('auth.')->group(function () {
         Route::get('/login', 'login')->name('login');
+        Route::post('/login', 'authenticate')->name('authenticate');
+        Route::post('/logout', 'logout')->name('logout');
     });
 
-    // Authenticated admin area — add an auth guard/middleware group here later:
-    //
-    //   Route::middleware(['auth', 'admin'])->name('template.')->group(function () {
-    //       Route::get('/dashboard', DashboardController::class)->name('dashboard');
-    //   });
+    // Authenticated admin area — guarded by the session flag (admin.auth).
+    Route::middleware('admin.auth')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    });
+
+    // /admin → dashboard when logged in, otherwise the login screen.
+    Route::get('/', function () {
+        return redirect()->route(
+            session('admin_logged_in') ? 'backend.dashboard' : 'backend.auth.login'
+        );
+    })->name('home');
 
 });

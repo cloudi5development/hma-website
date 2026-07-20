@@ -35,7 +35,9 @@
     position: relative;
     z-index: 1;
     border-radius: 36px;
-    padding: 70px;
+    padding: 50px ;
+    padding-left:0px !important;
+    padding-right:0px !important;
     overflow: hidden;
     background: linear-gradient(135deg, #FFF9DD 0%, #FFF8E7 55%, #FFFCEB 100%);
     box-shadow: 0 30px 80px rgba(180, 140, 40, .12);

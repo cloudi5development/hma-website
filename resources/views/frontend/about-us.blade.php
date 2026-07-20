@@ -7,10 +7,10 @@
     {{-- Poppins — the About hero heading typeface --}}
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap">
     {{-- Shared sections (also used on the home page) --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/partners.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/counters.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/testimonials.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/faq.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/partners.css') }}?v={{ filemtime(public_path('assets/css/frontend/partners.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/counters.css') }}?v={{ filemtime(public_path('assets/css/frontend/counters.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/testimonials.css') }}?v={{ filemtime(public_path('assets/css/frontend/testimonials.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/faq.css') }}?v={{ filemtime(public_path('assets/css/frontend/faq.css')) }}">
     {{-- ?v=<file mtime> busts the browser cache whenever about.css changes,
          so edits are never masked by a stale copy. --}}
     <link rel="stylesheet"

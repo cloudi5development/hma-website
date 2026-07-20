@@ -68,7 +68,7 @@
 .hm-navbar__links {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 18px;                 /* was 4px — the items were nearly touching */
     margin: 0 auto;
     padding: 0;
     list-style: none;
@@ -283,11 +283,41 @@
     pointer-events: none;
     transition: opacity .25s var(--hm-ease), transform .25s var(--hm-ease), visibility .25s;
 }
+/* Click-to-open (the caret sets .is-open) — kept global because the mobile
+   stack relies on it too. */
 .hm-nav-item--mega.is-open .hm-mega {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
     pointer-events: auto;
+}
+
+/* Hover-to-open — desktop only. On mobile the panel is an inline max-height
+   accordion, so hovering it makes no sense and could half-open it. */
+@media (min-width: 992px) {
+    .hm-nav-item--mega:hover .hm-mega,
+    .hm-nav-item--mega:focus-within .hm-mega {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
+    /* Invisible bridge over the 16px gap between the label and the panel, so the
+       pointer can travel from one to the other without crossing a dead strip
+       that would close it. */
+    .hm-nav-item--mega::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        height: 18px;
+    }
+
+    /* Caret rotates on hover too, so it stays in step with the panel. */
+    .hm-nav-item--mega:hover .hm-mega-toggle__caret,
+    .hm-nav-item--mega:focus-within .hm-mega-toggle__caret { transform: rotate(180deg); }
 }
 
 .hm-mega__grid {

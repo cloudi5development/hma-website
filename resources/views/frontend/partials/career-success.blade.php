@@ -19,7 +19,7 @@
 | Push its stylesheet from the page (the head is already rendered by the time
 | an @include runs, so @push('styles') cannot work from in here):
 |
-|   <link rel="stylesheet" href="{{ asset('assets/css/frontend/career-success.css') }}">
+|   <link rel="stylesheet" href="{{ asset('assets/css/frontend/career-success.css') }}?v={{ filemtime(public_path('assets/css/frontend/career-success.css')) }}">
 |
 | The Swiper init ships with this partial (see the bottom), so the component
 | carries its own behaviour wherever it is dropped in.
@@ -54,7 +54,7 @@
             {{-- Header --}}
             <div class="hm-reels__head">
                 <span class="hm-reels__label hm-anim hm-anim--up">
-                    <span class="hm-reels__label-icon" aria-hidden="true"></span>
+                   <span class="hm-cats__label-icon" aria-hidden="true"></span>
                     <span class="hm-reels__label-text">{{ $csLabel ?? 'Our Journey' }}</span>
                 </span>
                 <h2 class="hm-reels__title hm-anim hm-anim--up hm-anim--d1" id="hmReelsTitle">{{ $csTitle ?? 'Watch Our Learning Journey' }}</h2>

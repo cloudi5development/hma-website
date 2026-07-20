@@ -27,8 +27,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 
 {{-- Site stylesheet (loaded after Bootstrap so its resets/Geist body font win) --}}
-<link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
 
 {{-- Global navbar + footer (markup in layouts/, reused on every page) --}}
-<link rel="stylesheet" href="{{ asset('assets/css/frontend/navbar.css') }}">
-<link rel="stylesheet" href="{{ asset('assets/css/frontend/footer.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/frontend/navbar.css') }}?v={{ filemtime(public_path('assets/css/frontend/navbar.css')) }}">
+<link rel="stylesheet" href="{{ asset('assets/css/frontend/footer.css') }}?v={{ filemtime(public_path('assets/css/frontend/footer.css')) }}">

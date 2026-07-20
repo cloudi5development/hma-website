@@ -10,8 +10,8 @@
     {{-- Shared sections, also used on the home page. contact.css must come LAST:
          it fits both of them to this page (spacing, backdrop) by overriding
          rules of equal specificity, which only works on load order. --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/contact-form.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/faq.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/contact-form.css') }}?v={{ filemtime(public_path('assets/css/frontend/contact-form.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/faq.css') }}?v={{ filemtime(public_path('assets/css/frontend/faq.css')) }}">
     {{-- ?v=<file mtime> busts the browser cache whenever contact.css changes, so
          edits are never masked by a stale copy. --}}
     <link rel="stylesheet"

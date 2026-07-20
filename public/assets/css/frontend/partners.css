@@ -33,11 +33,12 @@
     mask-image: none;
 }
 
-/* Two identical groups slide left by exactly one group width → seamless loop */
+/* Two identical groups slide left by exactly one group width → seamless loop.
+   60s (was 30s) — half the speed, so it drifts rather than races. */
 .hm-partners__track {
     display: flex;
     width: max-content;
-    animation: hm-marquee 30s linear infinite;
+    animation: hm-marquee 60s linear infinite;
     will-change: transform;
 }
 

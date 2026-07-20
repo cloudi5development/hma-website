@@ -17,7 +17,7 @@
     background: linear-gradient(160deg, #8B4726 0%, #8A4322 55%, #7B3F1F 100%);
     color: var(--hmf-text);
     font-size: 16px;
-    line-height: 1.8;
+    line-height: 1.6;
 }
 
 /* ------------------------------ Column 1: Brand ------------------------------ */
@@ -32,7 +32,7 @@
     margin: 0 0 24px;
     color: var(--hmf-text);
     font-size: 16px;
-    line-height: 1.8;
+    line-height: 1.6;
 }
 .hm-footer__socials {
     display: flex;
@@ -105,7 +105,7 @@
 .hm-footer__contact-icon {
     flex-shrink: 0;
     width: 20px;
-    line-height: 1.8;          /* aligns icon with the first text line */
+    line-height: 1.6;          /* aligns icon with the first text line */
     color: var(--hmf-gold);
     font-size: .95rem;
     text-align: center;

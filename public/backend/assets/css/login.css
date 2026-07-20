@@ -1,0 +1,333 @@
+/* ==========================================================================
+   HireMinds Academy — Admin login
+   View: resources/views/backend/auth/login.blade.php
+
+   Full-viewport split: form left, illustration right, ALL WHITE. The page fills
+   the screen exactly (100dvh) with no outer padding and never scrolls — the
+   illustration is capped in vh units so the whole layout always fits the first
+   view at any common height.
+   ========================================================================== */
+
+:root {
+    --hm-brown: #8B451F;
+    --hm-dark: #2B1C14;
+    --hm-border: #ECECEC;
+    --hm-gray: #6F6F6F;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+body {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;            /* never scroll — the layout is sized to fit */
+    font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--hm-dark);
+    background: #FFFFFF;
+}
+
+/* ------------------------------ The screen ------------------------------ */
+.hm-login {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    background: #FFFFFF;
+    opacity: 0;
+    animation: hm-fade .5s ease forwards;
+}
+
+/* ============================== LEFT (form) ============================== */
+.hm-login__left {
+    flex: 0 0 45%;
+    max-width: 45%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 0;
+    padding: 32px 48px;
+    background: #FFFFFF;
+    opacity: 0;
+    transform: translateX(-22px);
+    animation: hm-slide-left .5s cubic-bezier(.22, .61, .36, 1) .1s forwards;
+}
+
+.hm-login__inner {
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+/* ---- Brand ---- */
+.hm-login__logo {
+    display: block;
+    height: 66px;
+    width: auto;
+    margin: 0 auto 12px;
+}
+
+.hm-login__tagline {
+    margin: 0 0 26px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--hm-brown);
+}
+
+.hm-login__title {
+    margin: 0 0 10px;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--hm-dark);
+}
+
+.hm-login__desc {
+    margin: 0 0 26px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--hm-gray);
+}
+
+/* ---- Error banner ---- */
+.hm-login__alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 18px;
+    padding: 11px 14px;
+    font-size: 13.5px;
+    font-weight: 500;
+    text-align: left;
+    color: #B23A2E;
+    background: #FCEEEC;
+    border: 1px solid #F3D3CE;
+    border-radius: 12px;
+}
+
+/* ---- Fields ---- */
+.hm-login__field { margin-bottom: 16px; text-align: left; }
+
+.hm-login__control {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.hm-login__icon {
+    position: absolute;
+    left: 20px;
+    display: inline-flex;
+    color: #A79E97;
+    pointer-events: none;
+}
+
+.hm-login__input {
+    width: 100%;
+    height: 56px;
+    padding: 0 20px 0 52px;
+    font-family: inherit;
+    font-size: 14.5px;
+    color: var(--hm-dark);
+    background: #FFFFFF;
+    border: 1px solid var(--hm-border);
+    border-radius: 14px;
+    outline: none;
+    transition: border-color .3s ease, box-shadow .3s ease;
+}
+
+.hm-login__input::placeholder { color: #B4ADA6; }
+
+.hm-login__input:focus {
+    border-color: var(--hm-brown);
+    box-shadow: 0 0 0 4px rgba(139, 69, 31, .10);
+}
+
+.hm-login__input--password { padding-right: 52px; }
+
+.hm-login__eye {
+    position: absolute;
+    right: 18px;
+    display: inline-flex;
+    padding: 4px;
+    color: #A79E97;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    transition: color .25s ease;
+}
+
+.hm-login__eye:hover { color: var(--hm-brown); }
+
+.hm-login__input.is-invalid { border-color: #D9534F; }
+.hm-login__error { margin: 6px 4px 0; font-size: 12px; color: #D9534F; }
+
+/* ---- Forgot ---- */
+.hm-login__forgot {
+    display: block;
+    margin: -2px 4px 22px;
+    text-align: right;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--hm-brown);
+    text-decoration: none;
+}
+
+.hm-login__forgot:hover { text-decoration: underline; }
+
+/* ---- Submit ---- */
+.hm-login__btn {
+    width: 100%;
+    height: 56px;
+    font-family: inherit;
+    font-size: 15.5px;
+    font-weight: 600;
+    color: #FFFFFF;
+    background: var(--hm-brown);
+    border: 0;
+    border-radius: 14px;
+    cursor: pointer;
+    box-shadow: 0 12px 26px rgba(139, 69, 31, .20);
+    transition: transform .3s ease, box-shadow .3s ease, background .3s ease;
+}
+
+.hm-login__btn:hover {
+    transform: translateY(-2px);
+    background: #7A3B18;
+    box-shadow: 0 18px 36px rgba(139, 69, 31, .28);
+}
+
+.hm-login__btn:active { transform: translateY(0); }
+
+/* ============================== RIGHT (art) ============================== */
+.hm-login__right {
+    position: relative;
+    flex: 0 0 55%;
+    max-width: 55%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: 28px 48px;
+    background: #FFFFFF;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(22px);
+    animation: hm-slide-right .5s cubic-bezier(.22, .61, .36, 1) .1s forwards;
+}
+
+/* Faint emblem watermark, centred behind the illustration */
+.hm-login__watermark {
+    position: absolute;
+    top: 42%;
+    left: 50%;
+    width: 44%;
+    max-width: 380px;
+    transform: translate(-50%, -50%);
+    opacity: .05;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* Illustration is capped in vh so the whole right column always fits the view */
+.hm-login__illustration {
+    position: relative;
+    z-index: 1;
+    width: auto;
+    max-width: 100%;
+    max-height: 74vh;
+    height: auto;
+    display: block;
+}
+
+.hm-login__dots {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 20px 0 18px;
+}
+
+.hm-login__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #E4D3C4;
+}
+
+.hm-login__dot--active {
+    width: 24px;
+    background: var(--hm-brown);
+}
+
+.hm-login__right-title {
+    position: relative;
+    z-index: 1;
+    margin: 0 0 10px;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: center;
+    color: var(--hm-dark);
+}
+
+.hm-login__right-desc {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    text-align: center;
+    color: var(--hm-gray);
+}
+
+/* ================================ Keyframes ================================ */
+@keyframes hm-fade        { to { opacity: 1; } }
+@keyframes hm-slide-left  { to { opacity: 1; transform: none; } }
+@keyframes hm-slide-right { to { opacity: 1; transform: none; } }
+
+/* ================================ Responsive ================================ */
+/* Tablet — stack; the form leads, a shorter illustration follows. Still fits. */
+@media (max-width: 991.98px) {
+    .hm-login { flex-direction: column; }
+    .hm-login__left,
+    .hm-login__right {
+        flex: 1 1 auto;
+        max-width: 100%;
+        padding: 24px 28px;
+    }
+    .hm-login__left { flex: 0 0 auto; }
+    .hm-login__illustration { max-height: 34vh; }
+    .hm-login__right-title { font-size: 22px; }
+    .hm-login__title { font-size: 28px; }
+}
+
+/* Phone — the illustration panel is hidden so the form fills the screen with
+   no scroll (a standard admin-login pattern on small devices). */
+@media (max-width: 575.98px) {
+    .hm-login__right { display: none; }
+    .hm-login__left {
+        flex: 1 1 auto;
+        max-width: 100%;
+        padding: 28px 22px;
+    }
+    .hm-login__title { font-size: 26px; }
+}
+
+/* Reduced motion — appear in place. */
+@media (prefers-reduced-motion: reduce) {
+    .hm-login,
+    .hm-login__left,
+    .hm-login__right { opacity: 1; transform: none; animation: none; }
+    .hm-login__btn { transition: background .3s ease; }
+}

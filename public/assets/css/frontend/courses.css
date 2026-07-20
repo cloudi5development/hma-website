@@ -54,6 +54,40 @@
     transform: scale(1.05);
 }
 
+/* Shimmer — a single diagonal gloss sweep from top-left to bottom-right on
+   hover, on top of the lift + zoom the card already does. Oversized and clipped
+   by the thumb's overflow: hidden, so the band clears both corners. Transform +
+   opacity only. */
+.hm-course__thumb::after {
+    content: "";
+    position: absolute;
+    inset: -50%;
+    z-index: 1;                 /* above the image */
+    pointer-events: none;
+    background: linear-gradient(135deg,
+        transparent 42%,
+        rgba(255, 255, 255, .55) 50%,
+        transparent 58%);
+    transform: translate3d(-120%, -120%, 0);
+    opacity: 0;
+    will-change: transform;
+}
+
+.hm-course:hover .hm-course__thumb::after {
+    animation: hm-course-shimmer .9s ease-out;
+}
+
+@keyframes hm-course-shimmer {
+    0%   { transform: translate3d(-120%, -120%, 0); opacity: 0; }
+    15%  { opacity: 1; }
+    85%  { opacity: 1; }
+    100% { transform: translate3d(120%, 120%, 0); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hm-course:hover .hm-course__thumb::after { animation: none; }
+}
+
 .hm-course__body {
     display: flex;
     flex-direction: column;
@@ -463,6 +497,117 @@
     opacity: .55;
 }
 
+/* Search + Categories button sit together on the left of the toolbar. */
+.hm-crs-bar__filters {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+/* ---- Categories button (rounded pill, filter icon, swappable label) ---- */
+.hm-crs-cat { position: relative; }
+
+.hm-crs-cat__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    height: 42px;
+    padding: 0 18px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6B7280;
+    background: #FFFFFF;
+    border: 1px solid #E4E4E7;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color .25s ease, box-shadow .25s ease, color .25s ease;
+}
+
+.hm-crs-cat__btn:hover,
+.hm-crs-cat__btn:focus-visible {
+    border-color: var(--hm-gold, #E9A320);
+    box-shadow: 0 0 0 3px rgba(233, 163, 32, .12);
+}
+
+/* Filter icon on the left */
+.hm-crs-cat__ico {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    opacity: .6;
+}
+
+.hm-crs-cat__caret {
+    font-size: 11px;
+    transition: transform .3s ease;
+}
+
+.hm-crs-cat__btn[aria-expanded="true"] .hm-crs-cat__caret { transform: rotate(180deg); }
+
+/* Once a category is chosen the label is the brand colour, so the button reads
+   as "active / filtered". */
+.hm-crs-cat.is-filtered .hm-crs-cat__label { color: #23180F; font-weight: 600; }
+
+/* ---- Dropdown panel — two columns of checkboxes ---- */
+.hm-crs-cat__menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+    gap: 6px 28px;
+    min-width: 420px;
+    padding: 22px 24px;
+    background: #FFFFFF;
+    border: 1px solid #EFEFF1;
+    border-radius: 18px;
+    box-shadow: 0 24px 60px rgba(42, 29, 20, .16);
+    /* Animated open/close on transform + opacity only */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity .25s ease, transform .25s ease, visibility .25s;
+}
+
+.hm-crs-cat.is-open .hm-crs-cat__menu {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+}
+
+.hm-crs-cat__col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Each option — checkbox + label, comfortable hit area */
+.hm-crs-cat__opt {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 8px;
+    border-radius: 8px;
+    font-size: 14.5px;
+    color: #3F3F46;
+    cursor: pointer;
+    transition: background .2s ease;
+}
+
+.hm-crs-cat__opt:hover { background: #FAF7F0; }
+
+.hm-crs-cat__opt--bold { font-weight: 700; color: #23180F; }
+
+.hm-crs-cat__cb {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    accent-color: var(--hm-gold, #E9A320);   /* tints the native check to brand */
+    cursor: pointer;
+}
+
 .hm-crs-bar__count {
     margin: 0;
     font-size: 14px;
@@ -517,8 +662,15 @@
     .hm-crs-hero__title { font-size: 24px; }
 
     .hm-crs-bar { flex-wrap: wrap; }
-    .hm-crs-bar__search { width: 100%; }
+    .hm-crs-bar__filters { width: 100%; flex-wrap: wrap; }
+    .hm-crs-bar__search { flex: 1 1 200px; width: auto; }
     .hm-crs-bar__count { width: 100%; text-align: left; }
+
+    /* Panel can't be wider than the viewport gutter allows. */
+    .hm-crs-cat__menu {
+        min-width: 0;
+        width: min(420px, calc(100vw - 40px));
+    }
 }
 
 /* Reduced motion — hold the aurora and the float, keep every state. */

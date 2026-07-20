@@ -16,14 +16,14 @@
     {{-- Poppins — used only for the Upcoming Events heading (per its design spec) --}}
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap">
     {{-- Shared sections (also used on the About / Contact pages) --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/partners.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/counters.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/testimonials.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/faq.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/contact-form.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/career-success.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/courses.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/home.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/partners.css') }}?v={{ filemtime(public_path('assets/css/frontend/partners.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/counters.css') }}?v={{ filemtime(public_path('assets/css/frontend/counters.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/testimonials.css') }}?v={{ filemtime(public_path('assets/css/frontend/testimonials.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/faq.css') }}?v={{ filemtime(public_path('assets/css/frontend/faq.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/contact-form.css') }}?v={{ filemtime(public_path('assets/css/frontend/contact-form.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/career-success.css') }}?v={{ filemtime(public_path('assets/css/frontend/career-success.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/courses.css') }}?v={{ filemtime(public_path('assets/css/frontend/courses.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/home.css') }}?v={{ filemtime(public_path('assets/css/frontend/home.css')) }}">
 @endpush
 
 @section('content')
@@ -134,9 +134,9 @@
             </div>
 
             {{-- Floating technology icons — scattered across the hero (positions set in home.css) --}}
-            <span class="hm-tech hm-tech--html hm-float-a hm-a hm-reveal hm-reveal--fade" data-delay="500" aria-hidden="true">
+            {{-- <span class="hm-tech hm-tech--html hm-float-a hm-a hm-reveal hm-reveal--fade" data-delay="500" aria-hidden="true">
                 <img src="{{ asset('assets/images/Hero-section/html.png') }}" alt="HTML5" width="30" height="30" loading="lazy">
-            </span>
+            </span> --}}
             <span class="hm-tech hm-tech--js hm-float-b hm-b hm-reveal hm-reveal--fade" data-delay="500" aria-hidden="true">
                 <img src="{{ asset('assets/images/Hero-section/javascript.webp') }}" alt="JavaScript" width="30" height="30" loading="lazy">
             </span>
@@ -210,6 +210,133 @@
         </div>
     </section>
 
+    {{-- ============================ TOP CATEGORIES ============================ --}}
+    @php
+        // Icons live in public/assets/images/categories/ (each is a coloured badge).
+        // 'tone' selects the pastel card background defined in home.css.
+        $categories = [
+            // 'icon' is the white iconsax glyph; the coloured blob behind it is
+            // derived from 'tone' (blob-<tone>.png), so it always matches the
+            // card tint. On hover only the blob rotates — see .hm-cat__icon-bg.
+            ['name' => 'IT & Software',  'count' => '07 Courses', 'icon' => 'iconsax-monitor.png',         'tone' => 'red'],
+            ['name' => 'Cloud & DevOps', 'count' => '04 Courses', 'icon' => 'iconsax-cloud.png',           'tone' => 'purple'],
+            ['name' => 'Data & AI',      'count' => '06 Courses', 'icon' => 'iconsax-setting.png',         'tone' => 'teal'],
+            ['name' => 'Cyber Security', 'count' => '03 Courses', 'icon' => 'iconsax-shield-security.png', 'tone' => 'pink'],
+            ['name' => 'Engineering',    'count' => '05 Courses', 'icon' => 'iconsax-setting.png',         'tone' => 'blue'],
+            ['name' => 'Communication',  'count' => '03 Courses', 'icon' => 'iconsax-share.png',           'tone' => 'gold'],
+            ['name' => 'Leadership',     'count' => '02 Courses', 'icon' => 'iconsax-share.png',           'tone' => 'peach'],
+            ['name' => 'Finance',        'count' => '04 Courses', 'icon' => 'iconsax-bank.png',            'tone' => 'green'],
+            ['name' => 'Data & AI',      'count' => '06 Courses', 'icon' => 'iconsax-setting.png',         'tone' => 'teal'],
+            ['name' => 'Cyber Security', 'count' => '03 Courses', 'icon' => 'iconsax-shield-security.png', 'tone' => 'pink'],
+            ['name' => 'IT & Software',  'count' => '07 Courses', 'icon' => 'iconsax-monitor.png',         'tone' => 'red'],
+            ['name' => 'Cloud & DevOps', 'count' => '04 Courses', 'icon' => 'iconsax-cloud.png',           'tone' => 'purple'],
+        ];
+    @endphp
+    <section class="hm-cats" id="categories" data-io aria-labelledby="hmCatsTitle">
+
+        {{-- Same slow-rotating premium background as the hero --}}
+        <div class="hm-cats__bg" aria-hidden="true">
+            <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" loading="lazy">
+        </div>
+
+        <div class="container hm-cats__container">
+
+            {{-- Header --}}
+            <div class="hm-cats__head">
+                <span class="hm-cats__label hm-anim hm-anim--up">
+                    <span class="hm-cats__label-icon" aria-hidden="true"></span>
+                    <span class="hm-cats__label-text">Top Categories</span>
+                </span>
+                <h2 class="hm-cats__title hm-anim hm-anim--up hm-anim--d1" id="hmCatsTitle">Explore courses by field</h2>
+                <p class="hm-cats__desc hm-anim hm-anim--up hm-anim--d2">
+                    Discover industry-focused programs designed to build practical skills, boost your
+                    confidence, and prepare you for successful careers.
+                </p>
+                <a class="hm-cats__seeall hm-anim hm-anim--up hm-anim--d2" href="#">
+                    See all <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </a>
+            </div>
+
+            {{-- Grid: 4 columns desktop · 2 tablet · 1 mobile --}}
+            <div class="row g-4 hm-cats__grid">
+                @foreach ($categories as $i => $cat)
+                    <div class="col-md-6 col-lg-3">
+                        <a class="hm-cat hm-cat--{{ $cat['tone'] }} hm-anim hm-anim--up hm-anim--d{{ ($i % 8) + 1 }}" href="#">
+                            <span class="hm-cat__text">
+                                <span class="hm-cat__name">{{ $cat['name'] }}</span>
+                                <span class="hm-cat__count">{{ $cat['count'] }}</span>
+                            </span>
+                            <span class="hm-cat__icon">
+                                {{-- Coloured blob behind, white glyph in front. Only
+                                     the blob spins on hover (see home.css). --}}
+                                <img class="hm-cat__icon-bg"
+                                     src="{{ asset('assets/images/categories/blob-'.$cat['tone'].'.png') }}"
+                                     alt="" aria-hidden="true" width="56" height="56" loading="lazy">
+                                <img class="hm-cat__icon-glyph"
+                                     src="{{ asset('assets/images/categories/'.$cat['icon']) }}"
+                                     alt="{{ $cat['name'] }} icon" width="28" height="28" loading="lazy">
+                            </span>
+                        </a>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
+    {{-- ============================ POPULAR COURSES ============================ --}}
+    @php
+        // Thumbnails live in public/assets/images/courses/ (each is a composed image).
+        $courses = [
+            ['img' => 'course-1.webp', 'badge' => 'Development',     'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-development')],
+            ['img' => 'course-2.webp',  'badge' => 'Corporate',       'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-corporate')],
+            ['img' => 'course-3.webp',  'badge' => 'Team Leadership',  'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-leadership')],
+            ['img' => 'course-4.webp', 'badge' => 'Career Readiness', 'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-career')],
+        ];
+    @endphp
+    <section class="hm-courses" id="courses" data-io aria-labelledby="hmCoursesTitle">
+
+        {{-- Same slow-rotating premium background as the hero --}}
+        <div class="hm-courses__bg" aria-hidden="true">
+            <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" loading="lazy">
+        </div>
+
+        {{-- Decorative dotted / striped shapes --}}
+        <img class="hm-courses__deco hm-courses__deco--tl" aria-hidden="true"
+             src="{{ asset('assets/images/courses/dots.png') }}" alt="" loading="lazy">
+        <img class="hm-courses__deco hm-courses__deco--br" aria-hidden="true"
+             src="{{ asset('assets/images/courses/pattern.png') }}" alt="" loading="lazy">
+
+        <div class="container hm-courses__container">
+
+            {{-- Header --}}
+            <div class="hm-courses__head">
+                <span class="hm-courses__label hm-anim hm-anim--up">
+                   <span class="hm-cats__label-icon" aria-hidden="true"></span>
+                    <span class="hm-courses__label-text">Popular Courses</span>
+                </span>
+                <h2 class="hm-courses__title hm-anim hm-anim--up hm-anim--d1" id="hmCoursesTitle">Explore Courses That Shape Your Future</h2>
+                <p class="hm-courses__desc hm-anim hm-anim--up hm-anim--d2">
+                    Choose from industry-focused courses designed to build practical skills, boost
+                    confidence, and prepare you for today's most in-demand careers.
+                </p>
+                <a class="hm-courses__seeall hm-anim hm-anim--up hm-anim--d2" href="#">
+                    See all <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </a>
+            </div>
+
+            {{-- Grid: 4 cards desktop · 2 tablet · 1 mobile --}}
+            <div class="row g-4">
+                @foreach ($courses as $i => $course)
+                    <div class="col-lg-3 col-md-6">
+                        {{-- Shared with the courses listing page — markup in
+                             partials/course-card.blade.php, CSS in courses.css. --}}
+                        @include('frontend.partials.course-card', ['course' => $course, 'i' => $i])
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
     {{-- ============================ WHY CHOOSE HIREMINDS ============================ --}}
     @php
         // Assets live in public/assets/images/why-choose/
@@ -258,7 +385,7 @@
         <div class="hm-why__intro">
             <div class="container">
                 <div class="hm-why__head">
-                    <span class="hm-why__eyebrow"><i class="fa-solid fa-square"></i> Why Choose HireMinds</span>
+                    <span class="hm-why__eyebrow"><span class="hm-cats__label-icon" aria-hidden="true"></span> Why Choose HireMinds</span>
                     <h2 class="hm-why__title" id="hm-why-title">Everything You Need to Launch a Successful Career</h2>
                     <p class="hm-why__lead">Gain practical skills, learn from industry experts, and receive career guidance that prepares you for real-world opportunities.</p>
                 </div>
@@ -346,7 +473,8 @@
 
         <div class="container hm-events__container">
             <div class="hm-events__head" data-ev-io>
-                <span class="hm-events__badge hm-ev-anim"><span class="hm-events__badge-sq"></span> Upcoming Event</span>
+
+                <span class="hm-events__badge hm-ev-anim"><span class="hm-cats__label-icon" aria-hidden="true"></span> Upcoming Event</span>
                 <h2 class="hm-events__title hm-ev-anim" id="hmEventsTitle">Learn, Connect &amp; Grow Through Our Events</h2>
                 <p class="hm-events__desc hm-ev-anim">Join workshops, seminars, career guidance sessions, and industry events designed to expand your knowledge, build your network, and prepare for future opportunities.</p>
             </div>
@@ -386,127 +514,6 @@
         </div>
     </section>
 
-    {{-- ============================ TOP CATEGORIES ============================ --}}
-    @php
-        // Icons live in public/assets/images/categories/ (each is a coloured badge).
-        // 'tone' selects the pastel card background defined in home.css.
-        $categories = [
-            ['name' => 'IT & Software',  'count' => '07 Courses', 'icon' => 'software.png',     'tone' => 'red'],
-            ['name' => 'Cloud & DevOps', 'count' => '04 Courses', 'icon' => 'cloud.png',        'tone' => 'purple'],
-            ['name' => 'Data & AI',      'count' => '06 Courses', 'icon' => 'data.png',         'tone' => 'teal'],
-            ['name' => 'Cyber Security', 'count' => '03 Courses', 'icon' => 'security.png',      'tone' => 'pink'],
-            ['name' => 'Engineering',    'count' => '05 Courses', 'icon' => 'engineering.png',   'tone' => 'blue'],
-            ['name' => 'Communication',  'count' => '03 Courses', 'icon' => 'communication.png', 'tone' => 'gold'],
-            ['name' => 'Leadership',     'count' => '02 Courses', 'icon' => 'leadership.png',    'tone' => 'peach'],
-            ['name' => 'Finance',        'count' => '04 Courses', 'icon' => 'finance.png',       'tone' => 'green'],
-            ['name' => 'Data & AI',      'count' => '06 Courses', 'icon' => 'data.png',         'tone' => 'teal'],
-            ['name' => 'Cyber Security', 'count' => '03 Courses', 'icon' => 'security.png',      'tone' => 'pink'],
-            ['name' => 'IT & Software',  'count' => '07 Courses', 'icon' => 'software.png',     'tone' => 'red'],
-            ['name' => 'Cloud & DevOps', 'count' => '04 Courses', 'icon' => 'cloud.png',        'tone' => 'purple'],
-        ];
-    @endphp
-    <section class="hm-cats" id="categories" data-io aria-labelledby="hmCatsTitle">
-
-        {{-- Same slow-rotating premium background as the hero --}}
-        <div class="hm-cats__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" loading="lazy">
-        </div>
-
-        <div class="container hm-cats__container">
-
-            {{-- Header --}}
-            <div class="hm-cats__head">
-                <span class="hm-cats__label hm-anim hm-anim--up">
-                    <span class="hm-cats__label-icon" aria-hidden="true"></span>
-                    <span class="hm-cats__label-text">Top Categories</span>
-                </span>
-                <h2 class="hm-cats__title hm-anim hm-anim--up hm-anim--d1" id="hmCatsTitle">Explore courses by field</h2>
-                <p class="hm-cats__desc hm-anim hm-anim--up hm-anim--d2">
-                    Discover industry-focused programs designed to build practical skills, boost your
-                    confidence, and prepare you for successful careers.
-                </p>
-                <a class="hm-cats__seeall hm-anim hm-anim--up hm-anim--d2" href="#">
-                    See all <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
-                </a>
-            </div>
-
-            {{-- Grid: 4 columns desktop · 2 tablet · 1 mobile --}}
-            <div class="row g-4 hm-cats__grid">
-                @foreach ($categories as $i => $cat)
-                    <div class="col-md-6 col-lg-3">
-                        <a class="hm-cat hm-cat--{{ $cat['tone'] }} hm-anim hm-anim--up hm-anim--d{{ ($i % 8) + 1 }}" href="#">
-                            <span class="hm-cat__text">
-                                <span class="hm-cat__name">{{ $cat['name'] }}</span>
-                                <span class="hm-cat__count">{{ $cat['count'] }}</span>
-                            </span>
-                            <span class="hm-cat__icon">
-                                <img src="{{ asset('assets/images/categories/'.$cat['icon']) }}"
-                                     alt="{{ $cat['name'] }} icon" width="56" height="56" loading="lazy">
-                            </span>
-                        </a>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
-
-    {{-- ============================ POPULAR COURSES ============================ --}}
-    @php
-        // Thumbnails live in public/assets/images/courses/ (each is a composed image).
-        $courses = [
-            ['img' => 'course-1.webp', 'badge' => 'Development',     'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-development')],
-            ['img' => 'course-2.webp',  'badge' => 'Corporate',       'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-corporate')],
-            ['img' => 'course-3.webp',  'badge' => 'Team Leadership',  'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-leadership')],
-            ['img' => 'course-4.webp', 'badge' => 'Career Readiness', 'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-career')],
-        ];
-    @endphp
-    <section class="hm-courses" id="courses" data-io aria-labelledby="hmCoursesTitle">
-
-        {{-- Same slow-rotating premium background as the hero --}}
-        <div class="hm-courses__bg" aria-hidden="true">
-            <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" loading="lazy">
-        </div>
-
-        {{-- Decorative dotted / striped shapes --}}
-        <img class="hm-courses__deco hm-courses__deco--tl" aria-hidden="true"
-             src="{{ asset('assets/images/courses/dots.png') }}" alt="" loading="lazy">
-        <img class="hm-courses__deco hm-courses__deco--br" aria-hidden="true"
-             src="{{ asset('assets/images/courses/pattern.png') }}" alt="" loading="lazy">
-
-        <div class="container hm-courses__container">
-
-            {{-- Header --}}
-            <div class="hm-courses__head">
-                <img class="hm-courses__float" aria-hidden="true"
-                     src="{{ asset('assets/images/courses/js-badge.png') }}" alt="" loading="lazy">
-
-                <span class="hm-courses__label hm-anim hm-anim--up">
-                    <span class="hm-courses__label-icon" aria-hidden="true"></span>
-                    <span class="hm-courses__label-text">Popular Courses</span>
-                </span>
-                <h2 class="hm-courses__title hm-anim hm-anim--up hm-anim--d1" id="hmCoursesTitle">Explore Courses That Shape Your Future</h2>
-                <p class="hm-courses__desc hm-anim hm-anim--up hm-anim--d2">
-                    Choose from industry-focused courses designed to build practical skills, boost
-                    confidence, and prepare you for today's most in-demand careers.
-                </p>
-                <a class="hm-courses__seeall hm-anim hm-anim--up hm-anim--d2" href="#">
-                    See all <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
-                </a>
-            </div>
-
-            {{-- Grid: 4 cards desktop · 2 tablet · 1 mobile --}}
-            <div class="row g-4">
-                @foreach ($courses as $i => $course)
-                    <div class="col-lg-3 col-md-6">
-                        {{-- Shared with the courses listing page — markup in
-                             partials/course-card.blade.php, CSS in courses.css. --}}
-                        @include('frontend.partials.course-card', ['course' => $course, 'i' => $i])
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
-
     {{-- ============================ STUDENT SUCCESS STORIES ============================ --}}
     @php
         // Portraits are transparent cut-outs in public/assets/images/success-story/.
@@ -530,7 +537,7 @@
             {{-- Header --}}
             <div class="hm-stories__head">
                 <span class="hm-stories__label hm-anim hm-anim--up">
-                    <span class="hm-stories__label-icon" aria-hidden="true"></span>
+                    <span class="hm-cats__label-icon" aria-hidden="true"></span>
                     <span class="hm-stories__label-text">Student Success Stories</span>
                 </span>
                 <h2 class="hm-stories__title hm-anim hm-anim--up hm-anim--d1" id="hmStoriesTitle">Real Career Stories Powered By Hireminds Academy</h2>
@@ -592,7 +599,7 @@
             {{-- Header --}}
             <div class="hm-blogs__head">
                 <span class="hm-blogs__label hm-anim hm-anim--up">
-                    <span class="hm-blogs__label-icon" aria-hidden="true"></span>
+                   <span class="hm-cats__label-icon" aria-hidden="true"></span>
                     <span class="hm-blogs__label-text">Latest Blog</span>
                 </span>
                 <h2 class="hm-blogs__title hm-anim hm-anim--up hm-anim--d1" id="hmBlogsTitle">Learn Beyond the Classroom</h2>
@@ -746,7 +753,11 @@
                     scrollTrigger: {
                         trigger: pin,
                         start: 'top top',
-                        end: '+=3000',
+                        {{-- Was +=3000. The timeline lost card 4's exit tween
+                             (~1 unit of ~6.2), so the pin no longer needs to hold
+                             for it — 2500 keeps the same scroll feel per card and
+                             releases right after card 4 rests. --}}
+                        end: '+=2500',
                         pin: pin,
                         scrub: 1.5,
                         anticipatePin: 1,
@@ -793,10 +804,14 @@
                 toExit(cards[2], t);
                 toSlot(cards[3], 0, t);
                 pillsIn(cards[3], t + 0.35);
-                t += MOVE + HOLD;               // card 4 fully shown
+                t += MOVE;                      // t = card 4 has arrived at the front
 
-                // Card 4 → out, section releases into the next section.
-                toExit(cards[3], t);
+                // Card 4 rests at the front, then the pin releases straight into
+                // the next section. It is NOT slid away — exiting it (as the other
+                // cards do) left the pinned viewport EMPTY for the rest of the
+                // scroll, which was the big blank gap before Upcoming Events.
+                tl.to(cards[3], { yPercent: slots[0].yp, duration: HOLD }, t);
+                t += HOLD;                      // card 4 held, pin about to release
 
                 return function () {
                     stack.classList.remove('is-gsap');

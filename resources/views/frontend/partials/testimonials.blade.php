@@ -7,7 +7,7 @@
 |   @include('frontend.partials.testimonials')
 |
 | Push its stylesheet from the page:
-|   <link rel="stylesheet" href="{{ asset('assets/css/frontend/testimonials.css') }}">
+|   <link rel="stylesheet" href="{{ asset('assets/css/frontend/testimonials.css') }}?v={{ filemtime(public_path('assets/css/frontend/testimonials.css')) }}">
 |
 | Its JS is pushed by this partial itself, so the component is self-contained.
 --}}
@@ -50,7 +50,7 @@
                 {{-- Header --}}
                 <div class="hm-tst__head">
                     <span class="hm-tst__label hm-anim hm-anim--up">
-                        <span class="hm-tst__label-icon" aria-hidden="true"></span>
+                     <span class="hm-cats__label-icon" aria-hidden="true"></span>
                         <span class="hm-tst__label-text">Testimonials</span>
                     </span>
                     <h2 class="hm-tst__title hm-anim hm-anim--up hm-anim--d1" id="hmTstTitle">Voices of Career Transformation</h2>

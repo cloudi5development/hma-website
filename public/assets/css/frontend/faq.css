@@ -146,6 +146,21 @@
     transition: transform .35s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), box-shadow .35s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)), background .35s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
 }
 .hm-faq__item:last-child { margin-bottom: 0; }
+
+/* Bootstrap rounds only the FIRST item's top and the LAST item's bottom (to its
+   own 6px default) via .accordion-item:first-of-type / :last-of-type, which
+   beat the .hm-faq__item rule above on those corners and left the first/last
+   items with mismatched top vs bottom radii. These same-scoped, higher-
+   specificity rules restore a uniform 20px on every corner of every item. */
+.hm-faq__accordion .accordion-item:first-of-type,
+.hm-faq__accordion .accordion-item:last-of-type {
+    border-radius: 20px;
+}
+.hm-faq__accordion .accordion-item:first-of-type .accordion-button,
+.hm-faq__accordion .accordion-item:last-of-type .accordion-button.collapsed {
+    border-radius: 20px;
+}
+
 /* Lift a closed item on hover */
 .hm-faq__item:has(.accordion-button.collapsed):hover {
     transform: translateY(-4px);

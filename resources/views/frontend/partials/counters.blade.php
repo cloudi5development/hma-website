@@ -10,7 +10,7 @@
 |
 | and push its stylesheet from the page:
 |
-|   <link rel="stylesheet" href="{{ asset('assets/css/frontend/counters.css') }}">
+|   <link rel="stylesheet" href="{{ asset('assets/css/frontend/counters.css') }}?v={{ filemtime(public_path('assets/css/frontend/counters.css')) }}">
 |
 | The count-up + reveal JS is pushed by this partial itself (see the bottom),
 | so the component is self-contained wherever it is dropped in.

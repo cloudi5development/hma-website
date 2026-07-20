@@ -35,9 +35,9 @@
     {{-- Reused components. course-details.css goes LAST: it fits the FAQ and the
          contact section to this page by overriding rules of equal specificity,
          which only works on load order. --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/courses.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/faq.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/frontend/contact-form.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/courses.css') }}?v={{ filemtime(public_path('assets/css/frontend/courses.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/faq.css') }}?v={{ filemtime(public_path('assets/css/frontend/faq.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/contact-form.css') }}?v={{ filemtime(public_path('assets/css/frontend/contact-form.css')) }}">
     {{-- ?v=<file mtime> busts the browser cache whenever course-details.css
          changes, so edits are never masked by a stale copy. --}}
     <link rel="stylesheet"
@@ -218,9 +218,12 @@
                     @endforeach
                 </div>
             </section>
-
+           <button class="hm-cd-btn hm-cd-btn--primary" type="button" data-bs-toggle="modal" data-bs-target="#hmEnquireModal">
+                            <span>Enquire Now</span>
+                            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                        </button>
             {{-- ============================== SKILLS ============================== --}}
-            <section class="hm-cd-sec" aria-labelledby="hmCdSkills">
+            {{-- <section class="hm-cd-sec" aria-labelledby="hmCdSkills">
                 <h2 class="hm-cd-sec__title" id="hmCdSkills">Skills You'll Gain</h2>
                 <p class="hm-cd-sec__desc">
                     A comprehensive roadmap covering the most in-demand technologies in the modern web ecosystem.
@@ -230,7 +233,7 @@
                     @foreach ($skills as $i => $skill)
                         <div class="col-12 col-lg-6">
                             <div class="hm-cd-skill">
-                                {{-- Decorative: the ordering is already conveyed by the list. --}}
+                              
                                 <span class="hm-cd-skill__num" aria-hidden="true">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>
                                 <div>
                                     <h3 class="hm-cd-skill__title">{{ $skill['title'] }}</h3>
@@ -240,7 +243,7 @@
                         </div>
                     @endforeach
                 </div>
-            </section>
+            </section> --}}
 
             {{-- ========================= CONTINUE LEARNING =========================
                  The shared course card — same markup, styling and hover as the home

@@ -15,7 +15,7 @@
 | and push its stylesheet from the page (the head is already rendered by the
 | time an @include runs, so @push('styles') cannot work from in here):
 |
-|   <link rel="stylesheet" href="{{ asset('assets/css/frontend/courses.css') }}">
+|   <link rel="stylesheet" href="{{ asset('assets/css/frontend/courses.css') }}?v={{ filemtime(public_path('assets/css/frontend/courses.css')) }}">
 |
 | $course keys:
 |   img        thumbnail filename in assets/images/courses/

@@ -1,13 +1,5 @@
 {{-- Admin panel footer. --}}
-<footer class="footer">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-6">
-                &copy; {{ date('Y') }} {{ config('app.name') }}.
-            </div>
-            <div class="col-sm-6 text-sm-end">
-                Admin Panel
-            </div>
-        </div>
-    </div>
+<footer class="app-footer d-flex flex-wrap justify-content-between gap-2">
+    <span>&copy; {{ date('Y') }} {{ config('app.name', 'HireMinds Academy') }}. All rights reserved.</span>
+    <span>Admin Panel &middot; v1.0</span>
 </footer>

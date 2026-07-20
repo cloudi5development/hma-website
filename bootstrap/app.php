@@ -30,6 +30,10 @@ return Application::configure(basePath: dirname(__DIR__))
             // Force a JSON response on any route/group that must always
             // answer in JSON, even when the client forgets the Accept header.
             'force.json' => \App\Http\Middleware\ForceJsonResponse::class,
+
+            // Session-based guard for the admin panel (temporary until the real
+            // auth module is built — see Backend\AuthController).
+            'admin.auth' => \App\Http\Middleware\AdminAuthenticate::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

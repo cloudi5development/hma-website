@@ -44,14 +44,12 @@
     box-shadow: 0 25px 60px rgba(0, 0, 0, .08);
 }
 .hm-contact__deco { position: absolute; pointer-events: none; z-index: 0; }
-.hm-contact__deco--star {
-    top: 26px; left: 40%; width: 26px; opacity: .55;
-    animation: hm-twinkle 6s ease-in-out infinite;
-}
-.hm-contact__deco--glow {
-    top: -60px; right: -40px; width: 240px; height: 240px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(233, 163, 32, .12), transparent 70%);
-}
+/* Both card decorations are hidden: the glow was the warm blob at the top-right
+   corner, the star the yellow speck over the (white) form side. Removing them
+   keeps the right/form half pure white as requested. Kept in the markup, off in
+   CSS, so it is one line to restore. */
+.hm-contact__deco--star,
+.hm-contact__deco--glow { display: none; }
 
 /* ------------------------------ Left info ------------------------------ */
 .hm-contact__info { position: relative; z-index: 1; }
