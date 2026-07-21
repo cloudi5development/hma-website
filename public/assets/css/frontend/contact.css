@@ -196,15 +196,17 @@
     border: 0;
 }
 
-/* ---- Branch switch — floats over the top-left of the map ---- */
+/* ---- Branch switch — sits as a bar above the map so it never covers
+   the map's own location info ---- */
 .hm-cnt-map__switch {
-    position: absolute;
-    top: 20px;
-    left: 20px;
+    position: relative;
     z-index: 2;
     display: flex;
     align-items: center;
     gap: 10px;
+    padding: 16px 20px;
+    background: #FFFFFF;
+    border-bottom: 1px solid rgba(42, 29, 20, .08);
 }
 
 .hm-cnt-map__btn {
@@ -236,23 +238,19 @@
     box-shadow: 0 10px 24px rgba(132, 61, 33, .34);
 }
 
-/* The pin ships white, so it only reads on the filled (selected) button. */
+/* Font Awesome pin — inherits the button's text colour, so it reads brown on
+   the inactive (white) button and white on the selected (brown) one. */
 .hm-cnt-map__btn-icon {
-    width: 14px;
-    height: 14px;
-    object-fit: contain;
-    opacity: 0;
-    transition: opacity .3s ease;
+    font-size: 13px;
+    line-height: 1;
 }
-
-.hm-cnt-map__btn[aria-pressed="true"] .hm-cnt-map__btn-icon { opacity: 1; }
 
 /* ---- Layers affordance — decorative, mirrors the design's top-right chip ---- */
 .hm-cnt-map__layers {
     position: absolute;
-    top: 20px;
+    top: 14px;
     right: 20px;
-    z-index: 2;
+    z-index: 3;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -272,14 +270,6 @@
     width: 17px;
     height: 17px;
     object-fit: contain;
-}
-
-/* ============================ SHARED FAQ FITS ============================
-   faq.css opens the section with 100px of lead-in for the home page; here it
-   follows the map, so it only needs the standard rhythm. contact.css loads
-   after faq.css, so this wins.                                               */
-.hm-faq {
-    padding: 70px 0 100px;
 }
 
 /* =============================== DECOR =============================== */
@@ -306,7 +296,6 @@
     .hm-cnt__banner-title { font-size: 34px; }
 
     .hm-cnt-map__frame { height: 420px; }
-    .hm-faq { padding: 56px 0 80px; }
 }
 
 @media (max-width: 767.98px) {
@@ -317,12 +306,10 @@
     .hm-cnt-map__card { border-radius: 20px; }
     .hm-cnt-map__frame { height: 340px; }
 
-    /* Branch buttons centre and sit above the map rather than over it, so they
-       never cover the map on a small screen. */
+    /* Branch buttons centre within the bar above the map. */
     .hm-cnt-map__switch {
-        position: static;
         justify-content: center;
-        padding: 14px 14px 0;
+        padding: 14px;
     }
 
     .hm-cnt-map__layers { display: none; }

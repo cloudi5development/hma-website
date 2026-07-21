@@ -269,7 +269,7 @@
                                      src="{{ asset('assets/images/categories/blob-'.$cat['tone'].'.png') }}"
                                      alt="" aria-hidden="true" width="56" height="56" loading="lazy">
                                 <img class="hm-cat__icon-glyph"
-                                     src="{{ asset('assets/images/categories/'.$cat['icon']) }}"
+                                     src="{{ $cat['icon'] }}"
                                      alt="{{ $cat['name'] }} icon" width="28" height="28" loading="lazy">
                             </span>
                         </a>

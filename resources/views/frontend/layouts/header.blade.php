@@ -56,10 +56,6 @@
                         <div class="hm-mega__grid">
                             @foreach ($courseMenu as $column)
                                 <div class="hm-mega__col">
-                                    <a class="hm-mega__thumb" href="{{ route('frontend.courses') }}" tabindex="-1" aria-hidden="true">
-                                        <img src="{{ $column['image_url'] ?? asset('assets/images/Header/domain-1.webp') }}"
-                                             alt="{{ $column['title'] }} courses" width="240" height="110" loading="lazy">
-                                    </a>
                                     <h3 class="hm-mega__title">{{ $column['title'] }}</h3>
                                     <ul class="hm-mega__list">
                                         @foreach ($column['items'] as $item)

@@ -88,9 +88,7 @@
                                 data-hm-branch="{{ $branch['name'] }}"
                                 data-hm-map-src="{{ $branch['map'] }}"
                                 aria-pressed="{{ $key === $defaultBranch ? 'true' : 'false' }}">
-                            <img class="hm-cnt-map__btn-icon"
-                                 src="{{ asset('assets/images/contact-us/map.png') }}"
-                                 alt="" aria-hidden="true">
+                            <i class="hm-cnt-map__btn-icon fa-solid fa-location-dot" aria-hidden="true"></i>
                             <span>{{ $branch['name'] }}</span>
                         </button>
                     @endforeach
@@ -113,18 +111,9 @@
         </div>
     </section>
 
-    {{-- ================================ FAQ ================================
-         The shared component — same markup, accordion and decorations as the
-         home page. Its accordion needs Bootstrap's JS; see the scripts push. --}}
-    @include('frontend.partials.faq')
-
 @endsection
 
 @push('scripts')
-    {{-- Bootstrap bundle — the shared FAQ partial's accordion is built on
-         data-bs-toggle="collapse", so it is dead without this. --}}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
-
     {{-- Branch switch — swaps the iframe src in place, no reload. --}}
     <script>
         (function () {

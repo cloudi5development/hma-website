@@ -211,10 +211,12 @@
                     @endforeach
                 </div>
             </section>
-           <button class="hm-cd-btn hm-cd-btn--primary" type="button" data-bs-toggle="modal" data-bs-target="#hmEnquireModal">
-                            <span>Enquire Now</span>
-                            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
-                        </button>
+            <div class="hm-cd-enquire">
+                <button class="hm-cd-btn hm-cd-btn--primary" type="button" data-bs-toggle="modal" data-bs-target="#hmEnquireModal">
+                    <span>Enquire Now</span>
+                    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </button>
+            </div>
             {{-- ============================== SKILLS ============================== --}}
             {{-- <section class="hm-cd-sec" aria-labelledby="hmCdSkills">
                 <h2 class="hm-cd-sec__title" id="hmCdSkills">Skills You'll Gain</h2>
@@ -278,9 +280,11 @@
         $enquiryCourses = \App\Models\Course::active()->orderBy('name')->pluck('name')->all();
         $selectedCourse = $course['title'];
 
-        $enquiryInterests = [
-            'IT & Software', 'Cloud', 'HR', 'Data Analytics',
-            'Business', 'Finance', 'Career Guidance',
+        $careerGoals = [
+            'Career Switch',
+            'Looking for Course Completion',
+            'Looking for Job',
+            'Looking for Career Upgrade',
         ];
 
         // Transparent cut-out of the support executive — sits on the cream panel.
@@ -389,14 +393,14 @@
 
                                 <div class="col-12 col-md-6">
                                     <div class="hm-enq__field" data-hm-field>
-                                        <label class="hm-enq__label" for="enqInterest">Area of interest</label>
-                                        <select class="hm-enq__input hm-enq__select" id="enqInterest" name="interest" required>
-                                            <option value="" disabled selected hidden>Select an interest</option>
-                                            @foreach ($enquiryInterests as $option)
+                                        <label class="hm-enq__label" for="enqCareerGoal">Current Career Goal</label>
+                                        <select class="hm-enq__input hm-enq__select" id="enqCareerGoal" name="career_goal" required>
+                                            <option value="" disabled selected hidden>Select your career goal</option>
+                                            @foreach ($careerGoals as $option)
                                                 <option>{{ $option }}</option>
                                             @endforeach
                                         </select>
-                                        <p class="hm-enq__error" data-hm-error>Please choose an area of interest.</p>
+                                        <p class="hm-enq__error" data-hm-error>Please choose your career goal.</p>
                                     </div>
                                 </div>
 
@@ -450,8 +454,8 @@
                 enqName:     function (v) { return v.trim().length > 0; },
                 enqEmail:    function (v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); },
                 enqPhone:    function (v) { return /^[0-9]{10}$/.test(v.trim()); },
-                enqCourse:   function (v) { return v !== ''; },
-                enqInterest: function (v) { return v !== ''; }
+                enqCourse:      function (v) { return v !== ''; },
+                enqCareerGoal:  function (v) { return v !== ''; }
             };
 
             function fieldOf(el) { return el.closest('[data-hm-field]'); }
