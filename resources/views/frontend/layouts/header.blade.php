@@ -2,37 +2,18 @@
      Styles: assets/css/frontend/navbar.css · Behaviour: assets/js/frontend/navbar.js
      (both loaded site-wide via layouts/common-css and layouts/common-js). --}}
 @php
-    // Courses mega-menu columns. Edit here to change categories/links.
-    $courseMenu = [
-        ['title' => 'Technical', 'image' => 'domain-1.webp', 'items' => [
-            ['label' => 'IT & Software', 'featured' => true],
-            ['label' => 'Cloud & DevOps'],
-            ['label' => 'Data & AI'],
-            ['label' => 'Cyber Security'],
-            ['label' => 'Engineering'],
-        ]],
-        ['title' => 'Non-technical', 'image' => 'domain-2.webp', 'items' => [
-            ['label' => 'Communication'],
-            ['label' => 'Leadership'],
-            ['label' => 'HR & Behavioral'],
-            ['label' => 'Sales'],
-            ['label' => 'Early Career'],
-            ['label' => 'Trainer'],
-        ]],
-        ['title' => 'Business', 'image' => 'domain-3.webp', 'items' => [
-            ['label' => 'Project Management'],
-            ['label' => 'Finance'],
-            ['label' => 'Operations'],
-            ['label' => 'Digital Marketing'],
-        ]],
-        ['title' => 'Industry', 'image' => 'domain-4.webp', 'items' => [
-            ['label' => 'Manufacturing'],
-            ['label' => 'Healthcare'],
-            ['label' => 'Banking'],
-            ['label' => 'Hospitality'],
-            ['label' => 'Energy'],
-        ]],
-    ];
+    // Fed by AppServiceProvider's view composer (departments → their active
+    // categories). Mapped to the exact column shape this markup expects, so the
+    // mega-menu design is unchanged; only the data source moved to the database.
+    $courseMenu = collect($megaDepartments ?? [])->map(fn ($dept) => [
+        'title'     => $dept->name,
+        'image_url' => $dept->image_url,
+        'items'     => $dept->categories->map(fn ($cat) => [
+            'label'    => $cat->name,
+            'url'      => route('frontend.courses', ['category' => $cat->slug]),
+            'featured' => (bool) $cat->is_featured,
+        ])->all(),
+    ])->all();
 @endphp
 <header>
     <nav class="hm-navbar" id="hmNavbar" aria-label="Primary navigation">
@@ -75,15 +56,15 @@
                         <div class="hm-mega__grid">
                             @foreach ($courseMenu as $column)
                                 <div class="hm-mega__col">
-                                    <a class="hm-mega__thumb" href="#" tabindex="-1" aria-hidden="true">
-                                        <img src="{{ asset('assets/images/Header/'.$column['image']) }}"
+                                    <a class="hm-mega__thumb" href="{{ route('frontend.courses') }}" tabindex="-1" aria-hidden="true">
+                                        <img src="{{ $column['image_url'] ?? asset('assets/images/Header/domain-1.webp') }}"
                                              alt="{{ $column['title'] }} courses" width="240" height="110" loading="lazy">
                                     </a>
                                     <h3 class="hm-mega__title">{{ $column['title'] }}</h3>
                                     <ul class="hm-mega__list">
                                         @foreach ($column['items'] as $item)
                                             <li>
-                                                <a href="#" @class(['is-featured' => $item['featured'] ?? false])>{{ $item['label'] }}</a>
+                                                <a href="{{ $item['url'] ?? '#' }}" @class(['is-featured' => $item['featured'] ?? false])>{{ $item['label'] }}</a>
                                             </li>
                                         @endforeach
                                     </ul>

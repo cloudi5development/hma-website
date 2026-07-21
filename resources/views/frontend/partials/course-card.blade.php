@@ -40,7 +40,9 @@
 
 <article class="hm-course hm-anim hm-anim--up hm-anim--d{{ ($i % 4) + 1 }}">
     <div class="hm-course__thumb">
-        <img src="{{ asset('assets/images/courses/' . $course['img']) }}"
+        {{-- 'img_url' is a ready-built URL (DB-driven cards); 'img' is a bare
+             filename in assets/images/courses/ (legacy/static callers). --}}
+        <img src="{{ $course['img_url'] ?? asset('assets/images/courses/' . $course['img']) }}"
              alt="{{ $course['title'] }} course thumbnail" loading="lazy">
     </div>
 

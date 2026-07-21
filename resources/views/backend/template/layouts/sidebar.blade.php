@@ -12,6 +12,7 @@
         'category'  => '<path d="M20.6 13.4 12 22l-8-8V4h10l6.6 6.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.1"/>',
         'book'      => '<path d="M12 6.5C10.5 5 8 4.5 4 5v13c4-.5 6.5 0 8 1.5 1.5-1.5 4-2 8-1.5V5c-4-.5-6.5 0-8 1.5Z"/><path d="M12 6.5v13"/>',
         'sections'  => '<rect x="3" y="3" width="18" height="18" rx="2.2"/><path d="M3 9h18M9 21V9"/>',
+        'hero'      => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M6.5 9.5h5M6.5 12.5h3"/><rect x="14.5" y="8.5" width="4" height="7" rx="1"/>',
         'partners'  => '<path d="M12 3 5 6v5c0 4.6 3 7.6 7 9 4-1.4 7-4.4 7-9V6l-7-3Z"/><path d="M9.3 12l1.8 1.8 3.4-3.8"/>',
         'counters'  => '<path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6" rx="1"/><rect x="12" y="7" width="3" height="10" rx="1"/><rect x="17" y="13" width="3" height="4" rx="1"/>',
         'events'    => '<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 3v3M16 3v3"/>',
@@ -41,8 +42,8 @@
 <aside class="app-sidebar" id="appSidebar">
 
     <div class="app-sidebar__brand">
-        <img src="{{ asset('backend/template/images/favicon.png') }}" alt="">
-        <span class="app-sidebar__brand-text">HireMinds</span>
+        <img class="app-sidebar__brand-mark" src="{{ asset('backend/template/images/favicon.png') }}" alt="">
+        <img class="app-sidebar__brand-logo" src="{{ asset('backend/template/images/logo-text.png') }}" alt="HireMinds Academy">
     </div>
 
     <nav class="app-sidebar__nav">
@@ -62,20 +63,21 @@
         <p class="app-sidebar__heading">Catalog</p>
 
         {{-- Courses (group) --}}
-        <div class="app-nav__item" data-group>
+        @php $coursesOpen = request()->routeIs('backend.departments.*', 'backend.categories.*', 'backend.courses.*'); @endphp
+        <div class="app-nav__item {{ $coursesOpen ? 'is-open' : '' }}" data-group>
             <a class="app-nav__link" role="button" tabindex="0">
                 {!! $ic('courses') !!}
                 <span class="app-nav__label">Courses</span>
                 <span class="app-nav__caret">{!! $ic('chevron') !!}</span>
             </a>
             <ul class="app-nav__sub">
-                <li><a class="app-nav__sublink" href="#">{!! $ic('department') !!}<span>Departments</span></a></li>
-                <li><a class="app-nav__sublink" href="#">{!! $ic('category') !!}<span>Categories</span></a></li>
-                <li><a class="app-nav__sublink" href="#">{!! $ic('book') !!}<span>Courses</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.departments.*') ? 'is-active' : '' }}" href="{{ route('backend.departments.index') }}">{!! $ic('department') !!}<span>Departments</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.categories.*') ? 'is-active' : '' }}" href="{{ route('backend.categories.index') }}">{!! $ic('category') !!}<span>Categories</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.courses.*') ? 'is-active' : '' }}" href="{{ route('backend.courses.index') }}">{!! $ic('book') !!}<span>Courses</span></a></li>
             </ul>
             <div class="app-nav__flyout">
                 <div class="app-nav__flyout-title">Courses</div>
-                <a href="#">Departments</a><a href="#">Categories</a><a href="#">Courses</a>
+                <a href="{{ route('backend.departments.index') }}">Departments</a><a href="{{ route('backend.categories.index') }}">Categories</a><a href="{{ route('backend.courses.index') }}">Courses</a>
             </div>
         </div>
 
@@ -83,25 +85,27 @@
         <p class="app-sidebar__heading">Website Content</p>
 
         {{-- Sections (group) --}}
-        <div class="app-nav__item" data-group>
+        @php $sectionsOpen = request()->routeIs('backend.hero.*', 'backend.partners.*', 'backend.counters.*', 'backend.testimonials.*', 'backend.faqs.*'); @endphp
+        <div class="app-nav__item {{ $sectionsOpen ? 'is-open' : '' }}" data-group>
             <a class="app-nav__link" role="button" tabindex="0">
                 {!! $ic('sections') !!}
                 <span class="app-nav__label">Sections</span>
                 <span class="app-nav__caret">{!! $ic('chevron') !!}</span>
             </a>
             <ul class="app-nav__sub">
-                <li><a class="app-nav__sublink" href="#">{!! $ic('partners') !!}<span>Trusted Partners</span></a></li>
-                <li><a class="app-nav__sublink" href="#">{!! $ic('counters') !!}<span>Counters</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.hero.*') ? 'is-active' : '' }}" href="{{ route('backend.hero.index') }}">{!! $ic('hero') !!}<span>Hero Section</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.partners.*') ? 'is-active' : '' }}" href="{{ route('backend.partners.index') }}">{!! $ic('partners') !!}<span>Trusted Partners</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.counters.*') ? 'is-active' : '' }}" href="{{ route('backend.counters.index') }}">{!! $ic('counters') !!}<span>Counters</span></a></li>
                 <li><a class="app-nav__sublink" href="#">{!! $ic('events') !!}<span>Upcoming Events</span></a></li>
                 <li><a class="app-nav__sublink" href="#">{!! $ic('stories') !!}<span>Success Stories</span></a></li>
                 <li><a class="app-nav__sublink" href="#">{!! $ic('journey') !!}<span>Our Journey</span></a></li>
-                <li><a class="app-nav__sublink" href="#">{!! $ic('testimonials') !!}<span>Testimonials</span></a></li>
-                <li><a class="app-nav__sublink" href="#">{!! $ic('faq') !!}<span>FAQ</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.testimonials.*') ? 'is-active' : '' }}" href="{{ route('backend.testimonials.index') }}">{!! $ic('testimonials') !!}<span>Testimonials</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.faqs.*') ? 'is-active' : '' }}" href="{{ route('backend.faqs.index') }}">{!! $ic('faq') !!}<span>FAQ</span></a></li>
             </ul>
             <div class="app-nav__flyout">
                 <div class="app-nav__flyout-title">Sections</div>
-                <a href="#">Trusted Partners</a><a href="#">Counters</a><a href="#">Upcoming Events</a>
-                <a href="#">Success Stories</a><a href="#">Our Journey</a><a href="#">Testimonials</a><a href="#">FAQ</a>
+                <a href="{{ route('backend.hero.index') }}">Hero Section</a><a href="{{ route('backend.partners.index') }}">Trusted Partners</a><a href="{{ route('backend.counters.index') }}">Counters</a><a href="#">Upcoming Events</a>
+                <a href="#">Success Stories</a><a href="#">Our Journey</a><a href="{{ route('backend.testimonials.index') }}">Testimonials</a><a href="{{ route('backend.faqs.index') }}">FAQ</a>
             </div>
         </div>
 

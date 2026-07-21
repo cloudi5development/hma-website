@@ -8,7 +8,7 @@
          it has parsed and applied the CSS above it, so the single largest paint
          on the page starts late. This makes it a parse-time fetch. --}}
     <link rel="preload" as="image" fetchpriority="high"
-          href="{{ asset('assets/images/Hero-section/hero-right-img.webp') }}"
+          href="{{ $hero->image_url }}"
           type="image/webp">
 
     {{-- Bootstrap 5 + Font Awesome are loaded site-wide via layouts/common-css --}}
@@ -45,26 +45,28 @@
             <div class="row align-items-center g-5">
 
                 {{-- ---------------------------- LEFT COLUMN ---------------------------- --}}
+                {{-- Copy + buttons are admin-editable (Sections → Hero); the layout,
+                     classes, reveal timing and the chevron icon stay fixed. --}}
                 <div class="col-lg-6 hm-hero__left">
                     <span class="hm-badge hm-reveal" data-delay="100">
                         <span class="hm-badge__icon" aria-hidden="true"></span>
-                        <span class="hm-badge__text">Learn &bull; Practice &bull; Get Hired</span>
+                        <span class="hm-badge__text">{{ $hero->badge_text }}</span>
                     </span>
 
                     <h1 class="hm-hero__title hm-reveal" data-delay="200" id="hmHeroTitle">
-                        Your Future Starts With the Right Skills
+                        {{ $hero->title }}
                     </h1>
 
                     <p class="hm-hero__text hm-reveal" data-delay="300">
-                        Build practical knowledge, work on real-world projects, and prepare for opportunities across today's fastest-growing industries.
+                        {{ $hero->description }}
                     </p>
 
                     <div class="hm-hero__actions hm-reveal" data-delay="400">
-                        <a class="hm-btn hm-btn--primary" href="#courses">
-                            <span class="hm-btn__label">Explore Course <i class="fa-solid fa-chevron-right"></i></span>
+                        <a class="hm-btn hm-btn--primary" href="{{ $hero->btn1_url ?: '#courses' }}">
+                            <span class="hm-btn__label">{{ $hero->btn1_text }} <i class="fa-solid fa-chevron-right"></i></span>
                         </a>
-                        <a class="hm-btn hm-btn--ghost" href="{{ route('frontend.contact-us') }}">
-                            <span class="hm-btn__label apply">Apply </span>
+                        <a class="hm-btn hm-btn--ghost" href="{{ $hero->btn2_url ?: route('frontend.contact-us') }}">
+                            <span class="hm-btn__label apply">{{ $hero->btn2_text }} </span>
                         </a>
                     </div>
                 </div>
@@ -78,9 +80,11 @@
                              than on window.load, which would block on every image
                              further down the page. decoding="sync" so it paints
                              with the rest of the hero instead of a frame later. --}}
+                        {{-- Right-column image is admin-editable (Sections → Hero);
+                             the floating cards + scroll badge below stay static. --}}
                         <img class="hm-hero__student hm-reveal hm-reveal--fade" data-delay="200"
                              data-hm-hero-img
-                             src="{{ asset('assets/images/Hero-section/hero-right-img.webp') }}"
+                             src="{{ $hero->image_url }}"
                              alt="Smiling Hire Minds Academy student holding a notebook"
                              width="560" height="548" decoding="sync" fetchpriority="high">
 
@@ -212,26 +216,18 @@
 
     {{-- ============================ TOP CATEGORIES ============================ --}}
     @php
-        // Icons live in public/assets/images/categories/ (each is a coloured badge).
-        // 'tone' selects the pastel card background defined in home.css.
-        $categories = [
-            // 'icon' is the white iconsax glyph; the coloured blob behind it is
-            // derived from 'tone' (blob-<tone>.png), so it always matches the
-            // card tint. On hover only the blob rotates — see .hm-cat__icon-bg.
-            ['name' => 'IT & Software',  'count' => '07 Courses', 'icon' => 'iconsax-monitor.png',         'tone' => 'red'],
-            ['name' => 'Cloud & DevOps', 'count' => '04 Courses', 'icon' => 'iconsax-cloud.png',           'tone' => 'purple'],
-            ['name' => 'Data & AI',      'count' => '06 Courses', 'icon' => 'iconsax-setting.png',         'tone' => 'teal'],
-            ['name' => 'Cyber Security', 'count' => '03 Courses', 'icon' => 'iconsax-shield-security.png', 'tone' => 'pink'],
-            ['name' => 'Engineering',    'count' => '05 Courses', 'icon' => 'iconsax-setting.png',         'tone' => 'blue'],
-            ['name' => 'Communication',  'count' => '03 Courses', 'icon' => 'iconsax-share.png',           'tone' => 'gold'],
-            ['name' => 'Leadership',     'count' => '02 Courses', 'icon' => 'iconsax-share.png',           'tone' => 'peach'],
-            ['name' => 'Finance',        'count' => '04 Courses', 'icon' => 'iconsax-bank.png',            'tone' => 'green'],
-            ['name' => 'Data & AI',      'count' => '06 Courses', 'icon' => 'iconsax-setting.png',         'tone' => 'teal'],
-            ['name' => 'Cyber Security', 'count' => '03 Courses', 'icon' => 'iconsax-shield-security.png', 'tone' => 'pink'],
-            ['name' => 'IT & Software',  'count' => '07 Courses', 'icon' => 'iconsax-monitor.png',         'tone' => 'red'],
-            ['name' => 'Cloud & DevOps', 'count' => '04 Courses', 'icon' => 'iconsax-cloud.png',           'tone' => 'purple'],
-        ];
+        // Fed by AppServiceProvider's view composer. Mapped to the exact array
+        // shape the markup expects; the course count is now derived live and the
+        // pastel tone / iconsax glyph keep the original design intact.
+        $categories = collect($homeCategories ?? [])->map(fn ($c) => [
+            'name'  => $c->name,
+            'count' => $c->course_count_label,
+            'icon'  => $c->icon_url,
+            'tone'  => $c->tone_value,
+            'url'   => route('frontend.courses', ['category' => $c->slug]),
+        ])->all();
     @endphp
+    @if (count($categories))
     <section class="hm-cats" id="categories" data-io aria-labelledby="hmCatsTitle">
 
         {{-- Same slow-rotating premium background as the hero --}}
@@ -282,17 +278,24 @@
             </div>
         </div>
     </section>
+    @endif
 
     {{-- ============================ POPULAR COURSES ============================ --}}
     @php
-        // Thumbnails live in public/assets/images/courses/ (each is a composed image).
-        $courses = [
-            ['img' => 'course-1.webp', 'badge' => 'Development',     'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-development')],
-            ['img' => 'course-2.webp',  'badge' => 'Corporate',       'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-corporate')],
-            ['img' => 'course-3.webp',  'badge' => 'Team Leadership',  'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-leadership')],
-            ['img' => 'course-4.webp', 'badge' => 'Career Readiness', 'title' => 'Learning JavaScript With Imagination', 'rating' => '4.5', 'url' => route('frontend.course-details', 'learning-javascript-career')],
-        ];
+        // Fed by the view composer (max 4). Mapped to the exact card shape the
+        // shared partial expects; the thumbnail is a ready-built URL.
+        $courses = collect($popularCourses ?? [])->map(fn ($c) => [
+            'img_url'     => $c->image_url,
+            'badge'       => $c->badge,
+            'title'       => $c->name,
+            'rating'      => $c->rating,
+            'duration'    => $c->duration,
+            'mode'        => $c->training_mode,
+            'certificate' => 'Industry Certificate',
+            'url'         => route('frontend.course-details', $c->slug),
+        ])->all();
     @endphp
+    @if (count($courses))
     <section class="hm-courses" id="courses" data-io aria-labelledby="hmCoursesTitle">
 
         {{-- Same slow-rotating premium background as the hero --}}
@@ -336,6 +339,7 @@
             </div>
         </div>
     </section>
+    @endif
 
     {{-- ============================ WHY CHOOSE HIREMINDS ============================ --}}
     @php

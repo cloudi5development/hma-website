@@ -17,65 +17,43 @@
 
     @php
         // ------------------------------------------------------------------
-        // Listing data. Swap for the paginator once the Course model lands —
-        // the card partial only reads these keys, so nothing else changes.
-        // Thumbnails are composed images in assets/images/courses/.
+        // Listing data — now database-driven (HomeController@courses). The card
+        // partial only reads these keys; the data-category/group/top attributes
+        // on the column wrapper feed the live category filter below.
         // ------------------------------------------------------------------
-        // 'category' + 'group' + 'top' drive the category filter (see the toolbar
-        // below and the script at the foot). They map straight onto the Course
-        // model's category when the admin lands.
-        $thumbs = [
-            ['img' => 'course-1.webp', 'badge' => 'Development',      'slug' => 'learning-javascript-development', 'category' => 'it-software',   'group' => 'technical',     'top' => true],
-            ['img' => 'course-4.webp', 'badge' => 'Career Readiness', 'slug' => 'learning-javascript-career',      'category' => 'business',      'group' => 'non-technical', 'top' => false],
-            ['img' => 'course-3.webp', 'badge' => 'Team Leadership',  'slug' => 'learning-javascript-leadership',  'category' => 'engineering',   'group' => 'technical',     'top' => false],
-            ['img' => 'course-2.webp', 'badge' => 'Corporate',        'slug' => 'learning-javascript-corporate',   'category' => 'cloud-devops',  'group' => 'technical',     'top' => true],
-        ];
+        $courses = collect($courses ?? [])->map(fn ($c) => [
+            'img_url'     => $c->image_url,
+            'badge'       => $c->badge,
+            'title'       => $c->name,
+            'rating'      => $c->rating,
+            'duration'    => $c->duration,
+            'mode'        => $c->training_mode,
+            'certificate' => 'Industry Certificate',
+            'url'         => route('frontend.course-details', $c->slug),
+            'category'    => $c->category?->slug,
+            'group'       => $c->category?->department?->slug,
+            'top'         => $c->is_featured,
+        ])->all();
 
-        $courses = [];
-
-        for ($i = 0; $i < 12; $i++) {
-            $thumb = $thumbs[$i % count($thumbs)];
-
-            $courses[] = [
-                'img'         => $thumb['img'],
-                'badge'       => $thumb['badge'],
-                'title'       => 'Learning JavaScript With Imagination',
-                'rating'      => '4.5',
-                'duration'    => '3 months',
-                'mode'        => 'On-Campus Learning',
-                'certificate' => 'Industry Certificate',
-                'url'         => route('frontend.course-details', $thumb['slug']),
-                'category'    => $thumb['category'],
-                'group'       => $thumb['group'],
-                'top'         => $thumb['top'],
-            ];
+        // Filter options built from departments → categories. Each department is
+        // a bold group header (matches a card's data-group); its categories are
+        // regular options (match data-category). Split across the two columns.
+        $filterOptions = [['label' => 'All Categories', 'value' => 'all', 'bold' => false]];
+        foreach ($departments ?? [] as $dept) {
+            $filterOptions[] = ['label' => $dept->name, 'value' => $dept->slug, 'bold' => true];
+            foreach ($dept->categories as $cat) {
+                $filterOptions[] = ['label' => $cat->name, 'value' => $cat->slug, 'bold' => false];
+            }
         }
+        $filterOptions[] = ['label' => 'Top Courses', 'value' => 'top-courses', 'bold' => true];
 
-        // Category filter options, laid out in the Figma's two columns. 'bold'
-        // marks the group headers; 'value' is what a card's data-category /
-        // data-group / data-top is matched against.
-        $catColumns = [
-            [
-                ['label' => 'All Categories', 'value' => 'all',           'bold' => false],
-                ['label' => 'Technical',      'value' => 'technical',     'bold' => true],
-                ['label' => 'IT & Software',  'value' => 'it-software',   'bold' => false],
-                ['label' => 'Cloud & DevOps', 'value' => 'cloud-devops',  'bold' => false],
-                ['label' => 'Data & AI',      'value' => 'data-ai',       'bold' => false],
-                ['label' => 'Top Courses',    'value' => 'top-courses',   'bold' => true],
-            ],
-            [
-                ['label' => 'Cyber Security', 'value' => 'cyber-security', 'bold' => false],
-                ['label' => 'Engineering',    'value' => 'engineering',    'bold' => false],
-                ['label' => 'Non - Technical','value' => 'non-technical',  'bold' => true],
-                ['label' => 'Business',       'value' => 'business',       'bold' => false],
-                ['label' => 'Industry',       'value' => 'industry',       'bold' => false],
-            ],
-        ];
+        $half = (int) ceil(count($filterOptions) / 2);
+        $catColumns = [array_slice($filterOptions, 0, $half), array_slice($filterOptions, $half)];
 
-        // Result counter — derived, so it stays honest if the array changes.
-        $total = 48;
-        $from  = 1;
-        $to    = count($courses);
+        // Result counter.
+        $total = count($courses);
+        $from  = $total ? 1 : 0;
+        $to    = $total;
     @endphp
 
     {{-- .hm-crs-page is also the gate the page-shell CSS keys off (see the
@@ -216,7 +194,8 @@
             var allBox = root.querySelector('[data-hm-cat-all]');
             var cards  = Array.prototype.slice.call(document.querySelectorAll('.hm-crs-item'));
             var count  = document.getElementById('hmCrsCount');
-            var total  = 48;   // keep the design's total; only the shown figure moves
+            var search = document.getElementById('hmCrsSearch');
+            var total  = cards.length;   // real total; only the shown figure moves
 
             function close() { root.classList.remove('is-open'); btn.setAttribute('aria-expanded', 'false'); }
             function open()  { root.classList.add('is-open');    btn.setAttribute('aria-expanded', 'true'); }
@@ -226,21 +205,28 @@
                 root.classList.contains('is-open') ? close() : open();
             });
 
-            // A card shows when its category, its group, or its "top" flag is in
-            // the chosen set. Empty set (or "All Categories") shows everything.
+            // A card shows when it matches the chosen categories AND the search
+            // text. Empty category set (or "All Categories") passes the category
+            // test; an empty search box passes the search test.
             function apply() {
                 var chosen = boxes
                     .filter(function (b) { return b.checked && b.value !== 'all'; })
                     .map(function (b) { return b.value; });
 
+                var term = (search && search.value ? search.value : '').trim().toLowerCase();
                 var shown = 0;
 
                 cards.forEach(function (card) {
-                    var match = chosen.length === 0
+                    var catMatch = chosen.length === 0
                         || chosen.indexOf(card.getAttribute('data-category')) !== -1
                         || chosen.indexOf(card.getAttribute('data-group')) !== -1
                         || (chosen.indexOf('top-courses') !== -1 && card.getAttribute('data-top') === '1');
 
+                    var titleEl = card.querySelector('.hm-course__title');
+                    var text = titleEl ? titleEl.textContent.toLowerCase() : '';
+                    var searchMatch = term === '' || text.indexOf(term) !== -1;
+
+                    var match = catMatch && searchMatch;
                     card.hidden = !match;
                     if (match) shown++;
                 });
@@ -272,6 +258,18 @@
                     apply();
                 });
             });
+
+            // Live search filters the grid as you type.
+            if (search) search.addEventListener('input', apply);
+
+            // Pre-select the category passed in the URL (?category=slug) — set by
+            // the home category cards and the navbar mega-menu links.
+            var preselect = @json($preselect ?? null);
+            if (preselect) {
+                var pre = boxes.filter(function (b) { return b.value === preselect; })[0];
+                if (pre) { pre.checked = true; if (allBox) allBox.checked = false; }
+            }
+            apply();
 
             // Close on outside click / Escape.
             document.addEventListener('click', function (e) { if (!root.contains(e.target)) close(); });

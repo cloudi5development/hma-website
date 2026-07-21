@@ -9,13 +9,13 @@
     $ic = fn ($p) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' . $p . '</svg>';
 
     $kpis = [
-        ['label' => 'Total Enquiries',   'num' => '1,284', 'trend' => '+12.4%', 'up' => true,  'tone' => 'brown',
+        ['label' => 'Total Enquiries',   'num' => '1,284', 'trend' => '+12.4%', 'tone' => 'peach',
          'icon' => '<path d="M5.5 5h13l1.5 8v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4l1.5-8Z"/><path d="M4 13h4l1.4 3h5.2L20 13"/>'],
-        ['label' => 'Course Enquiries',  'num' => '842',   'trend' => '+8.1%',  'up' => true,  'tone' => 'gold',
+        ['label' => 'Course Enquiries',  'num' => '842',   'trend' => '+8.1%',  'tone' => 'sky',
          'icon' => '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 10h7M8.5 14h5"/>'],
-        ['label' => 'Contact Enquiries', 'num' => '442',   'trend' => '+3.6%',  'up' => true,  'tone' => 'blue',
+        ['label' => 'Contact Enquiries', 'num' => '442',   'trend' => '+3.6%',  'tone' => 'lavender',
          'icon' => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.6 7 8.4 6 8.4-6"/>'],
-        ['label' => 'Converted',         'num' => '318',   'trend' => '24.7% rate', 'up' => true, 'tone' => 'green',
+        ['label' => 'Converted',         'num' => '318',   'trend' => '24.7% rate', 'tone' => 'cream',
          'icon' => '<path d="M20 6 9 17l-5-5"/>'],
     ];
 
@@ -28,11 +28,27 @@
         ['num' => '12', 'label' => 'Partners',     'icon' => '<path d="M12 3 5 6v5c0 4.6 3 7.6 7 9 4-1.4 7-4.4 7-9V6l-7-3Z"/><path d="M9.3 12l1.8 1.8 3.4-3.8"/>'],
     ];
 
-    // Monthly enquiries — value is the bar height in %.
-    $months = [
-        ['Jan', 42], ['Feb', 55], ['Mar', 48], ['Apr', 68], ['May', 60], ['Jun', 78],
-        ['Jul', 72], ['Aug', 88], ['Sep', 66], ['Oct', 92], ['Nov', 80], ['Dec', 74],
-    ];
+    $months  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    $newVals = [520, 560, 600, 540, 620, 720, 700, 880, 760, 900, 820, 780];   // New Enquiries (0-1000)
+    $conVals = [300, 340, 360, 320, 420, 510, 470, 600, 520, 640, 560, 540];   // Converted
+
+    // --- Smooth SVG path from a 0-1000 series (midpoint-quadratic) ---
+    $plotX = fn ($i) => 44 + $i * ((700 - 44) / 11);
+    $plotY = fn ($v) => 266 - ($v / 1000) * (266 - 16);
+    $smooth = function (array $vals, bool $area = false) use ($plotX, $plotY) {
+        $p = [];
+        foreach ($vals as $i => $v) { $p[] = [round($plotX($i), 1), round($plotY($v), 1)]; }
+        $d = 'M ' . $p[0][0] . ' ' . $p[0][1];
+        for ($i = 1; $i < count($p); $i++) {
+            $xc = round(($p[$i - 1][0] + $p[$i][0]) / 2, 1);
+            $yc = round(($p[$i - 1][1] + $p[$i][1]) / 2, 1);
+            $d .= ' Q ' . $p[$i - 1][0] . ' ' . $p[$i - 1][1] . ' ' . $xc . ' ' . $yc;
+        }
+        $last = end($p);
+        $d .= ' T ' . $last[0] . ' ' . $last[1];
+        if ($area) { $d .= ' L ' . $last[0] . ' 266 L ' . $p[0][0] . ' 266 Z'; }
+        return $d;
+    };
 
     $recent = [
         ['name' => 'Aarav Sharma',   'email' => 'aarav@gmail.com',   'course' => 'Full-Stack Development', 'type' => 'Course',  'status' => 'new',        'time' => '5 min ago'],
@@ -60,34 +76,14 @@
     <div class="row g-3 mb-3">
         @foreach ($kpis as $k)
             <div class="col-6 col-xl-3">
-                <div class="hm-card h-100">
-                    <div class="kpi">
-                        <span class="kpi__icon kpi__icon--{{ $k['tone'] }}">{!! $ic($k['icon']) !!}</span>
-                        <div>
-                            <div class="kpi__num">{{ $k['num'] }}</div>
-                            <div class="kpi__label">{{ $k['label'] }}</div>
-                            <div class="kpi__trend {{ $k['up'] ? 'kpi__trend--up' : 'kpi__trend--down' }}">
-                                &uarr; {{ $k['trend'] }}
-                            </div>
-                        </div>
+                <div class="kpi-card kpi-card--{{ $k['tone'] }} h-100">
+                    <div class="kpi-card__top">
+                        <span class="kpi-card__label">{{ $k['label'] }}</span>
+                        <span class="kpi-card__icon">{!! $ic($k['icon']) !!}</span>
                     </div>
-                </div>
-            </div>
-        @endforeach
-    </div>
+                    <div class="kpi-card__num">{{ $k['num'] }}</div>
+                    <div class="kpi-card__trend">&uarr; {{ $k['trend'] }} <span>from last month</span></div>
 
-    {{-- =========================== CONTENT CHIPS =========================== --}}
-    <div class="row g-3 mb-3">
-        @foreach ($chips as $c)
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="hm-card h-100">
-                    <div class="stat-chip">
-                        <span class="stat-chip__ico">{!! $ic($c['icon']) !!}</span>
-                        <div>
-                            <div class="stat-chip__num">{{ $c['num'] }}</div>
-                            <div class="stat-chip__label">{{ $c['label'] }}</div>
-                        </div>
-                    </div>
                 </div>
             </div>
         @endforeach
@@ -98,18 +94,50 @@
         <div class="col-12 col-xl-8">
             <div class="hm-card h-100">
                 <div class="hm-card__head">
-                    <h2 class="hm-card__title">Monthly Enquiries</h2>
+                    <h2 class="hm-card__title">Enquiries Overview</h2>
                     <span class="hm-card__link">This year</span>
                 </div>
                 <div class="hm-card__body">
-                    <div class="chart-bars">
-                        @foreach ($months as [$m, $v])
-                            <div class="chart-bars__col">
-                                <div class="chart-bars__bar" style="height: {{ $v }}%"></div>
-                                <span class="chart-bars__x">{{ $m }}</span>
-                            </div>
+                    <svg class="linechart" viewBox="0 0 720 300" preserveAspectRatio="none" role="img" aria-label="Enquiries over the year">
+                        <defs>
+                            <linearGradient id="gNew" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0" stop-color="#D8A64D" stop-opacity=".22"/>
+                                <stop offset="1" stop-color="#D8A64D" stop-opacity="0"/>
+                            </linearGradient>
+                            <linearGradient id="gConv" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0" stop-color="#6E5AA6" stop-opacity=".18"/>
+                                <stop offset="1" stop-color="#6E5AA6" stop-opacity="0"/>
+                            </linearGradient>
+                        </defs>
+
+                        {{-- gridlines + y labels --}}
+                        @foreach ([0, 250, 500, 750, 1000] as $g)
+                            @php $gy = round($plotY($g), 1); @endphp
+                            <line class="linechart__grid" x1="44" y1="{{ $gy }}" x2="700" y2="{{ $gy }}"/>
+                            <text class="linechart__ylabel" x="34" y="{{ $gy + 4 }}" text-anchor="end">{{ $g }}</text>
                         @endforeach
-                    </div>
+
+                        {{-- areas + lines --}}
+                        <path d="{{ $smooth($newVals, true) }}"  fill="url(#gNew)"  stroke="none"/>
+                        <path d="{{ $smooth($conVals, true) }}" fill="url(#gConv)" stroke="none"/>
+                        <path d="{{ $smooth($newVals) }}"  fill="none" stroke="#D8A64D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="{{ $smooth($conVals) }}" fill="none" stroke="#6E5AA6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+
+                        {{-- points --}}
+                        @foreach ($newVals as $i => $v)
+                            <circle cx="{{ round($plotX($i), 1) }}" cy="{{ round($plotY($v), 1) }}" r="3.4" fill="#fff" stroke="#D8A64D" stroke-width="2"/>
+                        @endforeach
+
+                        {{-- x labels --}}
+                        @foreach ($months as $i => $m)
+                            <text class="linechart__xlabel" x="{{ round($plotX($i), 1) }}" y="288" text-anchor="middle">{{ $m }}</text>
+                        @endforeach
+                    </svg>
+
+                    <ul class="chart-legend">
+                        <li><span class="line" style="background:#D8A64D"></span> New Enquiries</li>
+                        <li><span class="line" style="background:#6E5AA6"></span> Converted Enquiries</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -121,13 +149,13 @@
                 </div>
                 <div class="hm-card__body">
                     <div class="donut-wrap">
-                        <div class="donut" style="background: conic-gradient(#8B451F 0 62%, #E9A320 62% 88%, #2C7BE5 88% 100%);">
+                        <div class="donut" style="background: conic-gradient(#C89B3C 0 62%, #D8A64D 62% 88%, #6E5AA6 88% 100%);">
                             <div class="donut__center"><b>1,284</b><span>Total</span></div>
                         </div>
                         <ul class="donut-legend">
-                            <li><span class="dot" style="background:#8B451F"></span> Course <b>62%</b></li>
-                            <li><span class="dot" style="background:#E9A320"></span> Contact <b>26%</b></li>
-                            <li><span class="dot" style="background:#2C7BE5"></span> Event <b>12%</b></li>
+                            <li><span class="dot" style="background:#C89B3C"></span> Course <b>62%</b></li>
+                            <li><span class="dot" style="background:#D8A64D"></span> Contact <b>26%</b></li>
+                            <li><span class="dot" style="background:#6E5AA6"></span> Event <b>12%</b></li>
                         </ul>
                     </div>
                 </div>
@@ -154,8 +182,13 @@
                             @foreach ($recent as $r)
                                 <tr>
                                     <td>
-                                        <div class="hm-table__name">{{ $r['name'] }}</div>
-                                        <div class="hm-table__sub">{{ $r['email'] }}</div>
+                                        <div class="d-flex align-items-center">
+                                            <span class="hm-table__ava">{{ strtoupper(substr($r['name'], 0, 1)) }}</span>
+                                            <div>
+                                                <div class="hm-table__name">{{ $r['name'] }}</div>
+                                                <div class="hm-table__sub">{{ $r['email'] }}</div>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td>{{ $r['course'] }}</td>
                                     <td>{{ $r['type'] }}</td>

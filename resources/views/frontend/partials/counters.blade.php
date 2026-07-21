@@ -16,14 +16,18 @@
 | so the component is self-contained wherever it is dropped in.
 --}}
 @php
-    $counters = [
-        ['target' => '2.5', 'decimals' => 1, 'suffix' => 'K+', 'label' => 'Students Trained'],
-        ['target' => '150', 'decimals' => 0, 'suffix' => '+',  'label' => 'Industry-Focused Courses'],
-        ['target' => '95',  'decimals' => 0, 'suffix' => '%',  'label' => 'Learner Satisfaction'],
-        ['target' => '50',  'decimals' => 0, 'suffix' => '+',  'label' => 'Hiring & Training Partners'],
-    ];
+    // Fed by AppServiceProvider's view composer. Mapped to the exact array shape
+    // the markup below already expects, so the rendered output is unchanged; the
+    // model derives target/suffix/decimals from its stored display string.
+    $counters = collect($counters ?? [])->map(fn ($c) => [
+        'target'   => $c->target,
+        'decimals' => $c->decimals,
+        'suffix'   => $c->suffix,
+        'label'    => $c->label,
+    ])->values()->all();
 @endphp
 
+@if (count($counters))
 <div class="row hm-counters" role="list" data-hm-counters>
     @foreach ($counters as $i => $counter)
         <div class="col-6 col-lg-3 hm-stat hm-stat--d{{ $i + 1 }}" role="listitem">
@@ -37,6 +41,7 @@
         </div>
     @endforeach
 </div>
+@endif
 
 @push('scripts')
     {{-- Counters — reveal + one-time count-up, runs once then holds the value --}}

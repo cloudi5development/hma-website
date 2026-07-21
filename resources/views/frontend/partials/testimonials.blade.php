@@ -12,24 +12,18 @@
 | Its JS is pushed by this partial itself, so the component is self-contained.
 --}}
     @php
-        // 12-strong pool (the 6 images repeat). The stage shows 9 at a time and the
-        // nav arrows page through the pool. Full image URLs so the JS can reuse them.
-        $rimg = fn ($n) => asset('assets/images/review/customer-'.$n.'.png');
-        $pool = [
-            ['img' => $rimg(1), 'name' => 'Crystal Maiden', 'role' => 'UI/UX Designer',    'review' => "The mentorship here is on another level. Every project pushed me to think like a real designer, and the feedback was honest and practical. I landed my dream role within weeks of finishing."],
-            ['img' => $rimg(2), 'name' => 'Arjun Mehta',    'role' => 'Software Developer', 'review' => "I came in knowing almost nothing and left building full applications with confidence. The hands-on approach and constant support made all the difference in my career."],
-            ['img' => $rimg(3), 'name' => 'Priya Nair',     'role' => 'Data Analyst',       'review' => "What stood out was how industry-focused everything felt. Real datasets, real problems, real interviews. I felt prepared from day one when I stepped into my new job."],
-            ['img' => $rimg(4), 'name' => 'Rahul Verma',    'role' => 'Frontend Engineer',  'review' => "The trainers genuinely care about your growth. They answered every doubt and helped me polish my portfolio until it truly stood out to recruiters."],
-            ['img' => $rimg(5), 'name' => 'Sneha Kapoor',   'role' => 'Product Manager',    'review' => "From resume reviews to mock interviews, the career guidance was incredible. I switched fields completely and still felt supported every single step of the way."],
-            ['img' => $rimg(6), 'name' => 'Vikram Singh',   'role' => 'DevOps Engineer',    'review' => "Practical, intense, and worth every minute. The projects mirror exactly what companies expect, so the transition into my first role felt seamless and natural."],
-            ['img' => $rimg(1), 'name' => 'Ananya Rao',     'role' => 'Business Analyst',    'review' => "I joined unsure of my direction and left with a clear path and a job offer. The structured roadmap and mentor check-ins kept me motivated the whole way through."],
-            ['img' => $rimg(2), 'name' => 'Karan Malhotra', 'role' => 'Cloud Engineer',     'review' => "The labs felt exactly like a real workplace. By the time I interviewed, nothing surprised me — I had already solved similar problems dozens of times here."],
-            ['img' => $rimg(3), 'name' => 'Meera Iyer',     'role' => 'QA Engineer',        'review' => "Supportive community, sharp instructors, and projects that actually matter. I rebuilt my confidence and my resume at the same time, and it paid off quickly."],
-            ['img' => $rimg(4), 'name' => 'Rohan Das',      'role' => 'Backend Developer',  'review' => "Every doubt I raised got a thoughtful answer. The pace was challenging but fair, and the placement team stayed with me until I signed my offer letter."],
-            ['img' => $rimg(5), 'name' => 'Divya Menon',    'role' => 'Digital Marketer',   'review' => "They don't just teach tools, they teach how to think. That mindset shift is what got me hired over candidates with far more experience than me."],
-            ['img' => $rimg(6), 'name' => 'Aditya Joshi',   'role' => 'ML Engineer',        'review' => "From fundamentals to deployment, everything connected. I walked into my first role already comfortable shipping real features to real users."],
-        ];
+        // Fed by AppServiceProvider's view composer. Mapped to the exact array
+        // shape the markup + JSON payload already expect (img/name/role/review),
+        // so both the server render and the JS stage behave identically. The six
+        // review photos still repeat because the seeded rows reuse customer-1..6.
+        $pool = collect($testimonials ?? [])->map(fn ($t) => [
+            'img'    => $t->photo_url,
+            'name'   => $t->name,
+            'role'   => $t->role,
+            'review' => $t->review,
+        ])->values()->all();
     @endphp
+    @if (count($pool))
     <section class="hm-tst" id="testimonials" data-io aria-labelledby="hmTstTitle">
 
         {{-- Same slow-rotating hero background (shows faintly through the panel) --}}
@@ -119,6 +113,7 @@
             </div>
         </div>
     </section>
+    @endif
 
 @push('scripts')
     {{-- Testimonials: hover a profile → review card pops up beside it;

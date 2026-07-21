@@ -12,18 +12,12 @@
 |   <link rel="stylesheet" href="{{ asset('assets/css/frontend/partners.css') }}?v={{ filemtime(public_path('assets/css/frontend/partners.css')) }}">
 |
 --}}
-@php
-    // Logos live in public/assets/images/partners-section/. Add a row here
-    // (e.g. ['img' => 'flipkart.webp', 'name' => 'Flipkart']) once the image
-    // exists and it will appear in the marquee automatically.
-    $partners = [
-        ['img' => 'amason.webp',    'name' => 'Amazon'],
-        ['img' => 'google.webp',    'name' => 'Google'],
-        ['img' => 'microsoft.webp', 'name' => 'Microsoft'],
-        ['img' => 'tech.webp',      'name' => 'Tech'],
-    ];
-@endphp
+{{-- $partners is supplied by AppServiceProvider's view composer: active
+     partners flagged for the current page (home / about / testimonials),
+     ordered by sort_order. Managed in Admin → Sections → Trusted Partners. --}}
+@php $partners = $partners ?? collect(); @endphp
 
+@if ($partners->isNotEmpty())
 <section class="hm-partners" aria-labelledby="hmPartnersTitle">
     <div class="container">
         <h2 class="hm-partners__title" id="hmPartnersTitle">Our Trusted Partners</h2>
@@ -41,8 +35,8 @@
                         @foreach ($partners as $partner)
                             <li class="hm-partners__item">
                                 <img class="hm-partners__logo"
-                                     src="{{ asset('assets/images/partners-section/'.$partner['img']) }}"
-                                     alt="{{ $partner['name'] }} Partner Logo"
+                                     src="{{ $partner->logo_url }}"
+                                     alt="{{ $partner->name }} Partner Logo"
                                      height="40" loading="lazy" draggable="false">
                             </li>
                         @endforeach
@@ -52,3 +46,4 @@
         </div>
     </div>
 </section>
+@endif

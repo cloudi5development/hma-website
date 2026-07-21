@@ -4,29 +4,32 @@
      so $course has to exist before the title reads from it. --}}
 @php
     // ----------------------------------------------------------------------
-    // The course. $slug arrives from the route; nothing is looked up yet, so
-    // every slug renders this same record. Swap in the Course model and the
-    // markup below keeps working — it only reads these keys.
+    // $course arrives from HomeController@courseDetails as an Eloquent model.
+    // It is mapped here into the exact array shape the markup already reads, so
+    // the layout is untouched while every value is now database-driven. Fields
+    // the design has no slot for (student count, placement label) keep their
+    // original copy so the hero/stat cards stay visually identical.
     // ----------------------------------------------------------------------
+    $model = $course;
     $course = [
-        'slug'        => $slug ?? 'full-stack-web-development',
-        'title'       => 'Full-Stack Web Development Masterclass',
-        'description' => 'Master modern web architecture from ground zero to production-ready applications. Learn React, Node.js, and Cloud deployment with industry experts.',
-        'image'       => 'course-hero.webp',
-        'date'        => '24/07/2024',
-        'datetime'    => '2024-07-24',
+        'slug'        => $model->slug,
+        'title'       => $model->name,
+        'description' => $model->short_description ?: $model->overview,
+        'image'       => $model->image_url,
+        'date'        => optional($model->batch_start_date)->format('d/m/Y'),
+        'datetime'    => optional($model->batch_start_date)->toDateString(),
         'students'    => '2,250 Students',
-        'duration'    => '6 months',
-        'mode'        => 'Offline Class',
-        'level'       => 'Beginner to Pro',
+        'duration'    => $model->duration,
+        'mode'        => $model->training_mode,
+        'level'       => $model->skill_level,
         'certificate' => 'Industry Recognized',
         'placement'   => '100% Support',
-        'about'       => 'Understand the full lifecycle of web application development from concept to deployment. Master the MERN stack (MongoDB, Express, React, Node.js) to build scalable, high-performance apps. Learn industry-standard dev practices including Git version control, Agile methodologies, and CI/CD. "Our curriculum is designed to transform you into a job-ready engineer who doesn\'t just write code, but solves complex business problems." This masterclass goes beyond syntax. We focus on architectural patterns, system design, and the critical thinking required to excel in senior technical roles at top-tier tech companies globally.',
+        'about'       => $model->overview ?: $model->full_description ?: $model->short_description,
     ];
 @endphp
 
-@section('title', $course['title'] . ' — Hire Minds Academy')
-@section('meta_description', $course['description'])
+@section('title', $model->meta_title ?: $course['title'] . ' — Hire Minds Academy')
+@section('meta_description', $model->meta_description ?: $course['description'])
 
 @push('styles')
     {{-- Poppins — the heading typeface used across the site's hero/banner blocks --}}
@@ -77,28 +80,18 @@
         ['title' => 'Security Best Practices','desc' => 'Implement JWT, OAuth2, and CORS to protect user data and prevent common vulnerabilities.'],
     ];
 
-    // Related courses — the same shape the shared card partial reads.
-    $thumbs = [
-        ['img' => 'course-1.webp', 'badge' => 'Development',      'slug' => 'learning-javascript-development'],
-        ['img' => 'course-2.webp',  'badge' => 'Corporate',        'slug' => 'learning-javascript-corporate'],
-        ['img' => 'course-3.webp',  'badge' => 'Team Leadership',  'slug' => 'learning-javascript-leadership'],
-        ['img' => 'course-4.webp', 'badge' => 'Career Readiness', 'slug' => 'learning-javascript-career'],
-    ];
-
-    $relatedCourses = [];
-
-    foreach ($thumbs as $thumb) {
-        $relatedCourses[] = [
-            'img'         => $thumb['img'],
-            'badge'       => $thumb['badge'],
-            'title'       => 'Learning JavaScript With Imagination',
-            'rating'      => '4.5',
-            'duration'    => '3 months',
-            'mode'        => 'On-Campus Learning',
-            'certificate' => 'Industry Certificate',
-            'url'         => route('frontend.course-details', $thumb['slug']),
-        ];
-    }
+    // "Continue Your Learning Journey" — the flagged courses from the controller,
+    // mapped to the shape the shared card partial reads.
+    $relatedCourses = collect($continueLearning ?? [])->map(fn ($c) => [
+        'img_url'     => $c->image_url,
+        'badge'       => $c->badge,
+        'title'       => $c->name,
+        'rating'      => $c->rating,
+        'duration'    => $c->duration,
+        'mode'        => $c->training_mode,
+        'certificate' => 'Industry Certificate',
+        'url'         => route('frontend.course-details', $c->slug),
+    ])->all();
 @endphp
 
 @section('content')
@@ -113,9 +106,9 @@
                     <li class="hm-cd__crumb-sep" aria-hidden="true">&rsaquo;</li>
                     <li><a href="{{ route('frontend.courses') }}">Courses</a></li>
                     <li class="hm-cd__crumb-sep" aria-hidden="true">&rsaquo;</li>
-                    <li><a href="{{ route('frontend.courses') }}">IT &amp; Software</a></li>
+                    <li><a href="{{ route('frontend.courses', ['category' => $model->category?->slug]) }}">{{ $model->category?->name }}</a></li>
                     <li class="hm-cd__crumb-sep" aria-hidden="true">&rsaquo;</li>
-                    <li aria-current="page">Full-Stack Web Development</li>
+                    <li aria-current="page">{{ $course['title'] }}</li>
                 </ol>
             </nav>
 
@@ -167,7 +160,7 @@
                     {{-- The orange composition, its icon tile, the pills and the figure
                          are all baked into this one asset. --}}
                     <figure class="hm-cd-hero__figure">
-                        <img src="{{ asset('assets/images/courses/' . $course['image']) }}"
+                        <img src="{{ $course['image'] }}"
                              alt="{{ $course['title'] }}" loading="lazy">
                     </figure>
                 </div>
@@ -267,8 +260,9 @@
     </div>
 
     {{-- ================================ FAQ ================================
-         Shared component — its accordion needs Bootstrap's JS; see the push. --}}
-    @include('frontend.partials.faq')
+         Shared accordion, but fed THIS course's own FAQs (passing $faqs makes the
+         partial's composer stand down — see AppServiceProvider). --}}
+    @include('frontend.partials.faq', ['faqs' => $model->faqs])
 
     {{-- ============================ CONTACT FORM ============================
          Shared component — identical to the home page, validation JS included. --}}
@@ -279,10 +273,10 @@
          /hide, the backdrop, the focus trap, ESC and click-outside; every
          surface is restyled in course-details.css. --}}
     @php
-        $enquiryCourses = [
-            'Full-Stack Development', 'Data Analytics', 'Python', 'HR Training',
-            'AWS', 'Azure', 'DevOps', 'Digital Marketing',
-        ];
+        // Every active course, so the "Course" select is complete; the current
+        // course is preselected below (Enroll Now / Enquire Now need no manual pick).
+        $enquiryCourses = \App\Models\Course::active()->orderBy('name')->pluck('name')->all();
+        $selectedCourse = $course['title'];
 
         $enquiryInterests = [
             'IT & Software', 'Cloud', 'HR', 'Data Analytics',
@@ -384,9 +378,9 @@
                                     <div class="hm-enq__field" data-hm-field>
                                         <label class="hm-enq__label" for="enqCourse">Course</label>
                                         <select class="hm-enq__input hm-enq__select" id="enqCourse" name="course" required>
-                                            <option value="" disabled selected hidden>Select a course</option>
+                                            <option value="" disabled {{ $selectedCourse ? '' : 'selected' }} hidden>Select a course</option>
                                             @foreach ($enquiryCourses as $option)
-                                                <option>{{ $option }}</option>
+                                                <option {{ $option === $selectedCourse ? 'selected' : '' }}>{{ $option }}</option>
                                             @endforeach
                                         </select>
                                         <p class="hm-enq__error" data-hm-error>Please choose a course.</p>

@@ -1,0 +1,95 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
+
+class Course extends Model
+{
+    protected $fillable = [
+        'category_id', 'name', 'slug', 'image', 'batch_start_date', 'duration',
+        'training_mode', 'skill_level', 'rating', 'short_description',
+        'full_description', 'overview', 'learning_outcomes', 'prerequisites',
+        'certification', 'sort_order', 'is_active', 'is_popular',
+        'is_continue_learning', 'is_featured',
+        'meta_title', 'meta_description', 'meta_keywords',
+    ];
+
+    protected $casts = [
+        'category_id'          => 'integer',
+        'batch_start_date'     => 'date',
+        'rating'               => 'decimal:1',
+        'sort_order'           => 'integer',
+        'is_active'            => 'boolean',
+        'is_popular'           => 'boolean',
+        'is_continue_learning' => 'boolean',
+        'is_featured'          => 'boolean',
+    ];
+
+    /** Home "Popular Courses" is capped at this many. */
+    public const MAX_POPULAR = 4;
+
+    /** A course may carry at most this many FAQs. */
+    public const MAX_FAQS = 5;
+
+    public const TRAINING_MODES = ['Online', 'Offline', 'Hybrid'];
+
+    public const SKILL_LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Course $course) {
+            if (blank($course->slug)) {
+                $course->slug = Str::slug($course->name);
+            }
+        });
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function faqs(): HasMany
+    {
+        return $this->hasMany(CourseFaq::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /** The category's department, hopped through the category relation. */
+    public function department()
+    {
+        return $this->category?->department;
+    }
+
+    /** Active rows, in display order. */
+    public function scopeActive(Builder $q): Builder
+    {
+        return $q->where('is_active', true)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function scopePopular(Builder $q): Builder
+    {
+        return $q->where('is_popular', true);
+    }
+
+    public function scopeContinueLearning(Builder $q): Builder
+    {
+        return $q->where('is_continue_learning', true);
+    }
+
+    /** Public URL for the thumbnail (seeded asset path or admin upload). */
+    public function getImageUrlAttribute(): ?string
+    {
+        return $this->image ? asset($this->image) : null;
+    }
+
+    /** Category name — the pill/badge text on the course card. */
+    public function getBadgeAttribute(): string
+    {
+        return $this->category?->name ?? '';
+    }
+}

@@ -24,10 +24,14 @@
 </head>
 <body>
     <div id="layout-wrapper">
-        @include('backend.template.layouts.header')
         @include('backend.template.layouts.sidebar')
 
         <div class="main-content">
+            {{-- Topbar lives INSIDE main-content so it is offset by the sidebar
+                 width; otherwise the fixed sidebar overlaps its left edge and the
+                 menu toggle can't be clicked. --}}
+            @include('backend.template.layouts.header')
+
             <div class="page-content">
                 @yield('content')
             </div>
