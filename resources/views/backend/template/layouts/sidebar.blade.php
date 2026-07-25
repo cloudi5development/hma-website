@@ -85,7 +85,7 @@
         <p class="app-sidebar__heading">Website Content</p>
 
         {{-- Sections (group) --}}
-        @php $sectionsOpen = request()->routeIs('backend.hero.*', 'backend.partners.*', 'backend.counters.*', 'backend.testimonials.*', 'backend.faqs.*'); @endphp
+        @php $sectionsOpen = request()->routeIs('backend.hero.*', 'backend.partners.*', 'backend.counters.*', 'backend.events.*', 'backend.testimonials.*', 'backend.faqs.*'); @endphp
         <div class="app-nav__item {{ $sectionsOpen ? 'is-open' : '' }}" data-group>
             <a class="app-nav__link" role="button" tabindex="0">
                 {!! $ic('sections') !!}
@@ -96,7 +96,7 @@
                 <li><a class="app-nav__sublink {{ request()->routeIs('backend.hero.*') ? 'is-active' : '' }}" href="{{ route('backend.hero.index') }}">{!! $ic('hero') !!}<span>Hero Section</span></a></li>
                 <li><a class="app-nav__sublink {{ request()->routeIs('backend.partners.*') ? 'is-active' : '' }}" href="{{ route('backend.partners.index') }}">{!! $ic('partners') !!}<span>Trusted Partners</span></a></li>
                 <li><a class="app-nav__sublink {{ request()->routeIs('backend.counters.*') ? 'is-active' : '' }}" href="{{ route('backend.counters.index') }}">{!! $ic('counters') !!}<span>Counters</span></a></li>
-                <li><a class="app-nav__sublink" href="#">{!! $ic('events') !!}<span>Upcoming Events</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.events.*') ? 'is-active' : '' }}" href="{{ route('backend.events.index') }}">{!! $ic('events') !!}<span>Upcoming Events</span></a></li>
                 <li><a class="app-nav__sublink" href="#">{!! $ic('stories') !!}<span>Success Stories</span></a></li>
                 <li><a class="app-nav__sublink" href="#">{!! $ic('journey') !!}<span>Our Journey</span></a></li>
                 <li><a class="app-nav__sublink {{ request()->routeIs('backend.testimonials.*') ? 'is-active' : '' }}" href="{{ route('backend.testimonials.index') }}">{!! $ic('testimonials') !!}<span>Testimonials</span></a></li>
@@ -104,7 +104,7 @@
             </ul>
             <div class="app-nav__flyout">
                 <div class="app-nav__flyout-title">Sections</div>
-                <a href="{{ route('backend.hero.index') }}">Hero Section</a><a href="{{ route('backend.partners.index') }}">Trusted Partners</a><a href="{{ route('backend.counters.index') }}">Counters</a><a href="#">Upcoming Events</a>
+                <a href="{{ route('backend.hero.index') }}">Hero Section</a><a href="{{ route('backend.partners.index') }}">Trusted Partners</a><a href="{{ route('backend.counters.index') }}">Counters</a><a href="{{ route('backend.events.index') }}">Upcoming Events</a>
                 <a href="#">Success Stories</a><a href="#">Our Journey</a><a href="{{ route('backend.testimonials.index') }}">Testimonials</a><a href="{{ route('backend.faqs.index') }}">FAQ</a>
             </div>
         </div>

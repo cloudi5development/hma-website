@@ -6,6 +6,7 @@ use App\Http\Controllers\Backend\CounterController;
 use App\Http\Controllers\Backend\CourseController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\DepartmentController;
+use App\Http\Controllers\Backend\EventController;
 use App\Http\Controllers\Backend\FaqController;
 use App\Http\Controllers\Backend\HeroController;
 use App\Http\Controllers\Backend\PartnerController;
@@ -49,9 +50,10 @@ Route::prefix('admin')->name('backend.')->group(function () {
         Route::get('hero/edit', [HeroController::class, 'edit'])->name('hero.edit');
         Route::put('hero', [HeroController::class, 'update'])->name('hero.update');
 
-        // Sections → Trusted Partners / Counters / Testimonials / FAQ
+        // Sections → Trusted Partners / Counters / Events / Testimonials / FAQ
         Route::resource('partners', PartnerController::class)->except(['show']);
         Route::resource('counters', CounterController::class)->except(['show']);
+        Route::resource('events', EventController::class)->except(['show']);
         Route::resource('testimonials', TestimonialController::class)->except(['show']);
         Route::resource('faqs', FaqController::class)->except(['show']);
     });

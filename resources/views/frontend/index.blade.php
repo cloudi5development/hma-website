@@ -142,7 +142,7 @@
                 <img src="{{ asset('assets/images/Hero-section/html.png') }}" alt="HTML5" width="30" height="30" loading="lazy">
             </span> --}}
             <span class="hm-tech hm-tech--js hm-float-b hm-b hm-reveal hm-reveal--fade" data-delay="500" aria-hidden="true">
-                <img src="{{ asset('assets/images/Hero-section/javascript.webp') }}" alt="JavaScript" width="30" height="30" loading="lazy">
+                <img src="{{ asset('assets/images/Hero-section/react.png') }}" alt="JavaScript" width="30" height="30" loading="lazy">
             </span>
 
         </div>
@@ -438,38 +438,23 @@
 
     {{-- ============================ UPCOMING EVENTS ============================ --}}
     @php
-        // Speaker cut-outs live in public/assets/images/events/. Array order is
-        // left → centre → right on first paint; the carousel rotates them.
-        $events = [
-            [
-                'speaker' => 'Rochelle Fernandez',
-                'title'   => 'Learn about no-code tools',
-                'type'    => 'Live Event',
-                'price'   => '₹499/-',
-                'link'    => '#',
-                'person'  => 'person-2.webp',
-                'tone'    => 'purple',
-            ],
-            [
-                'speaker' => 'Regina Phalange',
-                'title'   => 'Nail your interviews',
-                'type'    => 'Live Event',
-                'price'   => '₹499/-',
-                'link'    => '#',
-                'person'  => 'person-3.webp',
-                'tone'    => 'teal',
-            ],
-            [
-                'speaker' => 'Rachel Bennett',
-                'title'   => 'Sell your first product online',
-                'type'    => 'Live Event',
-                'price'   => '₹499/-',
-                'link'    => '#',
-                'person'  => 'person-1.webp',
-                'tone'    => 'green',
-            ],
-        ];
+        // Fed by AppServiceProvider's frontend.index composer (active events
+        // flagged for home, in display order). Mapped to the exact shape this
+        // markup already used, so the cover-flow carousel is unchanged — only the
+        // data source moved to the database. 'person_url' is a ready-built URL
+        // (seeded asset path or admin upload). Array order is left → centre →
+        // right on first paint; the carousel rotates them.
+        $events = collect($events ?? [])->map(fn ($e) => [
+            'speaker'    => $e->speaker,
+            'title'      => $e->title,
+            'type'       => $e->type,
+            'price'      => $e->price,
+            'link'       => $e->link ?: '#',
+            'person_url' => $e->image_url,
+            'tone'       => $e->tone,
+        ])->all();
     @endphp
+    @if (count($events))
     <section class="hm-events" id="events" aria-labelledby="hmEventsTitle">
         <div class="hm-events__bg" aria-hidden="true">
             <img src="{{ asset('assets/images/events/events-bg.webp') }}" alt="" role="presentation" loading="lazy">
@@ -506,7 +491,7 @@
                                     </a>
                                 </div>
                             </div>
-                            <img class="hm-ev-card__person" src="{{ asset('assets/images/events/'.$ev['person']) }}" alt="{{ $ev['speaker'] }}" loading="lazy">
+                            <img class="hm-ev-card__person" src="{{ $ev['person_url'] }}" alt="{{ $ev['speaker'] }}" loading="lazy">
                         </article>
                     @endforeach
                 </div>
@@ -517,6 +502,7 @@
             </div>
         </div>
     </section>
+    @endif
 
     {{-- ============================ STUDENT SUCCESS STORIES ============================ --}}
     @php
@@ -858,7 +844,13 @@
             if (!carousel || !track) return;
 
             var cards = Array.prototype.slice.call(track.querySelectorAll('.hm-ev-card'));
-            if (cards.length < 3) return;
+            // The cover-flow needs three positions (left/centre/right). With fewer
+            // events than that, skip the rotation and just show what we have.
+            if (cards.length < 3) {
+                var pos = ['is-center', 'is-right', 'is-left'];
+                cards.forEach(function (c, i) { c.classList.add('ev-revealed', pos[i] || 'is-center'); });
+                return;
+            }
 
             var prevBtn = document.getElementById('hmEvPrev');
             var nextBtn = document.getElementById('hmEvNext');
@@ -933,6 +925,10 @@
             function reveal() {
                 if (reduce) { cards.forEach(function (c) { c.classList.add('ev-revealed'); }); started = true; play(); return; }
                 var seq = [order[1], order[0], order[2]];   // centre first, then left, right
+                // Reveal the off-stage cards too (index 3+). They stay hidden via
+                // .is-hidden until they rotate in — but without ev-revealed they'd
+                // stay at opacity 0 and leave an empty slot when they slide into view.
+                for (var k = 3; k < order.length; k++) seq.push(order[k]);
                 seq.forEach(function (idx, i) {
                     window.setTimeout(function () { cards[idx].classList.add('ev-revealed'); }, i * 150);
                 });

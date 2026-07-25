@@ -68,7 +68,7 @@
 .hm-navbar__links {
     display: flex;
     align-items: center;
-    gap: 18px;                 /* was 4px — the items were nearly touching */
+    gap: 40px;                 /* spread the items out to use the empty space either side */
     margin: 0 auto;
     padding: 0;
     list-style: none;

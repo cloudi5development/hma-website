@@ -189,12 +189,16 @@
     padding: 14px 22px;
     border-radius: 999px;
     background: linear-gradient(90deg, #F8B01C 0%, #FECA45 100%);
-    ;
     color: #23180F;
     font-size: 15px;
     font-weight: 700;
     text-decoration: none;
-
+    /* Was missing — the lift, scale, background and shadow all snapped on hover.
+       This eases them so the hover reads smooth instead of rough. */
+    transition:
+        transform .3s var(--hm-ease, cubic-bezier(.22, .7, .2, 1)),
+        box-shadow .3s ease,
+        background .3s ease;
 }
 
 .hm-course__btn span,

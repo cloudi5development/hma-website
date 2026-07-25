@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Counter;
 use App\Models\Course;
 use App\Models\Department;
+use App\Models\Event;
 use App\Models\Faq;
 use App\Models\Hero;
 use App\Models\Partner;
@@ -57,6 +58,9 @@ class AppServiceProvider extends ServiceProvider
                 ->with('category')
                 ->take(Course::MAX_POPULAR)
                 ->get());
+
+            // Upcoming Events — the cover-flow carousel (3 shown, extras rotate in).
+            $view->with('events', Event::active()->forPage('index')->get());
         });
 
         // Navbar mega-menu (rendered on every page) — departments as columns,
