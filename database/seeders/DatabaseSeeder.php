@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             PartnerSeeder::class,
             CounterSeeder::class,
             EventSeeder::class,
+            SuccessStorySeeder::class,
             TestimonialSeeder::class,
             FaqSeeder::class,
             CourseModuleSeeder::class,

@@ -10,6 +10,7 @@ use App\Http\Controllers\Backend\EventController;
 use App\Http\Controllers\Backend\FaqController;
 use App\Http\Controllers\Backend\HeroController;
 use App\Http\Controllers\Backend\PartnerController;
+use App\Http\Controllers\Backend\SuccessStoryController;
 use App\Http\Controllers\Backend\TestimonialController;
 use Illuminate\Support\Facades\Route;
 
@@ -54,6 +55,7 @@ Route::prefix('admin')->name('backend.')->group(function () {
         Route::resource('partners', PartnerController::class)->except(['show']);
         Route::resource('counters', CounterController::class)->except(['show']);
         Route::resource('events', EventController::class)->except(['show']);
+        Route::resource('success-stories', SuccessStoryController::class)->except(['show']);
         Route::resource('testimonials', TestimonialController::class)->except(['show']);
         Route::resource('faqs', FaqController::class)->except(['show']);
     });

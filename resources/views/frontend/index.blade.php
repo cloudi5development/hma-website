@@ -506,15 +506,21 @@
 
     {{-- ============================ STUDENT SUCCESS STORIES ============================ --}}
     @php
-        // Portraits are transparent cut-outs in public/assets/images/success-story/.
-        // 'tone' tints the CSS studio glow behind each student.
-        $stories = [
-            ['img' => 'person-1.webp', 'salary' => '₹9.0', 'name' => 'Aayushman Pravin', 'role' => 'Software Developer', 'tone' => 'olive'],
-            ['img' => 'person-2.webp', 'salary' => '₹9.0', 'name' => 'Aayushman Pravin', 'role' => 'Software Developer', 'tone' => 'teal'],
-            ['img' => 'person-3.webp', 'salary' => '₹9.0', 'name' => 'Aayushman Pravin', 'role' => 'Software Developer', 'tone' => 'green'],
-            ['img' => 'person-4.webp', 'salary' => '₹9.0', 'name' => 'Aayushman Pravin', 'role' => 'Software Developer', 'tone' => 'violet'],
-        ];
+        // Fed by AppServiceProvider's frontend.index composer (active stories
+        // flagged for home, in display order). Mapped to the exact shape this
+        // markup already used, so the grid is unchanged — only the data source
+        // moved to the database. 'img_url' is a ready-built URL (seeded asset
+        // path or admin upload); 'salary' is the bare number (the ₹ + LPA are
+        // in the markup). 'tone' tints the CSS studio glow behind each student.
+        $stories = collect($stories ?? [])->map(fn ($s) => [
+            'img_url' => $s->image_url,
+            'salary'  => $s->salary,
+            'name'    => $s->name,
+            'role'    => $s->role,
+            'tone'    => $s->tone,
+        ])->all();
     @endphp
+    @if (count($stories))
     <section class="hm-stories" id="success-stories" data-io aria-labelledby="hmStoriesTitle">
 
         {{-- Same slow-rotating premium background as the hero --}}
@@ -546,12 +552,12 @@
                                 <article class="hm-story hm-story--{{ $story['tone'] }}" tabindex="0">
                                     <span class="hm-story__bg" aria-hidden="true"></span>
                                     <img class="hm-story__img"
-                                         src="{{ asset('assets/images/success-story/'.$story['img']) }}"
+                                         src="{{ $story['img_url'] }}"
                                          alt="{{ $story['name'] }} — {{ $story['role'] }}" loading="lazy">
                                     <span class="hm-story__overlay" aria-hidden="true"></span>
                                     <div class="hm-story__content">
                                         <div class="hm-story__salary">
-                                            <span class="hm-story__amount">{{ $story['salary'] }}</span>
+                                            <span class="hm-story__amount">₹{{ $story['salary'] }}</span>
                                             <span class="hm-story__lpa">LPA</span>
                                         </div>
                                         <div class="hm-story__name">{{ $story['name'] }}</div>
@@ -565,6 +571,7 @@
             </div>
         </div>
     </section>
+    @endif
 
     {{-- ============================ LATEST BLOG ============================ --}}
     @php

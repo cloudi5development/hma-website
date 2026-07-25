@@ -10,6 +10,7 @@ use App\Models\Event;
 use App\Models\Faq;
 use App\Models\Hero;
 use App\Models\Partner;
+use App\Models\SuccessStory;
 use App\Models\Testimonial;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -61,6 +62,9 @@ class AppServiceProvider extends ServiceProvider
 
             // Upcoming Events — the cover-flow carousel (3 shown, extras rotate in).
             $view->with('events', Event::active()->forPage('index')->get());
+
+            // Student Success Stories — the "Real Career Stories" card grid.
+            $view->with('stories', SuccessStory::active()->forPage('index')->get());
         });
 
         // Navbar mega-menu (rendered on every page) — departments as columns,
