@@ -30,13 +30,44 @@
     </button>
 
     {{-- Notifications --}}
-    <button type="button" class="app-topbar__icon" aria-label="Notifications">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M10.3 21a2 2 0 0 0 3.4 0"/>
-        </svg>
-        <span class="app-topbar__dot" aria-hidden="true"></span>
-    </button>
+    <div class="app-notif" id="appNotif">
+        <button type="button" class="app-topbar__icon" id="appNotifBtn" aria-label="Notifications" aria-expanded="false" aria-haspopup="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M10.3 21a2 2 0 0 0 3.4 0"/>
+            </svg>
+            @if (($adminNotifUnread ?? 0) > 0)
+                <span class="app-notif__badge">{{ $adminNotifUnread > 9 ? '9+' : $adminNotifUnread }}</span>
+            @else
+                <span class="app-topbar__dot" aria-hidden="true" style="display:none"></span>
+            @endif
+        </button>
+
+        <div class="app-notif__panel" id="appNotifPanel" role="menu" hidden>
+            <div class="app-notif__head">
+                <span>Notifications</span>
+                @if (($adminNotifUnread ?? 0) > 0)
+                    <form method="POST" action="{{ route('backend.notifications.read-all') }}" style="margin:0">
+                        @csrf
+                        <button type="submit" class="app-notif__mark">Mark all read</button>
+                    </form>
+                @endif
+            </div>
+            <ul class="app-notif__list">
+                @forelse (($adminNotifications ?? []) as $n)
+                    <li class="app-notif__item {{ $n->is_read ? '' : 'is-unread' }}">
+                        <a href="{{ route('backend.notifications.open', $n) }}">
+                            <span class="app-notif__title">{{ $n->title }}</span>
+                            @if ($n->body) <span class="app-notif__body">{{ $n->body }}</span> @endif
+                            <span class="app-notif__time">{{ $n->created_at->diffForHumans() }}</span>
+                        </a>
+                    </li>
+                @empty
+                    <li class="app-notif__empty">You're all caught up.</li>
+                @endforelse
+            </ul>
+        </div>
+    </div>
 
     {{-- Profile --}}
     <div class="app-topbar__profile">
@@ -50,3 +81,25 @@
         </span>
     </div>
 </header>
+
+{{-- Notification bell — open/close, click-outside, Escape. --}}
+<script>
+    (function () {
+        'use strict';
+        var root  = document.getElementById('appNotif');
+        var btn   = document.getElementById('appNotifBtn');
+        var panel = document.getElementById('appNotifPanel');
+        if (!root || !btn || !panel) return;
+
+        function close() { panel.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
+
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var open = panel.hidden;
+            panel.hidden = !open;
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        document.addEventListener('click', function (e) { if (!root.contains(e.target)) close(); });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    })();
+</script>

@@ -13,7 +13,7 @@ class EventController extends Controller
 {
     public function index(): View
     {
-        $events = Event::orderBy('sort_order')->orderBy('id')->get();
+        $events = Event::orderBy('sort_order')->orderBy('id')->paginate(10);
 
         return view('backend.events.index', compact('events'));
     }

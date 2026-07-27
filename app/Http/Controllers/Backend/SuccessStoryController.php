@@ -13,7 +13,7 @@ class SuccessStoryController extends Controller
 {
     public function index(): View
     {
-        $stories = SuccessStory::orderBy('sort_order')->orderBy('id')->get();
+        $stories = SuccessStory::orderBy('sort_order')->orderBy('id')->paginate(10);
 
         return view('backend.success-stories.index', compact('stories'));
     }

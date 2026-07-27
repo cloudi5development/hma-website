@@ -13,7 +13,7 @@ class TestimonialController extends Controller
 {
     public function index(): View
     {
-        $testimonials = Testimonial::orderBy('sort_order')->orderBy('id')->get();
+        $testimonials = Testimonial::orderBy('sort_order')->orderBy('id')->paginate(10);
 
         return view('backend.testimonials.index', compact('testimonials'));
     }

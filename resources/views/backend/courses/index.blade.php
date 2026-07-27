@@ -9,7 +9,7 @@
     <div class="page-head">
         <div>
             <h1 class="page-head__title">Courses</h1>
-            <p class="page-head__sub">{{ $courses->count() }} course{{ $courses->count() === 1 ? '' : 's' }} · {{ $popularCount }} of {{ \App\Models\Course::MAX_POPULAR }} popular</p>
+            <p class="page-head__sub">{{ $courses->total() }} course{{ $courses->total() === 1 ? '' : 's' }} · {{ $popularCount }} of {{ \App\Models\Course::MAX_POPULAR }} popular</p>
         </div>
         <a href="{{ route('backend.courses.create') }}" class="btn-brand">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -50,6 +50,9 @@
                                     <a href="{{ route('frontend.course-details', $course->slug) }}" target="_blank" rel="noopener" class="btn-ghost btn-icon" aria-label="View">
                                         <span class="act-ico act-ico--view" aria-hidden="true"></span>
                                     </a>
+                                    <a href="{{ route('backend.course-enquiries.index', ['course' => $course->id]) }}" class="btn-ghost" aria-label="View enquiries for this course" title="View Enquiries">
+                                        Enquiries
+                                    </a>
                                     <a href="{{ route('backend.courses.edit', $course) }}" class="btn-ghost btn-icon" aria-label="Edit">
                                         <span class="act-ico act-ico--edit" aria-hidden="true"></span>
                                     </a>
@@ -70,5 +73,7 @@
             </table>
         </div>
     </div>
+
+    @include('backend.partials.table-pagination', ['paginator' => $courses])
 
 @endsection

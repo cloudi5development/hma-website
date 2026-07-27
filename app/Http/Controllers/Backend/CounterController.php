@@ -12,7 +12,7 @@ class CounterController extends Controller
 {
     public function index(): View
     {
-        $counters = Counter::orderBy('sort_order')->orderBy('id')->get();
+        $counters = Counter::orderBy('sort_order')->orderBy('id')->paginate(10);
 
         return view('backend.counters.index', compact('counters'));
     }

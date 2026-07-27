@@ -16,7 +16,7 @@ class CourseController extends Controller
     {
         $courses = Course::with('category.department')
             ->orderBy('sort_order')->orderBy('id')
-            ->get();
+            ->paginate(10);
 
         $popularCount = Course::popular()->count();
 

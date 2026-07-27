@@ -530,3 +530,228 @@ textarea.form-control-hm { height: auto; padding: 12px 16px; line-height: 1.6; r
     .kpi-card, .hm-card, .app-nav__link, .app-topbar__icon,
     .app-topbar__profile, .app-topbar__menu { animation: none !important; transition: none !important; }
 }
+
+/* ============================ NOTIFICATION BELL ============================ */
+.app-notif { position: relative; }
+.app-notif__badge {
+    position: absolute; top: 0; right: 0;
+    min-width: 17px; height: 17px; padding: 0 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: #fff; line-height: 1;
+    background: #d9534f; border-radius: 999px; box-shadow: 0 0 0 2px #fff;
+}
+.app-notif__panel {
+    position: absolute; top: calc(100% + 10px); right: 0;
+    width: 330px; max-width: 92vw;
+    background: #fff; border: 1px solid #eee; border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(42, 29, 20, .18);
+    z-index: 60; overflow: hidden;
+}
+.app-notif__panel[hidden] { display: none; }
+.app-notif__head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 15px; border-bottom: 1px solid #f0eeeb;
+    font-size: 13px; font-weight: 700; color: #23180f;
+}
+.app-notif__mark { border: 0; background: none; color: #843D21; font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; }
+.app-notif__mark:hover { text-decoration: underline; }
+.app-notif__list { list-style: none; margin: 0; padding: 0; max-height: 370px; overflow-y: auto; }
+.app-notif__item a { display: block; padding: 11px 15px; border-bottom: 1px solid #f5f2ee; text-decoration: none; transition: background .2s ease; }
+.app-notif__item a:hover { background: #faf7f3; }
+.app-notif__item.is-unread { background: #fff8ec; }
+.app-notif__title { display: block; font-size: 13px; font-weight: 600; color: #23180f; }
+.app-notif__body { display: block; font-size: 12px; color: #6b6357; margin-top: 2px; }
+.app-notif__time { display: block; font-size: 11px; color: #9a8b7c; margin-top: 3px; }
+.app-notif__empty { padding: 24px 15px; text-align: center; color: #9a8b7c; font-size: 13px; }
+
+/* ==========================================================================
+   ADMIN TABLE UI — premium redesign. Shared classes, so it applies uniformly
+   to every module (Courses, Enquiries, Blogs, Categories, Settings, …).
+   Appended last so it enhances the base rules above without editing markup.
+   ========================================================================== */
+
+/* ---- Table container: let hover shadows + tooltips breathe on desktop,
+        keep horizontal scroll on smaller screens. ---- */
+/* @media (min-width: 981px) {
+    .hm-card > .table-responsive { overflow: visible; }
+} */
+
+/* ---- Table ---- */
+.hm-table { border-collapse: separate; border-spacing: 0; }
+.hm-table thead th {
+    background: #F7F5FB;
+    color: #6E6880;
+    font-size: 11px; font-weight: 700; letter-spacing: .055em; text-transform: uppercase;
+    padding: 15px 24px;
+    border-bottom: 1px solid #ECE8F4;
+}
+.hm-table thead th:first-child { border-top-left-radius: 12px; }
+.hm-table thead th:last-child  { border-top-right-radius: 12px; }
+.hm-table td {
+    padding: 16px 24px; vertical-align: middle;
+    border-bottom: 1px solid #F1EEF7; font-size: 13.5px; color: #4A4556;
+}
+.hm-table tbody tr { transition: background .2s var(--ease); }
+.hm-table tbody tr:nth-child(even) { background: #FCFBFE; }          /* very subtle zebra */
+.hm-table tbody tr:hover { background: #F4F0FC; }                    /* hover highlight */
+.hm-table tbody tr:last-child td { border-bottom: 0; }
+
+/* ---- Action icon buttons (View / Edit / Delete) ---- */
+.hm-table td .d-inline-flex.gap-2 { gap: 10px; }
+.btn-icon {
+    width: 40px; height: 40px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 11px; border: 1px solid #ECEAF2; background: #fff;
+    color: #7A7488; cursor: pointer; position: relative;
+    transition: transform .22s var(--ease), background .22s ease, color .22s ease,
+                border-color .22s ease, box-shadow .22s ease;
+}
+.btn-icon .act-ico { width: 17px; height: 17px; }
+.btn-icon:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(46, 39, 74, .12); }
+.btn-icon:active { transform: translateY(0) scale(.95); }
+.btn-icon:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(110, 90, 166, .16); }
+
+/* Per-action colours — matched via the child icon, so no markup changes. */
+.btn-icon:has(.act-ico--view):hover { color: var(--purple); background: var(--lavender); border-color: #D9CFF1; }
+.btn-icon:has(.act-ico--edit):hover { color: #B0812B; background: #FBF3DE; border-color: #ECDDB0; }
+.btn-icon:has(.act-ico--delete):hover,
+.btn-danger-soft.btn-icon:hover     { color: #E4506A; background: #FFECEF; border-color: #F7CBD3; }
+/* Delete hints soft-red even at rest. */
+.btn-danger-soft.btn-icon { color: #E86B7E; background: #fff; border-color: #F3D8DD; }
+
+/* Tooltips built from the existing aria-label — premium bubble, no markup edits. */
+.btn-icon[aria-label]::after {
+    content: attr(aria-label);
+    position: absolute; bottom: calc(100% + 9px); left: 50%;
+    transform: translateX(-50%) translateY(5px) scale(.96);
+    padding: 5px 10px; border-radius: 8px; background: #2C2640; color: #fff;
+    font-size: 11px; font-weight: 600; white-space: nowrap;
+    opacity: 0; pointer-events: none; z-index: 30;
+    transition: opacity .2s ease, transform .2s ease;
+}
+.btn-icon[aria-label]::before {
+    content: ""; position: absolute; bottom: calc(100% + 4px); left: 50%;
+    transform: translateX(-50%) translateY(5px);
+    border: 5px solid transparent; border-top-color: #2C2640;
+    opacity: 0; pointer-events: none; z-index: 30;
+    transition: opacity .2s ease, transform .2s ease;
+}
+.btn-icon[aria-label]:hover::after  { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+.btn-icon[aria-label]:hover::before { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---- Status badges: extra workflow states + the inline status <select> ---- */
+.pill--pending  { color: #C99A2E; background: #FBF2DD; }
+.pill--approved { color: #2FA35F; background: #E4F7EC; }
+.pill--rejected { color: #D9534F; background: #FBE6E4; }
+
+select.pill {
+    appearance: none; -webkit-appearance: none;
+    padding-right: 24px; border: 0; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%236E6880' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 7px center; background-size: 9px;
+}
+select.pill::before { display: none; }
+
+/* ---- Search + filter inputs ---- */
+.form-control-hm:focus { border-color: #C9BBEE; box-shadow: 0 0 0 4px rgba(110, 90, 166, .12); }
+
+/* ---- Pagination (Bootstrap-5 markup from ->links(), restyled to the theme) ---- */
+.pagination { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.page-item { margin: 0; }
+.page-item .page-link {
+    min-width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center;
+    padding: 0 12px; border-radius: 10px; border: 1px solid #ECEAF2; background: #fff;
+    color: #6B6676; font-size: 13.5px; font-weight: 600; line-height: 1;
+    transition: transform .2s var(--ease), background .2s ease, color .2s ease, border-color .2s ease;
+}
+.page-item .page-link:hover { background: var(--lavender); color: var(--purple); border-color: #D9CFF1; transform: translateY(-1px); }
+.page-item.active .page-link { color: #fff; background: var(--active-grad); border-color: transparent; box-shadow: 0 8px 18px rgba(110, 90, 166, .26); }
+.page-item.disabled .page-link { opacity: .45; pointer-events: none; }
+.page-item .page-link:focus { outline: none; box-shadow: 0 0 0 4px rgba(110, 90, 166, .14); }
+
+/* ---- Table pagination footer (page buttons only) ---- */
+.hm-tablefoot {
+    display: flex; align-items: center; justify-content: flex-end;
+    flex-wrap: wrap; margin-top: 16px;
+}
+.hm-tablefoot .pagination { margin: 0; }
+
+/* ---- Responsive ---- */
+.table-responsive { -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+    .hm-table thead th, .hm-table td { padding-left: 16px; padding-right: 16px; }
+    .btn-icon { width: 38px; height: 38px; }
+    .hm-tablefoot { justify-content: center; }
+}
+
+/* ==========================================================================
+   DASHBOARD HERO BANNER — compact welcome banner above the KPI cards.
+   The cream bg + 3D illustration + feature circles come from banner-right.png;
+   only the left copy is overlaid.
+   ========================================================================== */
+.dash-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 218px;
+    margin-bottom: 22px;
+    padding: 30px 44px;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid #F1E8D6;
+    background-color: #FBF6EC;
+    background-image: url('../../template/images/banner-right.png');
+    background-repeat: no-repeat;
+    /* Overscale + nudge right so the illustration bleeds to the edges instead of
+       sitting inside the image's own light margin (the "padding" look). */
+    background-position: calc(100% + 12px) center;
+    background-size: auto 112%;
+    box-shadow: var(--shadow);
+}
+.dash-hero__content { position: relative; z-index: 2; max-width: 560px; }
+
+.dash-hero__badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 15px; border-radius: 999px;
+    background: #fff; border: 1px solid #F1E5CE;
+    font-size: 13px; font-weight: 600; color: #4A4030;
+    box-shadow: 0 5px 16px rgba(184, 142, 58, .14);
+}
+.dash-hero__badge svg { width: 18px; height: 18px; color: #DB9C2C; }
+
+.dash-hero__title {
+    margin: 16px 0 0;
+    font-family: "Poppins", "Inter", sans-serif;
+    font-size: 30px; line-height: 1.2; font-weight: 700;
+    letter-spacing: -.015em; color: #221F18;
+}
+.dash-hero__title-accent { color: #DA9A28; }
+
+.dash-hero__rule { display: block; width: 46px; height: 4px; border-radius: 999px; background: #DA9A28; margin-top: 14px; }
+
+.dash-hero__text {
+    margin: 14px 0 0; max-width: 390px;
+    font-size: 14px; line-height: 1.65; color: #6B6252;
+}
+
+.dash-hero__btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    margin-top: 20px; padding: 11px 22px; border-radius: 12px;
+    font-size: 14px; font-weight: 600; color: #fff;
+    background: linear-gradient(135deg, #EAB13F 0%, #D68E22 100%);
+    box-shadow: 0 12px 24px rgba(214, 142, 34, .30);
+    transition: transform .2s var(--ease), box-shadow .2s var(--ease);
+}
+.dash-hero__btn:hover { transform: translateY(-2px); color: #fff; box-shadow: 0 16px 30px rgba(214, 142, 34, .40); }
+.dash-hero__btn svg { width: 17px; height: 17px; }
+
+/* Responsive — shrink the illustration, then drop it on small screens. */
+/* Keep the illustration full-height/edge-to-edge; just give the text less room
+   on medium screens, then drop the image on small ones. */
+@media (max-width: 1024px) { .dash-hero__content { max-width: 48%; } }
+@media (max-width: 720px) {
+    .dash-hero { background-image: none; padding: 26px; }
+    .dash-hero__content { max-width: 100%; }
+    .dash-hero__title { font-size: 24px; }
+}
+   

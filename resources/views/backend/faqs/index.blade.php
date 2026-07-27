@@ -1,6 +1,6 @@
 @extends('backend.template.layouts.template-base')
 
-@php $atMax = $faqs->count() >= \App\Models\Faq::MAX; @endphp
+@php $atMax = $faqs->total() >= \App\Models\Faq::MAX; @endphp
 
 @section('title', 'FAQ')
 @section('page_title', 'FAQ')
@@ -11,7 +11,7 @@
     <div class="page-head">
         <div>
             <h1 class="page-head__title">FAQ</h1>
-            <p class="page-head__sub">{{ $faqs->count() }} of {{ \App\Models\Faq::MAX }} question{{ $faqs->count() === 1 ? '' : 's' }}</p>
+            <p class="page-head__sub">{{ $faqs->total() }} of {{ \App\Models\Faq::MAX }} question{{ $faqs->total() === 1 ? '' : 's' }}</p>
         </div>
         @if ($atMax)
             <button type="button" class="btn-brand is-disabled" data-faq-max>

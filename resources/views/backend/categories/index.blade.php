@@ -9,7 +9,7 @@
     <div class="page-head">
         <div>
             <h1 class="page-head__title">Categories</h1>
-            <p class="page-head__sub">{{ $categories->count() }} categor{{ $categories->count() === 1 ? 'y' : 'ies' }}</p>
+            <p class="page-head__sub">{{ $categories->total() }} categor{{ $categories->total() === 1 ? 'y' : 'ies' }}</p>
         </div>
         <a href="{{ route('backend.categories.create') }}" class="btn-brand">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -66,5 +66,7 @@
             </table>
         </div>
     </div>
+
+    @include('backend.partials.table-pagination', ['paginator' => $categories])
 
 @endsection

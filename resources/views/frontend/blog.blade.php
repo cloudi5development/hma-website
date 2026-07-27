@@ -15,36 +15,15 @@
 @section('content')
 
     @php
-        // ------------------------------------------------------------------
-        // Listing data. Swap this array for the paginator once the Blog model
-        // lands — the markup below only reads these keys, so nothing else has
-        // to change. 'tint' picks the card's gradient wash (see blog.css).
-        // ------------------------------------------------------------------
-        $tints  = ['blue', 'cream', 'pink', 'green', 'lavender', 'peach'];
-        $images = ['blog-1.webp', 'blog-2.webp', 'blog-3.webp', 'blog-4.webp'];
-
-        $blogs = [];
-
-        for ($i = 0; $i < 12; $i++) {
-            $blogs[] = [
-                'title'       => "How Are Plant Therapy's Essential Oils Extracted?",
-                'description' => 'Explore articles, career advice, interview tips, and industry updates written to keep you ahead in a competitive job market.',
-                'image'       => $images[$i % count($images)],
-                'date'        => '20 July, 2024',
-                'datetime'    => '2024-07-20',
-                'tint'        => $tints[$i % count($tints)],
-                'url'         => route('frontend.blog-details'),
-            ];
-        }
-
-        $total = 48;
-        $from  = 1;
-        $to    = count($blogs);
-
-        // The design shows two page links, so they are listed rather than
-        // derived — ceil(48 / 12) would give four.
-        $pages       = [1, 2];
-        $currentPage = 1;
+        // $blogs is a LengthAwarePaginator of Blog models (HomeController@blog).
+        // 'tint' picks the card's gradient wash and still cycles by position, so
+        // the grid looks identical — only the data source moved to the database.
+        $tints       = ['blue', 'cream', 'pink', 'green', 'lavender', 'peach'];
+        $total       = $blogs->total();
+        $from        = $blogs->firstItem() ?? 0;
+        $to          = $blogs->lastItem() ?? 0;
+        $currentPage = $blogs->currentPage();
+        $pages       = range(1, $blogs->lastPage());
     @endphp
 
     <section class="hm-blog" aria-labelledby="hmBlogHeading">
@@ -114,14 +93,15 @@
 
             {{-- =============================== GRID =============================== --}}
             <div class="row hm-blog__grid">
-                @foreach ($blogs as $blog)
+                @forelse ($blogs as $blog)
+                    @php $blogUrl = route('frontend.blog-details', $blog->slug); @endphp
                     <div class="col-12 col-md-6">
-                        <article class="hm-blog-card hm-blog-card--{{ $blog['tint'] }}">
+                        <article class="hm-blog-card hm-blog-card--{{ $tints[$loop->index % count($tints)] }}">
 
                             <div class="hm-blog-card__media">
                                 <img class="hm-blog-card__img"
-                                     src="{{ asset('assets/images/blog/' . $blog['image']) }}"
-                                     alt="{{ $blog['title'] }}"
+                                     src="{{ $blog->image_url }}"
+                                     alt="{{ $blog->title }}"
                                      width="197" height="165" loading="lazy">
                             </div>
 
@@ -130,45 +110,51 @@
                                     {{-- The ::after on this link stretches over the whole
                                          card, so the card reads as one hit area while the
                                          keyboard still gets a single, real tab stop. --}}
-                                    <a class="hm-blog-card__link" href="{{ $blog['url'] }}">{{ $blog['title'] }}</a>
+                                    <a class="hm-blog-card__link" href="{{ $blogUrl }}">{{ $blog->title }}</a>
                                 </h2>
 
-                                <p class="hm-blog-card__desc">{{ $blog['description'] }}</p>
+                                <p class="hm-blog-card__desc">{{ $blog->excerpt }}</p>
 
                                 <div class="hm-blog-card__foot">
                                     <span class="hm-blog-card__date">
                                         <img class="hm-blog-card__date-icon"
                                              src="{{ asset('assets/images/blog/calendar.png') }}"
                                              alt="" aria-hidden="true">
-                                        <time datetime="{{ $blog['datetime'] }}">{{ $blog['date'] }}</time>
+                                        <time datetime="{{ $blog->iso_date }}">{{ $blog->display_date }}</time>
                                     </span>
 
-                                    <a class="hm-blog-card__more" href="{{ $blog['url'] }}">Read More</a>
+                                    <a class="hm-blog-card__more" href="{{ $blogUrl }}">Read More</a>
                                 </div>
                             </div>
 
                         </article>
                     </div>
-                @endforeach
+                @empty
+                    <div class="col-12"><p class="hm-blog__count">No blog posts yet.</p></div>
+                @endforelse
             </div>
 
             {{-- ============================ PAGINATION ============================ --}}
-            <nav class="hm-blog__pagination" aria-label="Blog pages">
-                <a class="hm-blog__page hm-blog__page--prev" href="#" aria-label="Previous page">
-                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-                </a>
+            @if ($blogs->lastPage() > 1)
+                <nav class="hm-blog__pagination" aria-label="Blog pages">
+                    <a class="hm-blog__page hm-blog__page--prev" href="{{ $blogs->previousPageUrl() ?? '#' }}"
+                       aria-label="Previous page" @if ($blogs->onFirstPage()) aria-disabled="true" @endif>
+                        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                    </a>
 
-                @foreach ($pages as $page)
-                    <a class="hm-blog__page @if ($page === $currentPage) hm-blog__page--current @endif"
-                       href="#"
-                       aria-label="Page {{ $page }}"
-                       @if ($page === $currentPage) aria-current="page" @endif>{{ $page }}</a>
-                @endforeach
+                    @foreach ($pages as $page)
+                        <a class="hm-blog__page @if ($page === $currentPage) hm-blog__page--current @endif"
+                           href="{{ $blogs->url($page) }}"
+                           aria-label="Page {{ $page }}"
+                           @if ($page === $currentPage) aria-current="page" @endif>{{ $page }}</a>
+                    @endforeach
 
-                <a class="hm-blog__page hm-blog__page--next" href="#" aria-label="Next page">
-                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-                </a>
-            </nav>
+                    <a class="hm-blog__page hm-blog__page--next" href="{{ $blogs->nextPageUrl() ?? '#' }}"
+                       aria-label="Next page" @if (! $blogs->hasMorePages()) aria-disabled="true" @endif>
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                </nav>
+            @endif
 
         </div>
     </section>

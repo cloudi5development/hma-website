@@ -1595,6 +1595,23 @@
     animation-delay: -6s;
 } */
 
+/* ---- Slider variant — used only when there are more than 4 stories.
+   Shows 4 at a time (responsive) and autoplays through the rest. The padding
+   gives room for the card's -12px hover lift + shadow so Swiper's overflow
+   clipping doesn't cut them off. ---- */
+.hm-stories__swiper {
+    margin-top: 46px;
+    padding: 16px 6px 32px;
+    overflow: hidden;
+}
+.hm-stories__swiper .swiper-slide {
+    height: auto;
+    display: flex;
+}
+.hm-stories__swiper .swiper-slide .hm-story-wrap {
+    width: 100%;
+}
+
 /* ------------------------------ Card ------------------------------ */
 .hm-story {
     position: relative;

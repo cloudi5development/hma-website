@@ -82,7 +82,7 @@
 
                     {{-- Right: enquiry form --}}
                     <div class="col-lg-7 hm-contact__formcol hm-anim hm-anim--right">
-                        <form class="hm-contact__form needs-validation" id="hmContactForm" method="POST" action="#" novalidate>
+                        <form class="hm-contact__form needs-validation" id="hmContactForm" method="POST" action="{{ route('frontend.contact-enquiry.store') }}" novalidate>
                             @csrf
 
                             <div class="hm-field">
@@ -154,13 +154,26 @@
     </section>
 
 @push('scripts')
-    {{-- Contact form: Bootstrap-style validation, no page reload --}}
+    {{-- Contact form: HTML5 validation + AJAX submit (no page reload). Stores the
+         enquiry and emails the sender; see Frontend\ContactEnquiryController. --}}
     <script>
         (function () {
             'use strict';
             var form = document.getElementById('hmContactForm');
             if (!form) return;
-            var note = document.getElementById('hmContactNote');
+            var note   = document.getElementById('hmContactNote');
+            var submit = form.querySelector('.hm-contact__submit');
+            var label  = submit ? submit.querySelector('.hm-btn__label') : null;
+            var labelHtml = label ? label.innerHTML : '';
+
+            function showNote(msg, ok) {
+                if (!note) return;
+                note.textContent = msg;
+                note.style.color = ok ? '' : '#c0392b';
+                note.hidden = false;
+                clearTimeout(note._t);
+                note._t = setTimeout(function () { note.hidden = true; }, 6000);
+            }
 
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
@@ -170,14 +183,30 @@
                     if (firstInvalid) firstInvalid.focus();
                     return;
                 }
-                // Valid — no backend yet, so acknowledge and reset in-place.
                 form.classList.remove('was-validated');
-                form.reset();
-                if (note) {
-                    note.hidden = false;
-                    clearTimeout(note._t);
-                    note._t = setTimeout(function () { note.hidden = true; }, 6000);
-                }
+
+                if (submit) { submit.disabled = true; if (label) label.textContent = 'Sending…'; }
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    body: new FormData(form)
+                })
+                .then(function (r) { return r.ok ? r.json() : Promise.reject(r); })
+                .then(function (data) {
+                    if (data && data.success) {
+                        form.reset();
+                        showNote('Thanks! Your enquiry has been received — our team will get back to you within 24 hours.', true);
+                    } else {
+                        showNote('Something went wrong. Please try again.', false);
+                    }
+                })
+                .catch(function () {
+                    showNote('Sorry, we could not send your enquiry. Please try again or call us.', false);
+                })
+                .finally(function () {
+                    if (submit) { submit.disabled = false; if (label) label.innerHTML = labelHtml; }
+                });
             });
         })();
     </script>

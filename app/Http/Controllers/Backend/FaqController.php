@@ -12,7 +12,7 @@ class FaqController extends Controller
 {
     public function index(): View
     {
-        $faqs = Faq::orderBy('sort_order')->orderBy('id')->get();
+        $faqs = Faq::orderBy('sort_order')->orderBy('id')->paginate(10);
 
         return view('backend.faqs.index', compact('faqs'));
     }

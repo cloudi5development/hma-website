@@ -17,7 +17,7 @@ class CategoryController extends Controller
         $categories = Category::with('department')
             ->withCount('courses')
             ->orderBy('department_id')->orderBy('sort_order')->orderBy('id')
-            ->get();
+            ->paginate(10);
 
         return view('backend.categories.index', compact('categories'));
     }

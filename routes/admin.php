@@ -1,15 +1,21 @@
 <?php
 
 use App\Http\Controllers\Backend\AuthController;
+use App\Http\Controllers\Backend\BlogController;
 use App\Http\Controllers\Backend\CategoryController;
+use App\Http\Controllers\Backend\ContactEnquiryController;
 use App\Http\Controllers\Backend\CounterController;
 use App\Http\Controllers\Backend\CourseController;
+use App\Http\Controllers\Backend\CourseEnquiryController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\DepartmentController;
 use App\Http\Controllers\Backend\EventController;
 use App\Http\Controllers\Backend\FaqController;
 use App\Http\Controllers\Backend\HeroController;
+use App\Http\Controllers\Backend\NotificationController;
 use App\Http\Controllers\Backend\PartnerController;
+use App\Http\Controllers\Backend\ReelController;
+use App\Http\Controllers\Backend\SettingController;
 use App\Http\Controllers\Backend\SuccessStoryController;
 use App\Http\Controllers\Backend\TestimonialController;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +47,10 @@ Route::prefix('admin')->name('backend.')->group(function () {
     Route::middleware('admin.auth')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+        // Topbar notification bell
+        Route::get('notifications/{adminNotification}/open', [NotificationController::class, 'open'])->name('notifications.open');
+        Route::post('notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+
         // Courses → Departments / Categories / Courses
         Route::resource('departments', DepartmentController::class)->except(['show']);
         Route::resource('categories', CategoryController::class)->except(['show']);
@@ -56,8 +66,39 @@ Route::prefix('admin')->name('backend.')->group(function () {
         Route::resource('counters', CounterController::class)->except(['show']);
         Route::resource('events', EventController::class)->except(['show']);
         Route::resource('success-stories', SuccessStoryController::class)->except(['show']);
+        Route::resource('reels', ReelController::class)->except(['show']);
         Route::resource('testimonials', TestimonialController::class)->except(['show']);
         Route::resource('faqs', FaqController::class)->except(['show']);
+
+        // Blog posts (listing + details + home Latest Blog)
+        Route::resource('blogs', BlogController::class)->except(['show']);
+
+        // System → Settings (General / Contact / Social / Email / SEO)
+        Route::prefix('settings')->name('settings.')->group(function () {
+            Route::get('general', [SettingController::class, 'general'])->name('general');
+            Route::put('general', [SettingController::class, 'updateGeneral'])->name('general.update');
+            Route::get('contact', [SettingController::class, 'contact'])->name('contact');
+            Route::put('contact', [SettingController::class, 'updateContact'])->name('contact.update');
+            Route::get('social', [SettingController::class, 'social'])->name('social');
+            Route::put('social', [SettingController::class, 'updateSocial'])->name('social.update');
+            Route::get('email', [SettingController::class, 'email'])->name('email');
+            Route::put('email', [SettingController::class, 'updateEmail'])->name('email.update');
+            Route::post('email/test', [SettingController::class, 'sendTestMail'])->name('email.test');
+            Route::get('seo', [SettingController::class, 'seo'])->name('seo');
+            Route::put('seo', [SettingController::class, 'updateSeo'])->name('seo.update');
+        });
+
+        // Leads → Contact Enquiry (list + view + status + delete + export)
+        Route::get('contact-enquiries/export', [ContactEnquiryController::class, 'export'])->name('contact-enquiries.export');
+        Route::get('contact-enquiries/export-excel', [ContactEnquiryController::class, 'exportExcel'])->name('contact-enquiries.export-excel');
+        Route::patch('contact-enquiries/{contactEnquiry}/status', [ContactEnquiryController::class, 'updateStatus'])->name('contact-enquiries.status');
+        Route::resource('contact-enquiries', ContactEnquiryController::class)->only(['index', 'show', 'destroy']);
+
+        // Leads → Course Enquiry (list + view + status + delete + export; per-course via ?course=)
+        Route::get('course-enquiries/export', [CourseEnquiryController::class, 'export'])->name('course-enquiries.export');
+        Route::get('course-enquiries/export-excel', [CourseEnquiryController::class, 'exportExcel'])->name('course-enquiries.export-excel');
+        Route::patch('course-enquiries/{courseEnquiry}/status', [CourseEnquiryController::class, 'updateStatus'])->name('course-enquiries.status');
+        Route::resource('course-enquiries', CourseEnquiryController::class)->only(['index', 'show', 'destroy']);
     });
 
     // /admin → dashboard when logged in, otherwise the login screen.

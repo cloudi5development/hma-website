@@ -542,48 +542,53 @@
                 </p>
             </div>
 
-            {{-- Cards: 4 desktop · 2 tablet · 1 mobile --}}
-            <div class="row g-4 hm-stories__grid">
-                @foreach ($stories as $i => $story)
-                    <div class="col-lg-3 col-md-6">
-                        {{-- 3 nested layers keep reveal / float / hover transforms independent --}}
-                        <div class="hm-anim hm-anim--up hm-anim--d{{ ($i % 4) + 1 }}">
-                            <div class="hm-story-wrap">
-                                <article class="hm-story hm-story--{{ $story['tone'] }}" tabindex="0">
-                                    <span class="hm-story__bg" aria-hidden="true"></span>
-                                    <img class="hm-story__img"
-                                         src="{{ $story['img_url'] }}"
-                                         alt="{{ $story['name'] }} — {{ $story['role'] }}" loading="lazy">
-                                    <span class="hm-story__overlay" aria-hidden="true"></span>
-                                    <div class="hm-story__content">
-                                        <div class="hm-story__salary">
-                                            <span class="hm-story__amount">₹{{ $story['salary'] }}</span>
-                                            <span class="hm-story__lpa">LPA</span>
-                                        </div>
-                                        <div class="hm-story__name">{{ $story['name'] }}</div>
-                                        <span class="hm-story__role">{{ $story['role'] }}</span>
-                                    </div>
-                                </article>
+            {{-- ≤4 stories → a static 4-up grid (4 desktop · 2 tablet · 1 mobile).
+                 >4 stories → an autoplaying Swiper slider that shows 4 at a time
+                 and scrolls the rest through. Swiper's JS/CSS are already on the
+                 home page (loaded by the reels partial + the head). --}}
+            @if (count($stories) > 4)
+                <div class="swiper hm-stories__swiper hm-anim hm-anim--up hm-anim--d1">
+                    <div class="swiper-wrapper">
+                        @foreach ($stories as $story)
+                            <div class="swiper-slide">
+                                @include('frontend.partials.story-card', ['story' => $story])
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @else
+                <div class="row g-4 hm-stories__grid">
+                    @foreach ($stories as $i => $story)
+                        <div class="col-lg-3 col-md-6">
+                            {{-- 3 nested layers keep reveal / float / hover transforms independent --}}
+                            <div class="hm-anim hm-anim--up hm-anim--d{{ ($i % 4) + 1 }}">
+                                @include('frontend.partials.story-card', ['story' => $story])
                             </div>
                         </div>
-                    </div>
-                @endforeach
-            </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </section>
     @endif
 
     {{-- ============================ LATEST BLOG ============================ --}}
     @php
-        // Thumbnails live in public/assets/images/hero-blog/. 'tone' picks the pastel card bg.
-        $blogExcerpt = "Explore articles, career advice, interview tips, and industry updates written to keep you ahead in....";
-        $blogs = [
-            ['img' => 'blog-1.webp', 'tone' => 'cream',  'title' => "How Are Plant Therapy's Essential Oils Extracted?", 'excerpt' => $blogExcerpt, 'date' => '20 July, 2024'],
-            ['img' => 'blog-2.webp', 'tone' => 'blue',   'title' => "How Are Plant Therapy's Essential Oils Extracted?", 'excerpt' => $blogExcerpt, 'date' => '20 July, 2024'],
-            ['img' => 'blog-3.webp', 'tone' => 'green',  'title' => "How Are Plant Therapy's Essential Oils Extracted?", 'excerpt' => $blogExcerpt, 'date' => '20 July, 2024'],
-            ['img' => 'blog-4.webp', 'tone' => 'purple', 'title' => "How Are Plant Therapy's Essential Oils Extracted?", 'excerpt' => $blogExcerpt, 'date' => '20 July, 2024'],
-        ];
+        // Fed by AppServiceProvider's frontend.index composer (posts flagged
+        // "show_home"). Mapped to the shape this markup already used; the pastel
+        // tone still cycles by position, so the 2×2 grid looks identical — only
+        // the data source moved to the database.
+        $homeBlogTones = ['cream', 'blue', 'green', 'purple'];
+        $blogs = collect($homeBlogs ?? [])->values()->map(fn ($b, $i) => [
+            'img_url' => $b->image_url,
+            'tone'    => $homeBlogTones[$i % 4],
+            'title'   => $b->title,
+            'excerpt' => $b->excerpt,
+            'date'    => $b->display_date,
+            'url'     => route('frontend.blog-details', $b->slug),
+        ])->all();
     @endphp
+    @if (count($blogs))
     <section class="hm-blogs" id="latest-blog" data-io aria-labelledby="hmBlogsTitle">
 
         {{-- Same slow-rotating premium background as the hero --}}
@@ -615,19 +620,19 @@
                     <div class="col-md-6">
                         <article class="hm-blog hm-blog--{{ $blog['tone'] }} hm-anim hm-anim--up hm-anim--d{{ ($i % 4) + 1 }}">
                             <div class="hm-blog__thumb">
-                                <img src="{{ asset('assets/images/hero-blog/'.$blog['img']) }}"
+                                <img src="{{ $blog['img_url'] }}"
                                      alt="{{ $blog['title'] }}" loading="lazy">
                             </div>
                             <div class="hm-blog__body">
                                 <h3 class="hm-blog__title">
-                                    <a href="{{ route('frontend.blog-details') }}">{{ $blog['title'] }}</a>
+                                    <a href="{{ $blog['url'] }}">{{ $blog['title'] }}</a>
                                 </h3>
                                 <p class="hm-blog__desc">{{ $blog['excerpt'] }}</p>
                                 <div class="hm-blog__meta">
                                     <span class="hm-blog__date">
                                         <i class="fa-regular fa-calendar" aria-hidden="true"></i> {{ $blog['date'] }}
                                     </span>
-                                    <a class="hm-blog__more" href="{{ route('frontend.blog-details') }}">Read More</a>
+                                    <a class="hm-blog__more" href="{{ $blog['url'] }}">Read More</a>
                                 </div>
                             </div>
                         </article>
@@ -636,6 +641,7 @@
             </div>
         </div>
     </section>
+    @endif
 
     {{-- ============================ TESTIMONIALS ============================ --}}
     {{-- Shared with the About page — markup in partials/testimonials.blade.php --}}
@@ -960,5 +966,29 @@
                 reveal();
             }
         })();
+    </script>
+
+    {{-- Success Stories slider — only rendered when there are more than 4 stories.
+         Autoplays through them 4-at-a-time; Swiper itself ships with the reels
+         partial already included on this page. --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var el = document.querySelector('.hm-stories__swiper');
+            if (!el || typeof Swiper === 'undefined') return;
+
+            new Swiper(el, {
+                slidesPerView: 1,
+                spaceBetween: 24,
+                loop: true,
+                speed: 800,
+                grabCursor: true,
+                autoplay: { delay: 3000, disableOnInteraction: false, pauseOnMouseEnter: true },
+                breakpoints: {
+                    576:  { slidesPerView: 2, spaceBetween: 24 },
+                    992:  { slidesPerView: 3, spaceBetween: 24 },
+                    1200: { slidesPerView: 4, spaceBetween: 24 }
+                }
+            });
+        });
     </script>
 @endpush

@@ -13,7 +13,7 @@ class PartnerController extends Controller
 {
     public function index(): View
     {
-        $partners = Partner::orderBy('sort_order')->orderBy('id')->get();
+        $partners = Partner::orderBy('sort_order')->orderBy('id')->paginate(10);
 
         return view('backend.partners.index', compact('partners'));
     }

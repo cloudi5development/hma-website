@@ -30,6 +30,8 @@ class DatabaseSeeder extends Seeder
             SuccessStorySeeder::class,
             TestimonialSeeder::class,
             FaqSeeder::class,
+            BlogSeeder::class,
+            ReelSeeder::class,
             CourseModuleSeeder::class,
         ]);
     }

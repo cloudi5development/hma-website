@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Blog;
 use App\Models\Course;
 use App\Models\Department;
 use Illuminate\Http\Request;
@@ -22,11 +23,26 @@ class HomeController extends Controller
     }
     public function blog()
     {
-        return view('frontend.blog');
+        // Paginated so the design's Prev / 1 2 / Next controls stay meaningful.
+        $blogs = Blog::active()->paginate(12);
+
+        return view('frontend.blog', compact('blogs'));
     }
-    public function blogDetails()
+
+    /**
+     * Blog details, resolved by slug. 404 when the post is missing/inactive.
+     * "The Latest" sidebar pulls the flagged posts (excluding this one).
+     */
+    public function blogDetails(string $slug)
     {
-        return view('frontend.blog-details');
+        $blog = Blog::active()->where('slug', $slug)->firstOrFail();
+
+        $latestBlogs = Blog::active()->forLatest()
+            ->whereKeyNot($blog->id)
+            ->take(3)
+            ->get();
+
+        return view('frontend.blog-details', compact('blog', 'latestBlogs'));
     }
     public function contactUs()
     {

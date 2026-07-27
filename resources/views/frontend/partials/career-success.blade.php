@@ -3,7 +3,8 @@
 | Career Success / reel slider (shared section)
 |--------------------------------------------------------------------------
 |
-| Used by the home page and the testimonials page:
+| Used by the home page ("Our Journey") and the testimonials page ("Career
+| Success"):
 |
 |   @include('frontend.partials.career-success')
 |
@@ -21,25 +22,22 @@
 |
 |   <link rel="stylesheet" href="{{ asset('assets/css/frontend/career-success.css') }}?v={{ filemtime(public_path('assets/css/frontend/career-success.css')) }}">
 |
-| The Swiper init ships with this partial (see the bottom), so the component
-| carries its own behaviour wherever it is dropped in.
-|
-| Note: the .hm-anim / data-io reveal is a HOME-PAGE enhancement — those rules
-| live in home.css alongside the observer that adds .is-in. On any page that
-| does not load home.css the classes are inert, so the section simply renders
-| visible rather than staying stuck at opacity 0.
+| The reels are admin-managed (Sections → Our Journey) and fed to BOTH pages by
+| AppServiceProvider's career-success view composer. The Swiper init + the
+| in-page reel player ship with this partial, so it carries its own behaviour.
 --}}
     @php
-        // Covers live in public/assets/images/our-journey/. Replace the 'url'
-        // values with the real Instagram Reel links whenever they are ready.
-        $reels = [
-            ['image' => 'reel-1.webp', 'url' => 'https://www.instagram.com/hireminds_academy/', 'title' => 'A mentoring session at Hire Minds Academy'],
-            ['image' => 'reel-2.webp', 'url' => 'https://www.instagram.com/hireminds_academy/', 'title' => 'Inside a Hire Minds Academy classroom'],
-            ['image' => 'reel-3.webp', 'url' => 'https://www.instagram.com/hireminds_academy/', 'title' => 'Learners collaborating on a live project'],
-            ['image' => 'reel-4.webp', 'url' => 'https://www.instagram.com/hireminds_academy/', 'title' => 'A hands-on workshop moment'],
-            ['image' => 'reel-5.webp', 'url' => 'https://www.instagram.com/hireminds_academy/', 'title' => 'Talent Acquisition and HR Recruitment training'],
-        ];
+        // Fed by the career-success composer (active reels, in order). Each card
+        // is an uploaded clip that autoplays (muted, looped) right in the card —
+        // no cover image. 'url' is optional: if set, clicking the card opens the
+        // full reel on Instagram.
+        $reels = collect($reels ?? [])->map(fn ($r) => [
+            'video' => $r->video_url,
+            'url'   => $r->instagram_url,
+            'title' => $r->title,
+        ])->all();
     @endphp
+    @if (count($reels))
     <section class="hm-reels" id="our-journey" data-io aria-labelledby="hmReelsTitle">
 
         {{-- Same slow-rotating hero background --}}
@@ -72,17 +70,18 @@
             <div class="swiper hm-reels__swiper hm-anim hm-anim--up hm-anim--d3">
                 <div class="swiper-wrapper">
                     {{-- Rendered twice so there are more slides than are visible — this
-                         gives the arrows / loop somewhere to advance to (5 images only). --}}
+                         gives the arrows / loop somewhere to advance to. --}}
                     @foreach (array_merge($reels, $reels) as $reel)
                         <div class="swiper-slide hm-reels__slide">
                             <div class="hm-reel-float">
-                                <div class="hm-reel" data-instagram="{{ $reel['url'] }}" role="link" tabindex="0"
-                                     aria-label="Watch on Instagram: {{ $reel['title'] }}">
-                                    <img class="hm-reel__img" src="{{ asset('assets/images/our-journey/'.$reel['image']) }}"
-                                         alt="{{ $reel['title'] }}" loading="lazy">
+                                <div class="hm-reel {{ $reel['url'] ? '' : 'hm-reel--static' }}"
+                                     @if ($reel['url']) data-instagram="{{ $reel['url'] }}" role="button" tabindex="0" @endif
+                                     aria-label="{{ $reel['title'] }}">
+                                    {{-- Autoplays muted + looped so it plays right in the card. --}}
+                                    <video class="hm-reel__video" src="{{ $reel['video'] }}"
+                                           autoplay muted loop playsinline preload="metadata"></video>
                                     <span class="hm-reel__badge" aria-hidden="true"><i class="fa-brands fa-instagram"></i> Instagram Reel</span>
                                     <span class="hm-reel__overlay" aria-hidden="true"></span>
-                                    <span class="hm-reel__play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
                                 </div>
                             </div>
                         </div>
@@ -102,9 +101,11 @@
         </div>
     </section>
 
+    @endif
+
 @push('scripts')
-    {{-- Reel slider — Swiper + click-to-open Instagram. Ships with the
-         partial so the component works wherever it is included. --}}
+    {{-- Reel slider — Swiper + in-page reel player. Ships with the partial so
+         the component works wherever it is included. --}}
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" crossorigin="anonymous" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -125,8 +126,8 @@
                 }
             });
 
-            // Whole card is clickable → open its Instagram Reel in a new tab.
-            // Delegation covers Swiper's loop-cloned slides too.
+            /* ---- Optional click-through — cards with an Instagram link open the
+                   full reel in a new tab. Cards without a link just keep playing. ---- */
             swiperEl.addEventListener('click', function (e) {
                 var reel = e.target.closest('.hm-reel[data-instagram]');
                 if (reel && reel.dataset.instagram) window.open(reel.dataset.instagram, '_blank', 'noopener');

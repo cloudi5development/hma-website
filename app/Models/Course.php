@@ -59,6 +59,12 @@ class Course extends Model
         return $this->hasMany(CourseFaq::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    /** Enquiries submitted for this course (newest first). */
+    public function enquiries(): HasMany
+    {
+        return $this->hasMany(CourseEnquiry::class)->latest();
+    }
+
     /** The category's department, hopped through the category relation. */
     public function department()
     {

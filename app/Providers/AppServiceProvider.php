@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\AdminNotification;
+use App\Models\Blog;
 use App\Models\Category;
 use App\Models\Counter;
 use App\Models\Course;
@@ -10,10 +12,12 @@ use App\Models\Event;
 use App\Models\Faq;
 use App\Models\Hero;
 use App\Models\Partner;
+use App\Models\Reel;
 use App\Models\SuccessStory;
 use App\Models\Testimonial;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -35,6 +39,17 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureRateLimiting();
         $this->composeFrontendSections();
+
+        // Admin pagination (->links()) uses our minimal .pagination markup —
+        // page buttons only, no "Showing X to Y of Z results" text. admin.css
+        // themes it. Frontend uses its own custom pagination, so it is unaffected.
+        Paginator::defaultView('pagination.admin');
+
+        // Admin topbar bell — recent notifications + unread count on every page.
+        View::composer('backend.template.layouts.header', function ($view) {
+            $view->with('adminNotifications', AdminNotification::latest()->take(8)->get());
+            $view->with('adminNotifUnread', AdminNotification::where('is_read', false)->count());
+        });
     }
 
     /**
@@ -65,6 +80,9 @@ class AppServiceProvider extends ServiceProvider
 
             // Student Success Stories — the "Real Career Stories" card grid.
             $view->with('stories', SuccessStory::active()->forPage('index')->get());
+
+            // Latest Blog — the four posts flagged to show on the home page.
+            $view->with('homeBlogs', Blog::active()->forHome()->take(4)->get());
         });
 
         // Navbar mega-menu (rendered on every page) — departments as columns,
@@ -89,6 +107,12 @@ class AppServiceProvider extends ServiceProvider
         // Learner testimonials — home / about / testimonials.
         View::composer('frontend.partials.testimonials', function ($view) {
             $view->with('testimonials', Testimonial::active()->forPage($this->currentPage())->get());
+        });
+
+        // Our Journey / Career Success reels — the same reel library feeds the
+        // home page and the testimonials page (both @include this partial).
+        View::composer('frontend.partials.career-success', function ($view) {
+            $view->with('reels', Reel::active()->get());
         });
 
         // FAQ accordion — home / about / contact. Capped at Faq::MAX. When a

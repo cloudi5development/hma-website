@@ -85,7 +85,7 @@
         <p class="app-sidebar__heading">Website Content</p>
 
         {{-- Sections (group) --}}
-        @php $sectionsOpen = request()->routeIs('backend.hero.*', 'backend.partners.*', 'backend.counters.*', 'backend.events.*', 'backend.success-stories.*', 'backend.testimonials.*', 'backend.faqs.*'); @endphp
+        @php $sectionsOpen = request()->routeIs('backend.hero.*', 'backend.partners.*', 'backend.counters.*', 'backend.events.*', 'backend.success-stories.*', 'backend.reels.*', 'backend.testimonials.*', 'backend.faqs.*'); @endphp
         <div class="app-nav__item {{ $sectionsOpen ? 'is-open' : '' }}" data-group>
             <a class="app-nav__link" role="button" tabindex="0">
                 {!! $ic('sections') !!}
@@ -98,19 +98,19 @@
                 <li><a class="app-nav__sublink {{ request()->routeIs('backend.counters.*') ? 'is-active' : '' }}" href="{{ route('backend.counters.index') }}">{!! $ic('counters') !!}<span>Counters</span></a></li>
                 <li><a class="app-nav__sublink {{ request()->routeIs('backend.events.*') ? 'is-active' : '' }}" href="{{ route('backend.events.index') }}">{!! $ic('events') !!}<span>Upcoming Events</span></a></li>
                 <li><a class="app-nav__sublink {{ request()->routeIs('backend.success-stories.*') ? 'is-active' : '' }}" href="{{ route('backend.success-stories.index') }}">{!! $ic('stories') !!}<span>Success Stories</span></a></li>
-                <li><a class="app-nav__sublink" href="#">{!! $ic('journey') !!}<span>Our Journey</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.reels.*') ? 'is-active' : '' }}" href="{{ route('backend.reels.index') }}">{!! $ic('journey') !!}<span>Our Journey</span></a></li>
                 <li><a class="app-nav__sublink {{ request()->routeIs('backend.testimonials.*') ? 'is-active' : '' }}" href="{{ route('backend.testimonials.index') }}">{!! $ic('testimonials') !!}<span>Testimonials</span></a></li>
                 <li><a class="app-nav__sublink {{ request()->routeIs('backend.faqs.*') ? 'is-active' : '' }}" href="{{ route('backend.faqs.index') }}">{!! $ic('faq') !!}<span>FAQ</span></a></li>
             </ul>
             <div class="app-nav__flyout">
                 <div class="app-nav__flyout-title">Sections</div>
                 <a href="{{ route('backend.hero.index') }}">Hero Section</a><a href="{{ route('backend.partners.index') }}">Trusted Partners</a><a href="{{ route('backend.counters.index') }}">Counters</a><a href="{{ route('backend.events.index') }}">Upcoming Events</a>
-                <a href="{{ route('backend.success-stories.index') }}">Success Stories</a><a href="#">Our Journey</a><a href="{{ route('backend.testimonials.index') }}">Testimonials</a><a href="{{ route('backend.faqs.index') }}">FAQ</a>
+                <a href="{{ route('backend.success-stories.index') }}">Success Stories</a><a href="{{ route('backend.reels.index') }}">Our Journey</a><a href="{{ route('backend.testimonials.index') }}">Testimonials</a><a href="{{ route('backend.faqs.index') }}">FAQ</a>
             </div>
         </div>
 
         <div class="app-nav__item">
-            <a class="app-nav__link" href="#">{!! $ic('blog') !!}<span class="app-nav__label">Blog</span></a>
+            <a class="app-nav__link {{ request()->routeIs('backend.blogs.*') ? 'is-active' : '' }}" href="{{ route('backend.blogs.index') }}">{!! $ic('blog') !!}<span class="app-nav__label">Blog</span></a>
             <div class="app-nav__flyout"><div class="app-nav__flyout-title">Blog</div></div>
         </div>
 
@@ -118,20 +118,25 @@
         <p class="app-sidebar__heading">Leads</p>
 
         {{-- Enquiries (group) --}}
-        <div class="app-nav__item" data-group>
+        @php
+            $enquiriesOpen = request()->routeIs('backend.contact-enquiries.*', 'backend.course-enquiries.*');
+            $newEnquiries  = \App\Models\ContactEnquiry::where('status', 'New')->count()
+                           + \App\Models\CourseEnquiry::where('status', 'New')->count();
+        @endphp
+        <div class="app-nav__item {{ $enquiriesOpen ? 'is-open' : '' }}" data-group>
             <a class="app-nav__link" role="button" tabindex="0">
                 {!! $ic('enquiries') !!}
                 <span class="app-nav__label">Enquiries</span>
-                <span class="app-nav__badge">12</span>
+                @if ($newEnquiries) <span class="app-nav__badge">{{ $newEnquiries }}</span> @endif
                 <span class="app-nav__caret">{!! $ic('chevron') !!}</span>
             </a>
             <ul class="app-nav__sub">
-                <li><a class="app-nav__sublink" href="#">{!! $ic('course-enquiry') !!}<span>Course Enquiry</span></a></li>
-                <li><a class="app-nav__sublink" href="#">{!! $ic('contact-enquiry') !!}<span>Contact Enquiry</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.course-enquiries.*') ? 'is-active' : '' }}" href="{{ route('backend.course-enquiries.index') }}">{!! $ic('course-enquiry') !!}<span>Course Enquiry</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.contact-enquiries.*') ? 'is-active' : '' }}" href="{{ route('backend.contact-enquiries.index') }}">{!! $ic('contact-enquiry') !!}<span>Contact Enquiry</span></a></li>
             </ul>
             <div class="app-nav__flyout">
                 <div class="app-nav__flyout-title">Enquiries</div>
-                <a href="#">Course Enquiry</a><a href="#">Contact Enquiry</a>
+                <a href="{{ route('backend.course-enquiries.index') }}">Course Enquiry</a><a href="{{ route('backend.contact-enquiries.index') }}">Contact Enquiry</a>
             </div>
         </div>
 
@@ -139,23 +144,24 @@
         <p class="app-sidebar__heading">System</p>
 
         {{-- Settings (group) --}}
-        <div class="app-nav__item" data-group>
+        @php $settingsOpen = request()->routeIs('backend.settings.*'); @endphp
+        <div class="app-nav__item {{ $settingsOpen ? 'is-open' : '' }}" data-group>
             <a class="app-nav__link" role="button" tabindex="0">
                 {!! $ic('settings') !!}
                 <span class="app-nav__label">Settings</span>
                 <span class="app-nav__caret">{!! $ic('chevron') !!}</span>
             </a>
             <ul class="app-nav__sub">
-                <li><a class="app-nav__sublink" href="#">{!! $ic('general') !!}<span>General</span></a></li>
-                <li><a class="app-nav__sublink" href="#">{!! $ic('contact') !!}<span>Contact</span></a></li>
-                <li><a class="app-nav__sublink" href="#">{!! $ic('social') !!}<span>Social Media</span></a></li>
-                <li><a class="app-nav__sublink" href="#">{!! $ic('email') !!}<span>Email / SMTP</span></a></li>
-                <li><a class="app-nav__sublink" href="#">{!! $ic('seo') !!}<span>SEO Defaults</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.settings.general') ? 'is-active' : '' }}" href="{{ route('backend.settings.general') }}">{!! $ic('general') !!}<span>General</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.settings.contact') ? 'is-active' : '' }}" href="{{ route('backend.settings.contact') }}">{!! $ic('contact') !!}<span>Contact</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.settings.social') ? 'is-active' : '' }}" href="{{ route('backend.settings.social') }}">{!! $ic('social') !!}<span>Social Media</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.settings.email') ? 'is-active' : '' }}" href="{{ route('backend.settings.email') }}">{!! $ic('email') !!}<span>Email / SMTP</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.settings.seo') ? 'is-active' : '' }}" href="{{ route('backend.settings.seo') }}">{!! $ic('seo') !!}<span>SEO Defaults</span></a></li>
             </ul>
             <div class="app-nav__flyout">
                 <div class="app-nav__flyout-title">Settings</div>
-                <a href="#">General</a><a href="#">Contact</a><a href="#">Social Media</a>
-                <a href="#">Email / SMTP</a><a href="#">SEO Defaults</a>
+                <a href="{{ route('backend.settings.general') }}">General</a><a href="{{ route('backend.settings.contact') }}">Contact</a><a href="{{ route('backend.settings.social') }}">Social Media</a>
+                <a href="{{ route('backend.settings.email') }}">Email / SMTP</a><a href="{{ route('backend.settings.seo') }}">SEO Defaults</a>
             </div>
         </div>
 

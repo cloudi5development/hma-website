@@ -275,10 +275,10 @@
          /hide, the backdrop, the focus trap, ESC and click-outside; every
          surface is restyled in course-details.css. --}}
     @php
-        // Every active course, so the "Course" select is complete; the current
-        // course is preselected below (Enroll Now / Enquire Now need no manual pick).
-        $enquiryCourses = \App\Models\Course::active()->orderBy('name')->pluck('name')->all();
-        $selectedCourse = $course['title'];
+        // Every active course (id + name), so the "Course" select is complete and
+        // submits a real course_id; the current course is preselected below.
+        $enquiryCourses = \App\Models\Course::active()->orderBy('name')->get(['id', 'name']);
+        $selectedCourseId = $model->id;
 
         $careerGoals = [
             'Career Switch',
@@ -334,7 +334,7 @@
                         {{-- novalidate: the browser's own bubbles are replaced by the
                              inline messages below each field. action/@csrf are already
                              in place, so wiring a real POST is a route change only. --}}
-                        <form class="hm-enq__form" id="hmEnquireForm" method="POST" action="#" novalidate>
+                        <form class="hm-enq__form" id="hmEnquireForm" method="POST" action="{{ route('frontend.course-enquiry.store') }}" novalidate>
                             @csrf
 
                             <div class="row">
@@ -381,10 +381,10 @@
                                 <div class="col-12 col-md-6">
                                     <div class="hm-enq__field" data-hm-field>
                                         <label class="hm-enq__label" for="enqCourse">Course</label>
-                                        <select class="hm-enq__input hm-enq__select" id="enqCourse" name="course" required>
-                                            <option value="" disabled {{ $selectedCourse ? '' : 'selected' }} hidden>Select a course</option>
+                                        <select class="hm-enq__input hm-enq__select" id="enqCourse" name="course_id" required>
+                                            <option value="" disabled {{ $selectedCourseId ? '' : 'selected' }} hidden>Select a course</option>
                                             @foreach ($enquiryCourses as $option)
-                                                <option {{ $option === $selectedCourse ? 'selected' : '' }}>{{ $option }}</option>
+                                                <option value="{{ $option->id }}" {{ $option->id === $selectedCourseId ? 'selected' : '' }}>{{ $option->name }}</option>
                                             @endforeach
                                         </select>
                                         <p class="hm-enq__error" data-hm-error>Please choose a course.</p>
@@ -484,6 +484,8 @@
                 el.addEventListener('change', function () { validate(el); });
             });
 
+            var submitBtn = form.querySelector('.hm-enq__submit');
+
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
 
@@ -497,19 +499,36 @@
 
                 if (firstInvalid) { firstInvalid.focus(); return; }
 
-                // No backend yet — hand the payload over in the shape a Laravel
-                // POST would take, so wiring it up later is a route + action change.
-                var payload = Object.fromEntries(new FormData(form).entries());
-                delete payload._token;                       // Laravel adds its own
-                console.log('Enquiry submitted:', payload);
+                // Duplicate-submit guard — disable while the request is in flight.
+                if (submitBtn.disabled) return;
+                submitBtn.disabled = true;
+                var btnText = submitBtn.querySelector('span');
+                var original = btnText ? btnText.textContent : '';
+                if (btnText) btnText.textContent = 'Sending…';
 
-                form.reset();
-
-                if (note) {
-                    note.hidden = false;
-                    clearTimeout(note._t);
-                    note._t = setTimeout(function () { note.hidden = true; }, 6000);
-                }
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    body: new FormData(form)
+                })
+                .then(function (r) { return r.ok ? r.json() : Promise.reject(r); })
+                .then(function (data) {
+                    if (data && data.success) {
+                        form.reset();
+                        if (note) {
+                            note.hidden = false;
+                            clearTimeout(note._t);
+                            note._t = setTimeout(function () { note.hidden = true; }, 6000);
+                        }
+                    }
+                })
+                .catch(function () {
+                    if (note) { note.textContent = 'Sorry, something went wrong. Please try again.'; note.hidden = false; }
+                })
+                .finally(function () {
+                    submitBtn.disabled = false;
+                    if (btnText) btnText.textContent = original;
+                });
             });
 
             // Leave the modal as it was found: clear the values, the messages and

@@ -9,7 +9,7 @@
     <div class="page-head">
         <div>
             <h1 class="page-head__title">Trusted Partners</h1>
-            <p class="page-head__sub">{{ $partners->count() }} partner{{ $partners->count() === 1 ? '' : 's' }}</p>
+            <p class="page-head__sub">{{ $partners->total() }} partner{{ $partners->total() === 1 ? '' : 's' }}</p>
         </div>
         <a href="{{ route('backend.partners.create') }}" class="btn-brand">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -70,5 +70,7 @@
             </table>
         </div>
     </div>
+
+    @include('backend.partials.table-pagination', ['paginator' => $partners])
 
 @endsection

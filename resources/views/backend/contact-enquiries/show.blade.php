@@ -1,0 +1,76 @@
+@extends('backend.template.layouts.template-base')
+
+@section('title', 'Enquiry from ' . $enquiry->name)
+@section('page_title', 'Contact Enquiry')
+@section('page_sub', 'Contact Enquiries')
+
+@section('content')
+
+    <div class="page-head">
+        <a href="{{ route('backend.contact-enquiries.index') }}" class="btn-ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            Back to Enquiries
+        </a>
+    </div>
+
+    @if (session('success'))
+        <div class="alert-hm alert-hm--success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <div class="row g-3">
+        <div class="col-12 col-lg-8">
+            <div class="hm-card">
+                <div class="hm-card__head"><h2 class="hm-card__title">{{ $enquiry->name }}</h2></div>
+                <div class="hm-card__body">
+                    <table class="hm-table">
+                        <tbody>
+                            <tr><td style="width:180px;color:#6b6357;">Email</td><td><a href="mailto:{{ $enquiry->email }}">{{ $enquiry->email }}</a></td></tr>
+                            <tr><td style="color:#6b6357;">Mobile</td><td><a href="tel:{{ $enquiry->phone }}">{{ $enquiry->phone }}</a></td></tr>
+                            <tr><td style="color:#6b6357;">Subject</td><td>{{ $enquiry->subject ?: $enquiry->looking_for ?: '—' }}</td></tr>
+                            <tr><td style="color:#6b6357;">Area of interest</td><td>{{ $enquiry->interest ?: '—' }}</td></tr>
+                            <tr><td style="color:#6b6357;">IP address</td><td>{{ $enquiry->ip_address ?: '—' }}</td></tr>
+                            <tr><td style="color:#6b6357;">Received</td><td>{{ $enquiry->created_at->format('d M Y, g:i a') }}</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="form-row mt-3" style="margin-bottom:0">
+                        <label class="form-label">Message</label>
+                        <p style="white-space:pre-wrap;color:#23180f;margin:0;">{{ $enquiry->message ?: '— no message —' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="hm-card mb-3">
+                <div class="hm-card__head"><h2 class="hm-card__title">Status</h2></div>
+                <div class="hm-card__body">
+                    <form method="POST" action="{{ route('backend.contact-enquiries.status', $enquiry) }}">
+                        @csrf @method('PATCH')
+                        <select name="status" class="form-control-hm mb-2">
+                            @foreach (\App\Models\ContactEnquiry::STATUSES as $s)
+                                <option value="{{ $s }}" {{ $enquiry->status === $s ? 'selected' : '' }}>{{ $s }}</option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="btn-brand" style="width:100%;justify-content:center">Update Status</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="hm-card">
+                <div class="hm-card__body d-flex flex-column gap-2">
+                    <a href="mailto:{{ $enquiry->email }}" class="btn-ghost" style="justify-content:center">Reply by Email</a>
+                    <form method="POST" action="{{ route('backend.contact-enquiries.destroy', $enquiry) }}"
+                          onsubmit="return confirm('Delete this enquiry?');">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn-danger-soft" style="width:100%;justify-content:center">Delete Enquiry</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+@endsection
