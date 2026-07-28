@@ -17,19 +17,14 @@
         </a>
     </div>
 
-    @if (session('success'))
-        <div class="alert-hm alert-hm--success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            {{ session('success') }}
-        </div>
-    @endif
 
     <div class="hm-card">
+        @include("backend.partials.table-toolbar", ["placeholder" => "Search reel title"])
         <div class="table-responsive">
             <table class="hm-table">
                 <thead>
                     <tr>
-                        <th>Video</th><th>Title</th><th>Instagram Link</th><th>Order</th><th>Status</th><th class="text-end">Actions</th>
+                        <th>Video</th><th>Title</th><th>Instagram Link</th><th>Status</th><th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -44,7 +39,6 @@
                                     <span class="hm-table__sub">—</span>
                                 @endif
                             </td>
-                            <td>{{ $reel->sort_order }}</td>
                             <td>
                                 <span class="pill pill--tiny {{ $reel->is_active ? 'pill--active' : 'pill--inactive' }}">
                                     {{ $reel->is_active ? 'Active' : 'Hidden' }}
@@ -56,7 +50,7 @@
                                         <span class="act-ico act-ico--edit" aria-hidden="true"></span>
                                     </a>
                                     <form method="POST" action="{{ route('backend.reels.destroy', $reel) }}"
-                                          onsubmit="return confirm('Delete this reel?');" class="d-inline">
+                                          data-confirm="Delete this reel?" class="d-inline">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn-danger-soft btn-icon" aria-label="Delete">
                                             <span class="act-ico act-ico--delete" aria-hidden="true"></span>
@@ -66,7 +60,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-center py-5 hm-table__sub">No reels yet. Add your first one.</td></tr>
+                        <tr><td colspan="5" class="text-center py-5 hm-table__sub">No reels yet. Add your first one.</td></tr>
                     @endforelse
                 </tbody>
             </table>

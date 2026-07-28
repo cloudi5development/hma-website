@@ -17,20 +17,25 @@ class DepartmentRequest extends FormRequest
         $id = $this->route('department')?->id;
 
         return [
-            'name'        => ['required', 'string', 'max:120'],
-            'slug'        => ['nullable', 'string', 'max:140', 'alpha_dash', Rule::unique('departments', 'slug')->ignore($id)],
-            'description' => ['nullable', 'string', 'max:600'],
-            'image'       => ['nullable', 'image', 'mimes:webp,png,jpg,jpeg', 'max:2048'],
-            'sort_order'  => ['nullable', 'integer', 'min:0', 'max:9999'],
-            'is_active'   => ['nullable', 'boolean'],
+            // Name is unique because the slug is derived from it and slugs are
+            // unique — two "Technical" departments would collide.
+            'name'         => ['required', 'string', 'max:120', Rule::unique('departments', 'name')->ignore($id)],
+            'is_active'    => ['nullable', 'boolean'],
+            'categories'   => ['nullable', 'array'],
+            'categories.*' => ['integer', 'exists:categories,id'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Please enter a department name.',
+            'name.unique'   => 'A department with this name already exists.',
         ];
     }
 
     protected function prepareForValidation(): void
     {
-        $this->merge([
-            'is_active'  => $this->boolean('is_active'),
-            'sort_order' => $this->input('sort_order', 0),
-        ]);
+        $this->merge(['is_active' => $this->boolean('is_active')]);
     }
 }

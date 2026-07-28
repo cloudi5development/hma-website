@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\EventRequest;
 use App\Models\Event;
@@ -11,9 +12,13 @@ use Illuminate\View\View;
 
 class EventController extends Controller
 {
+    use HandlesTableQuery;
+
     public function index(): View
     {
-        $events = Event::orderBy('sort_order')->orderBy('id')->paginate(10);
+        $events = $this->applyTableFilters(Event::query(), ['speaker', 'title', 'type'])
+            ->orderBy('sort_order')->orderBy('id')
+            ->paginate($this->perPage())->withQueryString();
 
         return view('backend.events.index', compact('events'));
     }

@@ -21,12 +21,14 @@
         @csrf
         @if ($editing) @method('PUT') @endif
 
-        <div class="row g-3">
-            <div class="col-12 col-lg-8">
-                <div class="hm-card">
-                    <div class="hm-card__body">
+        {{-- One container for the whole form --}}
+        <div class="hm-card mb-3">
+            <div class="hm-card__body">
 
-                        <div class="form-row">
+                {{-- Row 1 — value + active toggle --}}
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="number">Value</label>
                             <input type="text" id="number" name="number"
                                    class="form-control-hm @error('number') is-invalid @enderror"
@@ -35,16 +37,35 @@
                             <p class="form-hint">The figure shown, exactly as it should read: <code>2.5K+</code>, <code>150+</code>, <code>95%</code>. It counts up automatically.</p>
                             @error('number') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
+                            <label class="form-label">Status</label>
+                            <div class="d-flex align-items-center" style="height:48px">
+                                <label class="switch">
+                                    <input type="hidden" name="is_active" value="0">
+                                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', $counter->is_active ?? true) ? 'checked' : '' }}>
+                                    <span class="switch__track"></span>
+                                    <span class="switch__label">Active</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                        <div class="form-row">
+                {{-- Row 2 — label + display order --}}
+                <div class="row g-3 mt-2">
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="label">Label</label>
                             <input type="text" id="label" name="label"
                                    class="form-control-hm @error('label') is-invalid @enderror"
                                    value="{{ old('label', $counter->label) }}" placeholder="e.g. Students Trained" required>
                             @error('label') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
-
-                        <div class="form-row">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="sort_order">Display Order</label>
                             <input type="number" id="sort_order" name="sort_order" min="0"
                                    class="form-control-hm @error('sort_order') is-invalid @enderror"
@@ -52,27 +73,13 @@
                             <p class="form-hint">Lower numbers appear first (left to right).</p>
                             @error('sort_order') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
-
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-lg-4">
-                <div class="hm-card mb-3">
-                    <div class="hm-card__head"><h2 class="hm-card__title">Status</h2></div>
-                    <div class="hm-card__body">
-                        <label class="switch">
-                            <input type="hidden" name="is_active" value="0">
-                            <input type="checkbox" name="is_active" value="1" {{ old('is_active', $counter->is_active ?? true) ? 'checked' : '' }}>
-                            <span class="switch__track"></span>
-                            <span class="switch__label">Active (visible on site)</span>
-                        </label>
                     </div>
                 </div>
 
-                <div class="hm-card">
-                    <div class="hm-card__head"><h2 class="hm-card__title">Page Visibility</h2></div>
-                    <div class="hm-card__body d-flex flex-column gap-2">
+                {{-- Row 3 — page visibility --}}
+                <div class="form-row mt-4" style="margin-bottom:0">
+                    <label class="form-label">Page Visibility</label>
+                    <div class="d-flex flex-wrap gap-2">
                         @foreach (['show_home' => 'Home', 'show_about' => 'About', 'show_testimonials' => 'Testimonials'] as $field => $label)
                             <label class="check-chip">
                                 <input type="hidden" name="{{ $field }}" value="0">
@@ -85,10 +92,11 @@
                         @endforeach
                     </div>
                 </div>
+
             </div>
         </div>
 
-        <div class="mt-3 d-flex gap-2">
+        <div class="d-flex gap-2">
             <button type="submit" class="btn-brand">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                 {{ $editing ? 'Save Changes' : 'Add Counter' }}

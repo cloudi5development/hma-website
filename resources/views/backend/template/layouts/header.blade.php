@@ -69,16 +69,57 @@
         </div>
     </div>
 
-    {{-- Profile --}}
-    <div class="app-topbar__profile">
-        <img class="app-topbar__avatar" src="{{ asset('backend/template/images/favicon.png') }}" alt="">
-        <span class="app-topbar__who">
-            <span class="app-topbar__name d-block">HireMinds Admin</span>
-            <span class="app-topbar__role">{{ session('admin_email', 'admin@gmail.com') }}</span>
-        </span>
-        <span class="app-topbar__chev">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
-        </span>
+    {{-- Profile + account menu --}}
+    <div class="app-profile" id="appProfile">
+        <button type="button" class="app-topbar__profile" id="appProfileBtn"
+                aria-haspopup="menu" aria-expanded="false" aria-controls="appProfileMenu">
+            <img class="app-topbar__avatar" src="{{ asset('backend/template/images/favicon.png') }}" alt="">
+            <span class="app-topbar__who">
+                <span class="app-topbar__name d-block">{{ session('admin_name', 'HireMinds Admin') }}</span>
+                <span class="app-topbar__role">{{ session('admin_email', 'admin@gmail.com') }}</span>
+            </span>
+            <span class="app-topbar__chev">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+        </button>
+
+        <div class="app-menu" id="appProfileMenu" role="menu" hidden>
+            <div class="app-menu__head">
+                <span class="app-menu__name">{{ session('admin_name', 'HireMinds Admin') }}</span>
+                <span class="app-menu__mail">{{ session('admin_email', 'admin@gmail.com') }}</span>
+            </div>
+
+            @if (session('admin_id'))
+                <a class="app-menu__item" role="menuitem" href="{{ route('backend.users.edit', session('admin_id')) }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-3.6 3.4-6 7.5-6s7.5 2.4 7.5 6"/></svg>
+                    My Profile
+                </a>
+            @endif
+
+            <a class="app-menu__item" role="menuitem" href="{{ route('backend.users.index') }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-5.4 6-5.4s6 2.1 6 5.4"/><path d="M16 4.6a3.4 3.4 0 0 1 0 6.8M21 20c0-2.6-1.5-4.3-4-5"/></svg>
+                Users
+            </a>
+
+            <a class="app-menu__item" role="menuitem" href="{{ route('backend.settings.general') }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+                Settings
+            </a>
+
+            <div class="app-menu__sep"></div>
+
+            <form method="POST" action="{{ route('backend.auth.logout') }}"
+                  data-confirm="You will be signed out of the admin panel."
+                  data-confirm-title="Sign out?"
+                  data-confirm-label="Sign out"
+                  data-confirm-icon="logout">
+                @csrf
+                <button type="submit" class="app-menu__item app-menu__item--danger" role="menuitem">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5"/><path d="M20 12H9M12 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/></svg>
+                    Sign Out
+                </button>
+            </form>
+        </div>
     </div>
 </header>
 
@@ -99,6 +140,32 @@
             panel.hidden = !open;
             btn.setAttribute('aria-expanded', open ? 'true' : 'false');
         });
+        document.addEventListener('click', function (e) { if (!root.contains(e.target)) close(); });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    })();
+
+    // Profile / account menu — same open-close behaviour as the bell.
+    (function () {
+        'use strict';
+        var root  = document.getElementById('appProfile');
+        var btn   = document.getElementById('appProfileBtn');
+        var menu  = document.getElementById('appProfileMenu');
+        if (!root || !btn || !menu) return;
+
+        function close() {
+            menu.hidden = true;
+            btn.setAttribute('aria-expanded', 'false');
+            root.classList.remove('is-open');
+        }
+
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var open = menu.hidden;
+            menu.hidden = !open;
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            root.classList.toggle('is-open', open);
+        });
+
         document.addEventListener('click', function (e) { if (!root.contains(e.target)) close(); });
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
     })();

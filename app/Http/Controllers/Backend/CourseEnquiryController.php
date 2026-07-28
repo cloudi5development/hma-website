@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Exports\ArrayExport;
+use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Course;
@@ -18,9 +19,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CourseEnquiryController extends Controller
 {
+    use HandlesTableQuery;
+
     public function index(Request $request): View
     {
-        $enquiries = $this->filtered($request)->with('course')->paginate(10)->withQueryString();
+        $enquiries = $this->filtered($request)->with('course')->paginate($this->perPage())->withQueryString();
 
         // When arriving from a course's "View Enquiries" button, name the course.
         $course = $request->filled('course') ? Course::find($request->integer('course')) : null;

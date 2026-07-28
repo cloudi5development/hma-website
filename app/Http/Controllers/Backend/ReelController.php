@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\ReelRequest;
 use App\Models\Reel;
@@ -11,9 +12,13 @@ use Illuminate\View\View;
 
 class ReelController extends Controller
 {
+    use HandlesTableQuery;
+
     public function index(): View
     {
-        $reels = Reel::orderBy('sort_order')->orderBy('id')->paginate(10);
+        $reels = $this->applyTableFilters(Reel::query(), ['title'])
+            ->orderBy('sort_order')->orderBy('id')
+            ->paginate($this->perPage())->withQueryString();
 
         return view('backend.reels.index', compact('reels'));
     }

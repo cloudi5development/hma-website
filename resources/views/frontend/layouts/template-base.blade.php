@@ -18,7 +18,9 @@
     @include('frontend.layouts.meta-tags')
     @include('frontend.layouts.seo-content')
 
-    <title>@yield('title', config('app.name', 'HireMinds'))</title>
+    {{-- Admin-set meta title (SEO → Page SEO) wins over the page's own @section --}}
+    <title>{{ ($seo?->title ?: null)
+        ?: $__env->yieldContent('title', \App\Models\Setting::get('seo_meta_title', config('app.name', 'HireMinds'))) }}</title>
 
     @include('frontend.layouts.common-css')
     @stack('styles')

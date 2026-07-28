@@ -18,7 +18,7 @@
 <header>
     <nav class="hm-navbar" id="hmNavbar" aria-label="Primary navigation">
         <a class="hm-navbar__logo" href="{{ route('frontend.index') }}" aria-label="Hire Minds Academy — home">
-            <img src="{{ asset('assets/images/branding/logo.png') }}" alt="Hire Minds Academy" width="150" height="44">
+            <img src="{{ \App\Models\Setting::image('site_logo', 'assets/images/branding/logo.png') }}" alt="Hire Minds Academy" width="150" height="44">
         </a>
 
         <button class="hm-navbar__toggle" id="hmNavToggle" type="button"

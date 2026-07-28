@@ -20,11 +20,12 @@
     @include('backend.partials.flash')
 
     <div class="hm-card">
+        @include("backend.partials.table-toolbar", ["placeholder" => "Search category name"])
         <div class="table-responsive">
             <table class="hm-table">
                 <thead>
                     <tr>
-                        <th>Icon</th><th>Category</th><th>Department</th><th>Courses</th><th>Order</th><th>Home</th><th>Status</th><th class="text-end">Actions</th>
+                        <th>Icon</th><th>Category</th><th>Department</th><th>Courses</th><th>Home</th><th>Status</th><th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -34,10 +35,10 @@
                             <td class="hm-table__name">{{ $category->name }}</td>
                             <td>{{ $category->department?->name }}</td>
                             <td>{{ $category->courses_count }}</td>
-                            <td>{{ $category->sort_order }}</td>
                             <td>
-                                @if ($category->show_home) <span class="pill pill--interested pill--tiny">On Home</span> @endif
-                                @if ($category->is_featured) <span class="pill pill--interested pill--tiny">Featured</span> @endif
+                                <span class="flag-text">
+                                    {{ collect([$category->show_home ? "Home" : null, $category->is_featured ? "Featured" : null])->filter()->implode(" · ") ?: "—" }}
+                                </span>
                             </td>
                             <td>
                                 <span class="pill pill--tiny {{ $category->is_active ? 'pill--active' : 'pill--inactive' }}">
@@ -50,7 +51,7 @@
                                         <span class="act-ico act-ico--edit" aria-hidden="true"></span>
                                     </a>
                                     <form method="POST" action="{{ route('backend.categories.destroy', $category) }}"
-                                          onsubmit="return confirm('Delete this category?');" class="d-inline">
+                                          data-confirm="Delete this category?" class="d-inline">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn-danger-soft btn-icon" aria-label="Delete">
                                             <span class="act-ico act-ico--delete" aria-hidden="true"></span>
@@ -60,7 +61,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="text-center py-5 hm-table__sub">No categories yet. Add your first one.</td></tr>
+                        <tr><td colspan="7" class="text-center py-5 hm-table__sub">No categories yet. Add your first one.</td></tr>
                     @endforelse
                 </tbody>
             </table>

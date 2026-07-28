@@ -20,11 +20,12 @@
     @include('backend.partials.flash')
 
     <div class="hm-card">
+        @include("backend.partials.table-toolbar", ["placeholder" => "Search department name"])
         <div class="table-responsive">
             <table class="hm-table">
                 <thead>
                     <tr>
-                        <th>Department</th><th>Categories</th><th>Order</th><th>Status</th><th class="text-end">Actions</th>
+                        <th>Department</th><th>Categories</th><th>Status</th><th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -32,7 +33,6 @@
                         <tr>
                             <td class="hm-table__name">{{ $department->name }}</td>
                             <td>{{ $department->categories_count }}</td>
-                            <td>{{ $department->sort_order }}</td>
                             <td>
                                 <span class="pill pill--tiny {{ $department->is_active ? 'pill--active' : 'pill--inactive' }}">
                                     {{ $department->is_active ? 'Active' : 'Hidden' }}
@@ -44,7 +44,7 @@
                                         <span class="act-ico act-ico--edit" aria-hidden="true"></span>
                                     </a>
                                     <form method="POST" action="{{ route('backend.departments.destroy', $department) }}"
-                                          onsubmit="return confirm('Delete this department?');" class="d-inline">
+                                          data-confirm="Delete this department?" class="d-inline">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn-danger-soft btn-icon" aria-label="Delete">
                                             <span class="act-ico act-ico--delete" aria-hidden="true"></span>
@@ -54,7 +54,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="text-center py-5 hm-table__sub">No departments yet. Add your first one.</td></tr>
+                        <tr><td colspan="4" class="text-center py-5 hm-table__sub">No departments yet. Add your first one.</td></tr>
                     @endforelse
                 </tbody>
             </table>

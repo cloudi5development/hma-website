@@ -1,6 +1,22 @@
 @extends('backend.template.layouts.template-base')
 
-@php $editing = $category->exists; @endphp
+@php
+    $editing = $category->exists;
+
+    // On a validation redisplay an empty tag-list posts nothing at all, so read
+    // old input only when there is some — otherwise the picker would refill itself.
+    $selectedCourses = collect(session()->hasOldInput() ? session()->getOldInput('courses', []) : $selected)
+        ->map(fn ($id) => (int) $id)->all();
+
+    // Feed the picker: every course with its current owner, so the admin can see
+    // that picking one will move it out of another category.
+    $coursePickerData = $allCourses->map(fn ($c) => [
+        'id'    => $c->id,
+        'name'  => $c->name,
+        'icon'  => $c->image_url,
+        'owner' => $c->category?->id === $category->id ? '' : ($c->category?->name ?? 'unassigned'),
+    ])->values();
+@endphp
 
 @section('title', $editing ? 'Edit Category' : 'Add Category')
 @section('page_title', $editing ? 'Edit Category' : 'Add Category')
@@ -21,13 +37,27 @@
         @csrf
         @if ($editing) @method('PUT') @endif
 
-        <div class="row g-3">
-            <div class="col-12 col-lg-8">
-                <div class="hm-card">
-                    <div class="hm-card__body">
+        <div class="hm-card mb-3">
+            <div class="hm-card__body">
 
-                        <div class="form-row">
-                            <label class="form-label" for="department_id">Department</label>
+                {{-- Row 1 — name + department --}}
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
+                            <label class="form-label" for="name">
+                                Category Name <span style="color:var(--danger)">*</span>
+                            </label>
+                            <input type="text" id="name" name="name"
+                                   class="form-control-hm @error('name') is-invalid @enderror"
+                                   value="{{ old('name', $category->name) }}" placeholder="e.g. IT & Software" required>
+                            @error('name') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
+                            <label class="form-label" for="department_id">
+                                Department <span style="color:var(--danger)">*</span>
+                            </label>
                             <select id="department_id" name="department_id"
                                     class="form-control-hm @error('department_id') is-invalid @enderror" required>
                                 <option value="">— Select department —</option>
@@ -39,92 +69,40 @@
                             </select>
                             @error('department_id') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
+                    </div>
+                </div>
 
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <div class="form-row">
-                                    <label class="form-label" for="name">Category Name</label>
-                                    <input type="text" id="name" name="name"
-                                           class="form-control-hm @error('name') is-invalid @enderror"
-                                           value="{{ old('name', $category->name) }}" placeholder="e.g. IT & Software" required>
-                                    @error('name') <p class="form-error">{{ $message }}</p> @enderror
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <div class="form-row">
-                                    <label class="form-label" for="slug">Slug <span class="form-hint" style="display:inline">(optional)</span></label>
-                                    <input type="text" id="slug" name="slug"
-                                           class="form-control-hm @error('slug') is-invalid @enderror"
-                                           value="{{ old('slug', $category->slug) }}" placeholder="auto from name">
-                                    @error('slug') <p class="form-error">{{ $message }}</p> @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
+                {{-- Row 2 — description + active toggle. Same 6/6 split as row 1 so
+                     the right-hand fields start on the same line in both rows. --}}
+                <div class="row g-3 mt-2">
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="description">Description</label>
                             <textarea id="description" name="description" rows="3"
                                       class="form-control-hm @error('description') is-invalid @enderror"
                                       placeholder="Short summary of this category…">{{ old('description', $category->description) }}</textarea>
                             @error('description') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
-
+                    </div>
+                    <div class="col-12 col-md-6">
                         <div class="form-row" style="margin-bottom:0">
-                            <label class="form-label" for="tone">Card Tone <span class="form-hint" style="display:inline">(home grid colour)</span></label>
-                            <select id="tone" name="tone" class="form-control-hm @error('tone') is-invalid @enderror" style="max-width:220px">
-                                <option value="">Auto</option>
-                                @foreach (\App\Models\Category::TONES as $tone)
-                                    <option value="{{ $tone }}" {{ old('tone', $category->tone) === $tone ? 'selected' : '' }}>{{ ucfirst($tone) }}</option>
-                                @endforeach
-                            </select>
-                            @error('tone') <p class="form-error">{{ $message }}</p> @enderror
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-lg-4">
-                <div class="hm-card mb-3">
-                    <div class="hm-card__head"><h2 class="hm-card__title">Icon</h2></div>
-                    <div class="hm-card__body">
-                        @if ($category->icon)
-                            <div class="hm-media mb-3" style="max-width:120px"><img id="iconPreview" src="{{ $category->icon_url }}" alt=""></div>
-                        @else
-                            <div class="hm-media hm-media--empty mb-3" id="iconPreviewWrap" style="min-height:120px">
-                                <img id="iconPreview" src="{{ asset('backend/template/images/actions/product-img.svg') }}" alt="">
-                                No icon
+                            <label class="form-label">Status</label>
+                            <div class="d-flex align-items-center" style="height:48px">
+                                <label class="switch">
+                                    <input type="hidden" name="is_active" value="0">
+                                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', $category->is_active ?? true) ? 'checked' : '' }}>
+                                    <span class="switch__track"></span>
+                                    <span class="switch__label">Active</span>
+                                </label>
                             </div>
-                        @endif
-                        <input type="file" id="icon" name="icon" accept="image/*"
-                               class="form-control-hm @error('icon') is-invalid @enderror" style="height:auto;padding:9px 12px">
-                        <p class="form-hint">WebP / PNG / JPG / SVG · max 2 MB.</p>
-                        @error('icon') <p class="form-error">{{ $message }}</p> @enderror
-                    </div>
-                </div>
-
-                <div class="hm-card mb-3">
-                    <div class="hm-card__head"><h2 class="hm-card__title">Status</h2></div>
-                    <div class="hm-card__body">
-                        <label class="switch">
-                            <input type="hidden" name="is_active" value="0">
-                            <input type="checkbox" name="is_active" value="1" {{ old('is_active', $category->is_active ?? true) ? 'checked' : '' }}>
-                            <span class="switch__track"></span>
-                            <span class="switch__label">Active</span>
-                        </label>
-                        <div class="form-row mt-3" style="margin-bottom:0">
-                            <label class="form-label" for="sort_order">Display Order</label>
-                            <input type="number" id="sort_order" name="sort_order" min="0"
-                                   class="form-control-hm @error('sort_order') is-invalid @enderror"
-                                   value="{{ old('sort_order', $category->sort_order ?? 0) }}" style="max-width:140px">
-                            @error('sort_order') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
                     </div>
                 </div>
 
-                <div class="hm-card">
-                    <div class="hm-card__head"><h2 class="hm-card__title">Visibility</h2></div>
-                    <div class="hm-card__body d-flex flex-column gap-2">
+                {{-- Row 3 — visibility + card tone --}}
+                <div class="form-row mt-4" style="margin-bottom:0">
+                    <label class="form-label">Visibility</label>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
                         <label class="check-chip">
                             <input type="hidden" name="show_home" value="0">
                             <input type="checkbox" name="show_home" value="1" {{ old('show_home', $category->show_home ?? false) ? 'checked' : '' }}>
@@ -141,12 +119,66 @@
                             </span>
                             <span class="check-chip__label">Feature in mega-menu</span>
                         </label>
+
+                        <select id="tone" name="tone" class="form-control-hm @error('tone') is-invalid @enderror"
+                                style="width:220px;height:42px" aria-label="Card tone">
+                            <option value="">Card Tone — Auto</option>
+                            @foreach (\App\Models\Category::TONES as $tone)
+                                <option value="{{ $tone }}" {{ old('tone', $category->tone) === $tone ? 'selected' : '' }}>{{ ucfirst($tone) }}</option>
+                            @endforeach
+                        </select>
                     </div>
+                    @error('tone') <p class="form-error">{{ $message }}</p> @enderror
+                    <p class="form-hint">Card tone is the pastel colour behind this category on the home grid.</p>
                 </div>
+
+                {{-- Row 4 — icon --}}
+                <div class="form-row mt-4" style="margin-bottom:0">
+                    <label class="form-label" for="icon">
+                        Icon @unless ($editing) <span style="color:var(--danger)">*</span> @endunless
+                    </label>
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <span class="tbl-logo" style="width:64px;height:64px;border-radius:14px">
+                            <img id="iconPreview" src="{{ $category->icon_url ?: asset('backend/template/images/actions/product-img.svg') }}" alt="">
+                        </span>
+                        <div>
+                            <input type="file" id="icon" name="icon" accept="image/*"
+                                   class="form-control-hm @error('icon') is-invalid @enderror" style="height:auto;padding:9px 12px">
+                            <p class="form-hint">WebP / PNG / JPG / SVG · max 2 MB.</p>
+                        </div>
+                    </div>
+                    @error('icon') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Row 5 — search an existing course and add it to this category --}}
+                <div class="form-row mt-4" style="margin-bottom:0">
+                    <label class="form-label" for="courseSearch">Courses</label>
+
+                    @if ($allCourses->isEmpty())
+                        <p class="form-hint" style="margin-top:0">
+                            No courses yet —
+                            <a href="{{ route('backend.courses.create') }}">create one first</a>,
+                            then come back to add it here.
+                        </p>
+                    @else
+                        @include('backend.partials.entity-picker', [
+                            'key'         => 'course',
+                            'name'        => 'courses',
+                            'items'       => $coursePickerData,
+                            'selected'    => $selectedCourses,
+                            'placeholder' => 'Search courses…',
+                            'hint'        => 'Search by name and click a result to add it. Adding a course that sits under another category moves it here; removing its tag leaves it unassigned.',
+                        ])
+                    @endif
+
+                    @error('courses') <p class="form-error">{{ $message }}</p> @enderror
+                    @error('courses.*') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
+
             </div>
         </div>
 
-        <div class="mt-3 d-flex gap-2">
+        <div class="d-flex gap-2">
             <button type="submit" class="btn-brand">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                 {{ $editing ? 'Save Changes' : 'Add Category' }}
@@ -161,11 +193,7 @@
     <script>
         var input = document.getElementById('icon'), img = document.getElementById('iconPreview');
         if (input) input.addEventListener('change', function () {
-            if (this.files && this.files[0]) {
-                var wrap = document.getElementById('iconPreviewWrap');
-                if (wrap) wrap.classList.remove('hm-media--empty');
-                img.src = URL.createObjectURL(this.files[0]);
-            }
+            if (this.files && this.files[0]) img.src = URL.createObjectURL(this.files[0]);
         });
     </script>
 @endpush

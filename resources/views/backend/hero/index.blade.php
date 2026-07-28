@@ -23,19 +23,14 @@
         </div>
     </div>
 
-    @if (session('success'))
-        <div class="alert-hm alert-hm--success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            {{ session('success') }}
-        </div>
-    @endif
 
-    <div class="row g-3">
-        {{-- Left column copy + buttons --}}
-        <div class="col-12 col-lg-7">
-            <div class="hm-card">
-                <div class="hm-card__head"><h2 class="hm-card__title">Left Column</h2></div>
-                <div class="hm-card__body">
+    {{-- One container for the whole section; the two columns are headed inside it. --}}
+    <div class="hm-card">
+        <div class="hm-card__body">
+            <div class="row g-4">
+                {{-- Left column copy + buttons --}}
+                <div class="col-12 col-lg-7">
+                    <h3 class="form-section__title mb-3">Left Column</h3>
                     <div class="hm-field">
                         <p class="hm-field__label">Badge Text</p>
                         <p class="hm-field__value">{{ $hero->badge_text }}</p>
@@ -57,14 +52,10 @@
                         <p class="hm-field__value">{{ $hero->btn2_text }} <span class="hm-field__value--muted">→ {{ $hero->btn2_url ?: 'Contact page' }}</span></p>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        {{-- Right column image --}}
-        <div class="col-12 col-lg-5">
-            <div class="hm-card">
-                <div class="hm-card__head"><h2 class="hm-card__title">Right Column Image</h2></div>
-                <div class="hm-card__body">
+                {{-- Right column image --}}
+                <div class="col-12 col-lg-5">
+                    <h3 class="form-section__title mb-3">Right Column Image</h3>
                     @if ($hero->image)
                         <div class="hm-media"><img src="{{ $hero->image_url }}" alt="Hero image"></div>
                     @else
@@ -73,7 +64,6 @@
                             No image uploaded
                         </div>
                     @endif
-                    <p class="form-hint">The floating rating cards and the scroll badge around this image are fixed and can't be edited.</p>
                 </div>
             </div>
         </div>

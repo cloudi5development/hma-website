@@ -23,9 +23,29 @@ class Department extends Model
     {
         static::saving(function (Department $department) {
             if (blank($department->slug)) {
-                $department->slug = Str::slug($department->name);
+                $department->slug = $department->uniqueSlug(Str::slug($department->name));
             }
         });
+    }
+
+    /**
+     * The slug is derived from the name (there is no slug field on the form),
+     * so guard the unique index by suffixing a counter on collisions.
+     */
+    private function uniqueSlug(string $base): string
+    {
+        $base = $base ?: 'department';
+        $slug = $base;
+
+        $taken = fn (string $candidate) => static::where('slug', $candidate)
+            ->when($this->exists, fn ($q) => $q->whereKeyNot($this->getKey()))
+            ->exists();
+
+        for ($i = 2; $taken($slug); $i++) {
+            $slug = $base . '-' . $i;
+        }
+
+        return $slug;
     }
 
     public function categories(): HasMany

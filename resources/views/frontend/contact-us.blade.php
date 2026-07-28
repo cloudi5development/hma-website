@@ -25,21 +25,13 @@
         // one here is all it takes — the markup and the JS both read this array.
         // 'map' must be an embeddable Maps URL (?output=embed); a plain
         // /maps/place link refuses to frame and renders blank.
-        $branches = [
-            'coimbatore' => [
-                'name'    => 'Coimbatore',
-                'address' => '339, Chinnasamy Naidu Rd, Siddhapudur, Balasundaram Layout, B.K.R Nagar, Coimbatore, Tamil Nadu 641044',
-                'map'     => 'https://www.google.com/maps?q=' . urlencode('339, Chinnasamy Naidu Rd, Siddhapudur, Balasundaram Layout, B.K.R Nagar, Coimbatore, Tamil Nadu 641044') . '&output=embed',
-            ],
-            'chennai' => [
-                'name'    => 'Chennai',
-                'address' => 'No 22 / 97, KGEYES VEDA RANGA NIVAS, 4th Floor, 4th Avenue, Ashok Nagar, Chennai – 33',
-                'map'     => 'https://www.google.com/maps?q=' . urlencode('KGEYES VEDA RANGA NIVAS, 4th Avenue, Ashok Nagar, Chennai 600083') . '&output=embed',
-            ],
-        ];
+        // Branches come from Settings → Contact ($contact, via AppServiceProvider).
+        // Adding a branch there adds a tab here and a map to go with it; each one
+        // carries its own embed URL, falling back to a pin from its address.
+        $branches = collect($contact['branches'])->keyBy('key')->all();
 
-        // The branch the map opens on.
-        $defaultBranch = 'coimbatore';
+        // The branch the map opens on — the first in the list.
+        $defaultBranch = array_key_first($branches);
     @endphp
 
     {{-- ============================== BANNER ============================== --}}
@@ -73,6 +65,7 @@
     @include('frontend.partials.contact-form')
 
     {{-- ================================ MAP ================================ --}}
+    @if ($branches)
     <section class="hm-cnt-map" aria-labelledby="hmCntMapHeading">
         <div class="container">
             <h2 class="visually-hidden" id="hmCntMapHeading">Our branches on the map</h2>
@@ -110,6 +103,7 @@
             </div>
         </div>
     </section>
+    @endif
 
 @endsection
 

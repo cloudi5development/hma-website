@@ -1,6 +1,22 @@
 @extends('backend.template.layouts.template-base')
 
-@php $editing = $department->exists; @endphp
+@php
+    $editing = $department->exists;
+
+    // On a validation redisplay an empty tag-list posts nothing at all, so read
+    // old input only when there is some — otherwise the picker would refill itself.
+    $selected = collect(session()->hasOldInput() ? session()->getOldInput('categories', []) : $selected)
+        ->map(fn ($id) => (int) $id)->all();
+
+    // Feed the picker: every category with its current owner, so the admin can
+    // see that picking one will move it out of another department.
+    $pickerData = $allCategories->map(fn ($c) => [
+        'id'    => $c->id,
+        'name'  => $c->name,
+        'icon'  => $c->icon_url,
+        'owner' => $c->department?->id === $department->id ? '' : ($c->department?->name ?? 'unassigned'),
+    ])->values();
+@endphp
 
 @section('title', $editing ? 'Edit Department' : 'Add Department')
 @section('page_title', $editing ? 'Edit Department' : 'Add Department')
@@ -17,84 +33,71 @@
 
     <form method="POST"
           action="{{ $editing ? route('backend.departments.update', $department) : route('backend.departments.store') }}"
-          enctype="multipart/form-data" novalidate>
+          novalidate>
         @csrf
         @if ($editing) @method('PUT') @endif
 
-        <div class="row g-3">
-            <div class="col-12 col-lg-8">
-                <div class="hm-card">
-                    <div class="hm-card__body">
+        <div class="hm-card mb-3">
+            <div class="hm-card__body">
 
-                        <div class="form-row">
-                            <label class="form-label" for="name">Department Name</label>
+                {{-- Row 1 — name + active toggle --}}
+                <div class="row g-3 align-items-start">
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
+                            <label class="form-label" for="name">
+                                Department Name <span style="color:var(--danger)">*</span>
+                            </label>
                             <input type="text" id="name" name="name"
                                    class="form-control-hm @error('name') is-invalid @enderror"
                                    value="{{ old('name', $department->name) }}" placeholder="e.g. Technical" required>
                             @error('name') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
-
-                        <div class="form-row">
-                            <label class="form-label" for="slug">Slug <span class="form-hint" style="display:inline">(optional — auto from name)</span></label>
-                            <input type="text" id="slug" name="slug"
-                                   class="form-control-hm @error('slug') is-invalid @enderror"
-                                   value="{{ old('slug', $department->slug) }}" placeholder="e.g. technical">
-                            @error('slug') <p class="form-error">{{ $message }}</p> @enderror
-                        </div>
-
-                        <div class="form-row">
-                            <label class="form-label" for="description">Description <span class="form-hint" style="display:inline">(optional)</span></label>
-                            <textarea id="description" name="description" rows="3"
-                                      class="form-control-hm @error('description') is-invalid @enderror"
-                                      placeholder="Short summary of this domain…">{{ old('description', $department->description) }}</textarea>
-                            @error('description') <p class="form-error">{{ $message }}</p> @enderror
-                        </div>
-
                     </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-lg-4">
-                <div class="hm-card mb-3">
-                    <div class="hm-card__head"><h2 class="hm-card__title">Mega-menu Image</h2></div>
-                    <div class="hm-card__body">
-                        @if ($department->image)
-                            <div class="hm-media mb-3"><img id="deptPreview" src="{{ $department->image_url }}" alt=""></div>
-                        @else
-                            <div class="hm-media hm-media--empty mb-3" id="deptPreviewWrap">
-                                <img id="deptPreview" src="{{ asset('backend/template/images/actions/product-img.svg') }}" alt="">
-                                No image uploaded
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
+                            <label class="form-label">Status</label>
+                            {{-- Wrapper matches the name input's 48px height so the two line up --}}
+                            <div class="d-flex align-items-center" style="height:48px">
+                                <label class="switch">
+                                    <input type="hidden" name="is_active" value="0">
+                                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', $department->is_active ?? true) ? 'checked' : '' }}>
+                                    <span class="switch__track"></span>
+                                    <span class="switch__label">Active</span>
+                                </label>
                             </div>
-                        @endif
-                        <input type="file" id="image" name="image" accept="image/*"
-                               class="form-control-hm @error('image') is-invalid @enderror" style="height:auto;padding:9px 12px">
-                        <p class="form-hint">WebP / PNG / JPG · max 2 MB · shown at the top of this department's mega-menu column.</p>
-                        @error('image') <p class="form-error">{{ $message }}</p> @enderror
-                    </div>
-                </div>
-
-                <div class="hm-card mb-3">
-                    <div class="hm-card__head"><h2 class="hm-card__title">Status</h2></div>
-                    <div class="hm-card__body">
-                        <label class="switch">
-                            <input type="hidden" name="is_active" value="0">
-                            <input type="checkbox" name="is_active" value="1" {{ old('is_active', $department->is_active ?? true) ? 'checked' : '' }}>
-                            <span class="switch__track"></span>
-                            <span class="switch__label">Active</span>
-                        </label>
-                        <div class="form-row mt-3" style="margin-bottom:0">
-                            <label class="form-label" for="sort_order">Display Order</label>
-                            <input type="number" id="sort_order" name="sort_order" min="0"
-                                   class="form-control-hm @error('sort_order') is-invalid @enderror"
-                                   value="{{ old('sort_order', $department->sort_order ?? 0) }}" style="max-width:140px">
-                            @error('sort_order') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
                     </div>
                 </div>
+
+                {{-- Row 2 — search an existing category and add it to this department --}}
+                <div class="form-row mt-4" style="margin-bottom:0">
+                    <label class="form-label" for="categorySearch">Categories</label>
+
+                    @if ($allCategories->isEmpty())
+                        <p class="form-hint" style="margin-top:0">
+                            No categories yet —
+                            <a href="{{ route('backend.categories.create') }}">create one first</a>,
+                            then come back to add it here.
+                        </p>
+                    @else
+                        @include('backend.partials.entity-picker', [
+                            'key'         => 'category',
+                            'name'        => 'categories',
+                            'items'       => $pickerData,
+                            'selected'    => $selected,
+                            'placeholder' => 'Search categories…',
+                            'hint'        => 'Search by name and click a result to add it. Adding a category that sits under another department moves it here; removing its tag leaves it unassigned.',
+                        ])
+                    @endif
+
+                    @error('categories') <p class="form-error">{{ $message }}</p> @enderror
+                    @error('categories.*') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
+
             </div>
         </div>
 
-        <div class="mt-3 d-flex gap-2">
+        <div class="d-flex gap-2">
             <button type="submit" class="btn-brand">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                 {{ $editing ? 'Save Changes' : 'Add Department' }}
@@ -104,16 +107,3 @@
     </form>
 
 @endsection
-
-@push('scripts')
-    <script>
-        var input = document.getElementById('image'), img = document.getElementById('deptPreview');
-        if (input) input.addEventListener('change', function () {
-            if (this.files && this.files[0]) {
-                var wrap = document.getElementById('deptPreviewWrap');
-                if (wrap) wrap.classList.remove('hm-media--empty');
-                img.src = URL.createObjectURL(this.files[0]);
-            }
-        });
-    </script>
-@endpush

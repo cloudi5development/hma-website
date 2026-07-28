@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\TestimonialRequest;
 use App\Models\Testimonial;
@@ -11,9 +12,13 @@ use Illuminate\View\View;
 
 class TestimonialController extends Controller
 {
+    use HandlesTableQuery;
+
     public function index(): View
     {
-        $testimonials = Testimonial::orderBy('sort_order')->orderBy('id')->paginate(10);
+        $testimonials = $this->applyTableFilters(Testimonial::query(), ['name', 'role', 'company'])
+            ->orderBy('sort_order')->orderBy('id')
+            ->paginate($this->perPage())->withQueryString();
 
         return view('backend.testimonials.index', compact('testimonials'));
     }

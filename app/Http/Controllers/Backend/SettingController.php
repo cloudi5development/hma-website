@@ -7,6 +7,7 @@ use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class SettingController extends Controller
@@ -41,13 +42,46 @@ class SettingController extends Controller
     public function updateContact(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'contact_phone'             => ['nullable', 'string', 'max:40'],
-            'contact_email'             => ['nullable', 'email', 'max:120'],
-            'contact_address_chennai'   => ['nullable', 'string', 'max:400'],
-            'contact_address_coimbatore'=> ['nullable', 'string', 'max:400'],
+            'contact_phone'        => ['nullable', 'string', 'max:40'],
+            'contact_email'        => ['nullable', 'email', 'max:120'],
+            'branches'             => ['nullable', 'array', 'max:12'],
+            'branches.*.name'      => ['nullable', 'string', 'max:80'],
+            'branches.*.address'   => ['nullable', 'string', 'max:400'],
+            'branches.*.map'       => ['nullable', 'string', 'max:2000'],
+        ], [
+            'branches.max' => 'You can add up to 12 branches.',
         ]);
 
-        Setting::putMany($data);
+        $branches = [];
+
+        foreach ($request->input('branches', []) as $row) {
+            $name    = trim((string) ($row['name'] ?? ''));
+            $address = trim((string) ($row['address'] ?? ''));
+
+            // A row with neither name nor address is a leftover blank — drop it.
+            if ($name === '' && $address === '') {
+                continue;
+            }
+
+            if ($name === '' || $address === '') {
+                return back()->withInput()
+                    ->with('error', 'Every branch needs both a name and an address.');
+            }
+
+            $branches[] = [
+                'name'    => $name,
+                'address' => $address,
+                // Accepts the whole <iframe> snippet or a bare URL; anything that
+                // is not a Google Maps link is dropped and the address is used.
+                'map'     => Setting::normaliseMapUrl($row['map'] ?? null),
+            ];
+        }
+
+        Setting::putMany([
+            'contact_phone'    => $data['contact_phone'] ?? null,
+            'contact_email'    => $data['contact_email'] ?? null,
+            'contact_branches' => json_encode($branches, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        ]);
 
         return back()->with('success', 'Contact settings saved.');
     }
@@ -122,6 +156,60 @@ class SettingController extends Controller
             return back()->with('success', 'Test email sent to ' . $request->input('test_email') . '. Check the inbox (and spam).');
         } catch (\Throwable $e) {
             return back()->with('error', 'Test email failed: ' . $e->getMessage());
+        }
+    }
+
+    /* ============================ LOGO / FAVICON ============================ */
+
+    public function logo(): View
+    {
+        return view('backend.settings.logo');
+    }
+
+    /**
+     * Site logo and favicon. Each field is optional on its own — uploading one
+     * leaves the other alone — and either can be reset to the bundled default.
+     */
+    public function updateLogo(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'site_logo'    => ['nullable', 'image', 'mimes:webp,png,jpg,jpeg,svg', 'max:2048'],
+            'site_favicon' => ['nullable', 'image', 'mimes:png,ico,webp,jpg,jpeg,svg', 'max:1024'],
+        ], [
+            'site_logo.max'    => 'The logo must be 2 MB or smaller.',
+            'site_favicon.max' => 'The favicon must be 1 MB or smaller.',
+        ]);
+
+        $changes = [];
+
+        foreach (['site_logo', 'site_favicon'] as $key) {
+            if ($request->boolean('remove_' . $key)) {
+                $this->deleteUpload(Setting::get($key));
+                $changes[$key] = null;
+
+                continue;
+            }
+
+            if ($request->hasFile($key)) {
+                $this->deleteUpload(Setting::get($key));
+                $changes[$key] = 'storage/' . $request->file($key)->store('branding', 'public');
+            }
+        }
+
+        if (! $changes) {
+            return back()->with('error', 'Nothing to save — choose a file or tick “remove”.');
+        }
+
+        Setting::putMany($changes);
+
+        return back()->with('success', 'Logo settings saved.');
+    }
+
+    /** Remove a previously uploaded branding file (never the bundled defaults). */
+    private function deleteUpload(?string $path): void
+    {
+        if ($path && str_starts_with($path, 'storage/')) {
+            Storage::disk('public')->delete(substr($path, strlen('storage/')));
         }
     }
 

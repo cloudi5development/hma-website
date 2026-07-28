@@ -13,12 +13,6 @@
         </a>
     </div>
 
-    @if (session('success'))
-        <div class="alert-hm alert-hm--success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            {{ session('success') }}
-        </div>
-    @endif
 
     <div class="row g-3">
         <div class="col-12 col-lg-8">
@@ -64,7 +58,7 @@
                 <div class="hm-card__body d-flex flex-column gap-2">
                     <a href="mailto:{{ $enquiry->email }}" class="btn-ghost" style="justify-content:center">Reply by Email</a>
                     <form method="POST" action="{{ route('backend.contact-enquiries.destroy', $enquiry) }}"
-                          onsubmit="return confirm('Delete this enquiry?');">
+                          data-confirm="Delete this enquiry?">
                         @csrf @method('DELETE')
                         <button type="submit" class="btn-danger-soft" style="width:100%;justify-content:center">Delete Enquiry</button>
                     </form>

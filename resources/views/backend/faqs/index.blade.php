@@ -26,19 +26,7 @@
         @endif
     </div>
 
-    @if (session('success'))
-        <div class="alert-hm alert-hm--success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            {{ session('success') }}
-        </div>
-    @endif
 
-    @if (session('error'))
-        <div class="alert-hm alert-hm--error">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>
-            {{ session('error') }}
-        </div>
-    @endif
 
     @if ($atMax)
         <div class="alert-hm alert-hm--error">
@@ -48,23 +36,22 @@
     @endif
 
     <div class="hm-card">
+        @include("backend.partials.table-toolbar", ["placeholder" => "Search question"])
         <div class="table-responsive">
             <table class="hm-table">
                 <thead>
                     <tr>
-                        <th>Question</th><th>Order</th><th>Visible On</th><th>Status</th><th class="text-end">Actions</th>
+                        <th>Question</th><th>Visible On</th><th>Status</th><th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($faqs as $faq)
                         <tr>
                             <td class="hm-table__name">{{ $faq->question }}</td>
-                            <td>{{ $faq->sort_order }}</td>
                             <td>
-                                @if ($faq->show_home)         <span class="pill pill--interested pill--tiny">Home</span> @endif
-                                @if ($faq->show_about)        <span class="pill pill--interested pill--tiny">About</span> @endif
-                                @if ($faq->show_courses)      <span class="pill pill--interested pill--tiny">Courses</span> @endif
-                                @if ($faq->show_testimonials) <span class="pill pill--interested pill--tiny">Testimonials</span> @endif
+                                <span class="flag-text">
+                                    {{ collect([$faq->show_home ? "Home" : null, $faq->show_about ? "About" : null, $faq->show_courses ? "Courses" : null, $faq->show_testimonials ? "Testimonials" : null])->filter()->implode(" · ") ?: "—" }}
+                                </span>
                             </td>
                             <td>
                                 <span class="pill pill--tiny {{ $faq->is_active ? 'pill--active' : 'pill--inactive' }}">
@@ -77,7 +64,7 @@
                                         <span class="act-ico act-ico--edit" aria-hidden="true"></span>
                                     </a>
                                     <form method="POST" action="{{ route('backend.faqs.destroy', $faq) }}"
-                                          onsubmit="return confirm('Delete this FAQ?');" class="d-inline">
+                                          data-confirm="Delete this FAQ?" class="d-inline">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn-danger-soft btn-icon" aria-label="Delete">
                                             <span class="act-ico act-ico--delete" aria-hidden="true"></span>
@@ -87,7 +74,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="text-center py-5 hm-table__sub">No FAQs yet. Add your first one.</td></tr>
+                        <tr><td colspan="4" class="text-center py-5 hm-table__sub">No FAQs yet. Add your first one.</td></tr>
                     @endforelse
                 </tbody>
             </table>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\CourseRequest;
 use App\Models\Category;
@@ -12,11 +13,16 @@ use Illuminate\View\View;
 
 class CourseController extends Controller
 {
+    use HandlesTableQuery;
+
     public function index(): View
     {
-        $courses = Course::with('category.department')
+        $courses = $this->applyTableFilters(
+                Course::with('category.department'),
+                ['name', 'duration', 'training_mode', 'skill_level', 'category.name']
+            )
             ->orderBy('sort_order')->orderBy('id')
-            ->paginate(10);
+            ->paginate($this->perPage())->withQueryString();
 
         $popularCount = Course::popular()->count();
 

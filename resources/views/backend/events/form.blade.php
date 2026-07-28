@@ -24,82 +24,99 @@
         {{-- Events only appear on the home page, so visibility is fixed to home. --}}
         <input type="hidden" name="show_home" value="1">
 
-        <div class="row g-3">
-            <div class="col-12 col-lg-8">
-                <div class="hm-card">
-                    <div class="hm-card__body">
+        {{-- One container for the whole form --}}
+        <div class="hm-card mb-3">
+            <div class="hm-card__body">
 
-                        <div class="form-row">
+                {{-- Row 1 — speaker + active toggle --}}
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="speaker">Speaker</label>
                             <input type="text" id="speaker" name="speaker"
                                    class="form-control-hm @error('speaker') is-invalid @enderror"
                                    value="{{ old('speaker', $event->speaker) }}" placeholder="e.g. Rochelle Fernandez" required>
                             @error('speaker') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
-
-                        <div class="form-row">
-                            <label class="form-label" for="title">Event Title</label>
-                            <input type="text" id="title" name="title"
-                                   class="form-control-hm @error('title') is-invalid @enderror"
-                                   value="{{ old('title', $event->title) }}" placeholder="e.g. Learn about no-code tools" required>
-                            @error('title') <p class="form-error">{{ $message }}</p> @enderror
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <div class="form-row">
-                                    <label class="form-label" for="type">Type</label>
-                                    <input type="text" id="type" name="type"
-                                           class="form-control-hm @error('type') is-invalid @enderror"
-                                           value="{{ old('type', $event->type ?? 'Live Event') }}" placeholder="e.g. Live Event">
-                                    @error('type') <p class="form-error">{{ $message }}</p> @enderror
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <div class="form-row">
-                                    <label class="form-label" for="price">Price <span class="form-hint" style="display:inline">(optional)</span></label>
-                                    <input type="text" id="price" name="price"
-                                           class="form-control-hm @error('price') is-invalid @enderror"
-                                           value="{{ old('price', $event->price) }}" placeholder="e.g. ₹499/-">
-                                    @error('price') <p class="form-error">{{ $message }}</p> @enderror
-                                </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
+                            <label class="form-label">Status</label>
+                            <div class="d-flex align-items-center" style="height:48px">
+                                <label class="switch">
+                                    <input type="hidden" name="is_active" value="0">
+                                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', $event->is_active ?? true) ? 'checked' : '' }}>
+                                    <span class="switch__track"></span>
+                                    <span class="switch__label">Active</span>
+                                </label>
                             </div>
                         </div>
-
-                        <div class="form-row">
-                            <label class="form-label" for="link">Event Details Link <span class="form-hint" style="display:inline">(optional)</span></label>
-                            <input type="text" id="link" name="link"
-                                   class="form-control-hm @error('link') is-invalid @enderror"
-                                   value="{{ old('link', $event->link) }}" placeholder="https://… (leave blank for #)">
-                            @error('link') <p class="form-error">{{ $message }}</p> @enderror
-                        </div>
-
-                        <div class="form-row">
-                            <label class="form-label" for="image">Speaker Photo</label>
-                            <div class="d-flex align-items-center gap-3 mb-2">
-                                <span class="tbl-logo tbl-logo--round" style="width:64px;height:64px">
-                                    <img id="imagePreview" src="{{ $editing ? $event->image_url : '' }}" alt=""
-                                         style="{{ $editing ? '' : 'display:none' }}">
-                                </span>
-                                <div>
-                                    <input type="file" id="image" name="image" accept="image/*"
-                                           class="form-control-hm @error('image') is-invalid @enderror" style="height:auto;padding:9px 12px">
-                                    <p class="form-hint">WebP / PNG / JPG · max 2 MB · a transparent cut-out of the person works best.</p>
-                                </div>
-                            </div>
-                            @error('image') <p class="form-error">{{ $message }}</p> @enderror
-                        </div>
-
                     </div>
                 </div>
-            </div>
 
-            <div class="col-12 col-lg-4">
-                <div class="hm-card mb-3">
-                    <div class="hm-card__head"><h2 class="hm-card__title">Card Colour</h2></div>
-                    <div class="hm-card__body">
+                {{-- Row 2 — title --}}
+                <div class="form-row mt-2">
+                    <label class="form-label" for="title">Event Title</label>
+                    <input type="text" id="title" name="title"
+                           class="form-control-hm @error('title') is-invalid @enderror"
+                           value="{{ old('title', $event->title) }}" placeholder="e.g. Learn about no-code tools" required>
+                    @error('title') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Row 3 — type + price --}}
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
                         <div class="form-row" style="margin-bottom:0">
-                            <select name="tone" class="form-control-hm @error('tone') is-invalid @enderror" style="max-width:220px">
+                            <label class="form-label" for="type">Type</label>
+                            <input type="text" id="type" name="type"
+                                   class="form-control-hm @error('type') is-invalid @enderror"
+                                   value="{{ old('type', $event->type ?? 'Live Event') }}" placeholder="e.g. Live Event">
+                            @error('type') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
+                            <label class="form-label" for="price">Price <span class="form-hint" style="display:inline">(optional)</span></label>
+                            <input type="text" id="price" name="price"
+                                   class="form-control-hm @error('price') is-invalid @enderror"
+                                   value="{{ old('price', $event->price) }}" placeholder="e.g. ₹499/-">
+                            @error('price') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Row 4 — link --}}
+                <div class="form-row mt-4">
+                    <label class="form-label" for="link">Event Details Link <span class="form-hint" style="display:inline">(optional)</span></label>
+                    <input type="text" id="link" name="link"
+                           class="form-control-hm @error('link') is-invalid @enderror"
+                           value="{{ old('link', $event->link) }}" placeholder="https://… (leave blank for #)">
+                    @error('link') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Row 5 — speaker photo --}}
+                <div class="form-row">
+                    <label class="form-label" for="image">Speaker Photo</label>
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <span class="tbl-logo tbl-logo--round" style="width:64px;height:64px">
+                            <img id="imagePreview" src="{{ $editing ? $event->image_url : '' }}" alt=""
+                                 style="{{ $editing ? '' : 'display:none' }}">
+                        </span>
+                        <div>
+                            <input type="file" id="image" name="image" accept="image/*"
+                                   class="form-control-hm @error('image') is-invalid @enderror" style="height:auto;padding:9px 12px">
+                            <p class="form-hint">WebP / PNG / JPG · max 2 MB · a transparent cut-out of the person works best.</p>
+                        </div>
+                    </div>
+                    @error('image') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Row 6 — card colour + display order --}}
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
+                            <label class="form-label" for="tone">Card Colour</label>
+                            <select id="tone" name="tone" class="form-control-hm @error('tone') is-invalid @enderror" style="max-width:220px">
                                 @foreach (\App\Models\Event::TONES as $tone)
                                     <option value="{{ $tone }}" {{ old('tone', $event->tone ?? 'purple') === $tone ? 'selected' : '' }}>
                                         {{ ucfirst($tone) }}
@@ -110,18 +127,8 @@
                             <p class="form-hint">The dark gradient behind the speaker.</p>
                         </div>
                     </div>
-                </div>
-
-                <div class="hm-card">
-                    <div class="hm-card__head"><h2 class="hm-card__title">Status</h2></div>
-                    <div class="hm-card__body">
-                        <label class="switch">
-                            <input type="hidden" name="is_active" value="0">
-                            <input type="checkbox" name="is_active" value="1" {{ old('is_active', $event->is_active ?? true) ? 'checked' : '' }}>
-                            <span class="switch__track"></span>
-                            <span class="switch__label">Active (visible on site)</span>
-                        </label>
-                        <div class="form-row mt-3" style="margin-bottom:0">
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="sort_order">Display Order</label>
                             <input type="number" id="sort_order" name="sort_order" min="0"
                                    class="form-control-hm @error('sort_order') is-invalid @enderror"
@@ -131,10 +138,11 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
 
-        <div class="mt-3 d-flex gap-2">
+        <div class="d-flex gap-2">
             <button type="submit" class="btn-brand">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                 {{ $editing ? 'Save Changes' : 'Add Event' }}

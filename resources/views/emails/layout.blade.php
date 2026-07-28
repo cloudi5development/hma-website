@@ -22,7 +22,10 @@
                          The logo is embedded as a CID attachment ($message->embed),
                          never a URL — the recipient's mail client cannot reach this
                          server's APP_URL. Falls back to a text wordmark if missing. --}}
-                    @php $logoPath = public_path('assets/images/branding/logo.png'); @endphp
+                    @php
+                        // Uploaded logo (Settings → Logo) when there is one, else the bundled asset.
+                        $logoPath = public_path(\App\Models\Setting::get('site_logo') ?: 'assets/images/branding/logo.png');
+                    @endphp
                     <tr>
                         <td align="center" style="background:#843D21;padding:24px 32px;">
                             @if (file_exists($logoPath))

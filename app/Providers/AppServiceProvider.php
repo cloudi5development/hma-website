@@ -13,12 +13,15 @@ use App\Models\Faq;
 use App\Models\Hero;
 use App\Models\Partner;
 use App\Models\Reel;
+use App\Models\SeoPage;
+use App\Models\Setting;
 use App\Models\SuccessStory;
 use App\Models\Testimonial;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -59,6 +62,31 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function composeFrontendSections(): void
     {
+        // Per-page SEO for the document head. Resolved from the current route
+        // name, so no page or controller has to pass anything.
+        View::composer([
+            'frontend.layouts.template-base',
+            'frontend.layouts.meta-tags',
+            'frontend.layouts.seo-content',
+        ], function ($view) {
+            $view->with('seo', SeoPage::forRoute(Route::currentRouteName()));
+        });
+
+        // Contact details (Settings → Contact) for every surface that shows them:
+        // the footer, the shared enquiry form and the contact page's branch map.
+        View::composer([
+            'frontend.layouts.footer',
+            'frontend.partials.contact-form',
+            'frontend.contact-us',
+        ], function ($view) {
+            $view->with('contact', Setting::contactDetails());
+        });
+
+        // Social profile links (Settings → Social Media) for the footer icons.
+        View::composer('frontend.layouts.footer', function ($view) {
+            $view->with('socialLinks', Setting::socialLinks());
+        });
+
         // Home page — hero singleton + the "Top Categories" grid + the four
         // "Popular Courses". All injected here since this markup lives inline in
         // frontend/index.blade.php.

@@ -17,19 +17,14 @@
         </a>
     </div>
 
-    @if (session('success'))
-        <div class="alert-hm alert-hm--success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            {{ session('success') }}
-        </div>
-    @endif
 
     <div class="hm-card">
+        @include("backend.partials.table-toolbar", ["placeholder" => "Search name or company"])
         <div class="table-responsive">
             <table class="hm-table">
                 <thead>
                     <tr>
-                        <th>Photo</th><th>Name</th><th>Role</th><th>Rating</th><th>Order</th><th>Visible On</th><th>Status</th><th class="text-end">Actions</th>
+                        <th>Photo</th><th>Name</th><th>Role</th><th>Rating</th><th>Visible On</th><th>Status</th><th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -41,11 +36,10 @@
                             <td class="hm-stars" aria-label="{{ $testimonial->rating }} out of 5">
                                 {{ str_repeat('★', $testimonial->rating) }}{{ str_repeat('☆', 5 - $testimonial->rating) }}
                             </td>
-                            <td>{{ $testimonial->sort_order }}</td>
                             <td>
-                                @if ($testimonial->show_home)         <span class="pill pill--interested pill--tiny">Home</span> @endif
-                                @if ($testimonial->show_about)        <span class="pill pill--interested pill--tiny">About</span> @endif
-                                @if ($testimonial->show_testimonials) <span class="pill pill--interested pill--tiny">Testimonials</span> @endif
+                                <span class="flag-text">
+                                    {{ collect([$testimonial->show_home ? "Home" : null, $testimonial->show_about ? "About" : null, $testimonial->show_testimonials ? "Testimonials" : null])->filter()->implode(" · ") ?: "—" }}
+                                </span>
                             </td>
                             <td>
                                 <span class="pill pill--tiny {{ $testimonial->is_active ? 'pill--active' : 'pill--inactive' }}">
@@ -58,7 +52,7 @@
                                         <span class="act-ico act-ico--edit" aria-hidden="true"></span>
                                     </a>
                                     <form method="POST" action="{{ route('backend.testimonials.destroy', $testimonial) }}"
-                                          onsubmit="return confirm('Delete this testimonial?');" class="d-inline">
+                                          data-confirm="Delete this testimonial?" class="d-inline">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn-danger-soft btn-icon" aria-label="Delete">
                                             <span class="act-ico act-ico--delete" aria-hidden="true"></span>
@@ -68,7 +62,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="text-center py-5 hm-table__sub">No testimonials yet. Add your first one.</td></tr>
+                        <tr><td colspan="7" class="text-center py-5 hm-table__sub">No testimonials yet. Add your first one.</td></tr>
                     @endforelse
                 </tbody>
             </table>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\BlogRequest;
 use App\Models\Blog;
@@ -11,9 +12,13 @@ use Illuminate\View\View;
 
 class BlogController extends Controller
 {
+    use HandlesTableQuery;
+
     public function index(): View
     {
-        $blogs = Blog::orderBy('sort_order')->orderBy('id')->paginate(10);
+        $blogs = $this->applyTableFilters(Blog::query(), ['title', 'author', 'category'])
+            ->orderBy('sort_order')->orderBy('id')
+            ->paginate($this->perPage())->withQueryString();
 
         return view('backend.blogs.index', compact('blogs'));
     }

@@ -30,9 +30,29 @@ class Category extends Model
     {
         static::saving(function (Category $category) {
             if (blank($category->slug)) {
-                $category->slug = Str::slug($category->name);
+                $category->slug = $category->uniqueSlug(Str::slug($category->name));
             }
         });
+    }
+
+    /**
+     * The slug is derived from the name (there is no slug field on the form),
+     * so guard the unique index by suffixing a counter on collisions.
+     */
+    private function uniqueSlug(string $base): string
+    {
+        $base = $base ?: 'category';
+        $slug = $base;
+
+        $taken = fn (string $candidate) => static::where('slug', $candidate)
+            ->when($this->exists, fn ($q) => $q->whereKeyNot($this->getKey()))
+            ->exists();
+
+        for ($i = 2; $taken($slug); $i++) {
+            $slug = $base . '-' . $i;
+        }
+
+        return $slug;
     }
 
     public function department(): BelongsTo

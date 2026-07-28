@@ -17,12 +17,13 @@
         @csrf
         @method('PUT')
 
-        <div class="row g-3">
-            {{-- Left column copy + buttons --}}
-            <div class="col-12 col-lg-7">
-                <div class="hm-card">
-                    <div class="hm-card__head"><h2 class="hm-card__title">Left Column</h2></div>
-                    <div class="hm-card__body">
+        {{-- One container for the whole form; the two columns are headed inside it. --}}
+        <div class="hm-card mb-3">
+            <div class="hm-card__body">
+                <div class="row g-4">
+                    {{-- Left column copy + buttons --}}
+                    <div class="col-12 col-lg-7">
+                        <h3 class="form-section__title mb-3">Left Column</h3>
 
                         <div class="form-row">
                             <label class="form-label" for="badge_text">Badge Text</label>
@@ -92,14 +93,10 @@
                         </div>
 
                     </div>
-                </div>
-            </div>
 
-            {{-- Right column image --}}
-            <div class="col-12 col-lg-5">
-                <div class="hm-card">
-                    <div class="hm-card__head"><h2 class="hm-card__title">Right Column Image</h2></div>
-                    <div class="hm-card__body">
+                    {{-- Right column image --}}
+                    <div class="col-12 col-lg-5">
+                        <h3 class="form-section__title mb-3">Right Column Image</h3>
 
                         @if ($hero->image)
                             <div class="hm-media mb-3"><img id="heroPreview" src="{{ $hero->image_url }}" alt="Hero image"></div>
@@ -117,13 +114,12 @@
                             <p class="form-hint">WebP / PNG / JPG · max 3 MB · around 560 × 548 px. Leave empty to keep the current image.</p>
                             @error('image') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
-
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="mt-3 d-flex gap-2">
+        <div class="d-flex gap-2">
             <button type="submit" class="btn-brand">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                 Save Changes

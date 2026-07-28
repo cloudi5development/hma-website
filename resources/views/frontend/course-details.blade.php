@@ -304,7 +304,7 @@
 
                     {{-- ---------------------------- LEFT ---------------------------- --}}
                     <div class="col-12 col-lg-5 hm-enq__aside">
-                        <img class="hm-enq__logo" src="{{ asset('assets/images/branding/logo.png') }}"
+                        <img class="hm-enq__logo" src="{{ \App\Models\Setting::image('site_logo', 'assets/images/branding/logo.png') }}"
                              alt="Hire Minds Academy">
 
                         <h2 class="hm-enq__title" id="hmEnquireTitle">Take the First Step Toward Your Dream Career</h2>

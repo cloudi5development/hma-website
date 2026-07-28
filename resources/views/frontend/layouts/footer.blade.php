@@ -8,27 +8,26 @@
             {{-- Column 1 — Brand --}}
             <div class="col-lg-3 col-md-6 hm-footer__col hm-footer__brand">
                 <a href="{{ route('frontend.index') }}" class="hm-footer__logo-link" aria-label="Hire Minds Academy — home">
-                    <img src="{{ asset('assets/images/branding/logo.png') }}" alt="Hire Minds Academy"
+                    <img src="{{ \App\Models\Setting::image('site_logo', 'assets/images/branding/logo.png') }}" alt="Hire Minds Academy"
                          class="hm-footer__logo" width="160" height="54">
                 </a>
                 <p class="hm-footer__about">
                     Empowering aspiring professionals with industry-focused Talent Acquisition training,
                     practical learning, and career guidance designed for long-term success.
                 </p>
-                <div class="hm-footer__socials">
-                    <a href="#" class="hm-footer__social" aria-label="Facebook">
-                        <i class="fa-brands fa-facebook-f" aria-hidden="true"></i>
-                    </a>
-                    <a href="#" class="hm-footer__social" aria-label="Instagram">
-                        <i class="fa-brands fa-instagram" aria-hidden="true"></i>
-                    </a>
-                    <a href="#" class="hm-footer__social" aria-label="LinkedIn">
-                        <i class="fa-brands fa-linkedin-in" aria-hidden="true"></i>
-                    </a>
-                    <a href="#" class="hm-footer__social" aria-label="YouTube">
-                        <i class="fa-brands fa-youtube" aria-hidden="true"></i>
-                    </a>
-                </div>
+                {{-- Settings → Social Media. A platform with no link set is left
+                     out entirely rather than rendered as a dead icon. --}}
+                @if ($socialLinks)
+                    <div class="hm-footer__socials">
+                        @foreach ($socialLinks as $social)
+                            <a href="{{ $social['url'] }}" class="hm-footer__social"
+                               target="_blank" rel="noopener noreferrer"
+                               aria-label="{{ $social['label'] }}" title="{{ $social['label'] }}">
+                                <i class="{{ $social['icon'] }}" aria-hidden="true"></i>
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
             </div>
 
             {{-- Column 2 — Quick Links --}}
@@ -63,28 +62,25 @@
             <div class="col-lg-4 col-md-6 hm-footer__col">
                 <h2 class="hm-footer__heading">Contact Us</h2>
                 <ul class="hm-footer__contact">
+                    {{-- $contact comes from Settings → Contact via AppServiceProvider. --}}
                     <li class="hm-footer__contact-item">
                         <i class="fa-solid fa-phone hm-footer__contact-icon" aria-hidden="true"></i>
-                        <a href="tel:+917824094044" class="hm-footer__contact-link">+91 7824094044</a>
+                        <a href="{{ $contact['phone_href'] }}" class="hm-footer__contact-link">{{ $contact['phone'] }}</a>
                     </li>
                     <li class="hm-footer__contact-item">
                         <i class="fa-solid fa-envelope hm-footer__contact-icon" aria-hidden="true"></i>
-                        <a href="mailto:info@hiremindsacademy.com" class="hm-footer__contact-link">info@hiremindsacademy.com</a>
+                        <a href="{{ $contact['email_href'] }}" class="hm-footer__contact-link">{{ $contact['email'] }}</a>
                     </li>
-                    <li class="hm-footer__contact-item">
-                        <i class="fa-solid fa-location-dot hm-footer__contact-icon" aria-hidden="true"></i>
-                        <span class="hm-footer__address">
-                            <span class="hm-footer__branch">Chennai Branch Address:</span>
-                            No. 12, 2nd Floor, Anna Salai, T. Nagar, Chennai, Tamil Nadu 600017
-                        </span>
-                    </li>
-                    <li class="hm-footer__contact-item">
-                        <i class="fa-solid fa-location-dot hm-footer__contact-icon" aria-hidden="true"></i>
-                        <span class="hm-footer__address">
-                            <span class="hm-footer__branch">Coimbatore Branch Address:</span>
-                            No. 45, Cross Cut Road, Gandhipuram, Coimbatore, Tamil Nadu 641012
-                        </span>
-                    </li>
+                    {{-- One line per branch, in the order they are listed in Settings. --}}
+                    @foreach ($contact['branches'] as $branch)
+                        <li class="hm-footer__contact-item">
+                            <i class="fa-solid fa-location-dot hm-footer__contact-icon" aria-hidden="true"></i>
+                            <span class="hm-footer__address">
+                                <span class="hm-footer__branch">{{ $branch['name'] }} Branch Address:</span>
+                                {{ $branch['address'] }}
+                            </span>
+                        </li>
+                    @endforeach
                 </ul>
             </div>
 

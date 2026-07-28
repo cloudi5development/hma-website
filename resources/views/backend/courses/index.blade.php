@@ -20,11 +20,12 @@
     @include('backend.partials.flash')
 
     <div class="hm-card">
+        @include("backend.partials.table-toolbar", ["placeholder" => "Search course name"])
         <div class="table-responsive">
             <table class="hm-table">
                 <thead>
                     <tr>
-                        <th>Image</th><th>Course</th><th>Category</th><th>Mode</th><th>Level</th><th>Flags</th><th>Status</th><th class="text-end">Actions</th>
+                        <th>Image</th><th>Course</th><th>Category</th><th>Flags</th><th>Status</th><th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -33,12 +34,10 @@
                             <td><span class="tbl-logo"><img src="{{ $course->image_url ?? asset('backend/template/images/actions/product-img.svg') }}" alt=""></span></td>
                             <td class="hm-table__name">{{ $course->name }}</td>
                             <td>{{ $course->category?->name }}<br><span class="hm-table__sub">{{ $course->category?->department?->name }}</span></td>
-                            <td>{{ $course->training_mode }}</td>
-                            <td>{{ $course->skill_level }}</td>
                             <td>
-                                @if ($course->is_popular)          <span class="pill pill--interested pill--tiny">Popular</span> @endif
-                                @if ($course->is_featured)         <span class="pill pill--interested pill--tiny">Featured</span> @endif
-                                @if ($course->is_continue_learning) <span class="pill pill--interested pill--tiny">Continue</span> @endif
+                                <span class="flag-text">
+                                    {{ collect([$course->is_popular ? "Popular" : null, $course->is_featured ? "Featured" : null, $course->is_continue_learning ? "Continue" : null])->filter()->implode(" · ") ?: "—" }}
+                                </span>
                             </td>
                             <td>
                                 <span class="pill pill--tiny {{ $course->is_active ? 'pill--active' : 'pill--inactive' }}">
@@ -57,7 +56,7 @@
                                         <span class="act-ico act-ico--edit" aria-hidden="true"></span>
                                     </a>
                                     <form method="POST" action="{{ route('backend.courses.destroy', $course) }}"
-                                          onsubmit="return confirm('Delete this course?');" class="d-inline">
+                                          data-confirm="Delete this course?" class="d-inline">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn-danger-soft btn-icon" aria-label="Delete">
                                             <span class="act-ico act-ico--delete" aria-hidden="true"></span>
@@ -67,7 +66,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="text-center py-5 hm-table__sub">No courses yet. Add your first one.</td></tr>
+                        <tr><td colspan="6" class="text-center py-5 hm-table__sub">No courses yet. Add your first one.</td></tr>
                     @endforelse
                 </tbody>
             </table>

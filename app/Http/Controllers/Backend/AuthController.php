@@ -3,18 +3,16 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class AuthController extends Controller
 {
-    /**
-     * TEMPORARY credentials. These live here only until the real authentication
-     * module (users table + hashed passwords + roles) is built in Phase 0/1.
-     */
-    private const TEMP_USERNAME = 'admin@gmail.com';
-    private const TEMP_PASSWORD = '12345678';
+    /** Compared against when the email is unknown, to keep both branches' timing similar. */
+    private const DUMMY_HASH = '$2y$12$usesomesillystringfoeueiwerweasdfghjklzxcvbnmqwertyuiopas';
 
     /**
      * Show the admin login screen. Already-authenticated admins skip it.
@@ -29,11 +27,12 @@ class AuthController extends Controller
     }
 
     /**
-     * Verify the submitted credentials and open an admin session.
+     * Verify the submitted credentials against the users table and open an
+     * admin session.
      *
-     * Required-field errors surface as Bootstrap field validation; a wrong
-     * username/password surfaces as a single "invalid credentials" banner, so we
-     * never reveal which of the two was wrong.
+     * Required-field errors surface as field validation; a wrong email/password
+     * — or a deactivated account — surfaces as one banner, so we never reveal
+     * which of the two was wrong, nor whether the address exists.
      */
     public function authenticate(Request $request): RedirectResponse
     {
@@ -42,19 +41,24 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $ok = hash_equals(self::TEMP_USERNAME, $data['username'])
-            && hash_equals(self::TEMP_PASSWORD, $data['password']);
+        $user = User::where('email', $data['username'])->first();
 
-        if (! $ok) {
+        $valid = Hash::check($data['password'], $user->password ?? self::DUMMY_HASH);
+
+        if (! $user || ! $valid || ! $user->is_active) {
             return back()
                 ->withInput($request->only('username'))
                 ->with('login_error', 'Invalid username or password.');
         }
 
+        $user->forceFill(['last_login_at' => now()])->save();
+
         // Fresh session ID on privilege change — standard fixation defence.
         $request->session()->regenerate();
         $request->session()->put('admin_logged_in', true);
-        $request->session()->put('admin_email', $data['username']);
+        $request->session()->put('admin_id', $user->id);
+        $request->session()->put('admin_name', $user->name);
+        $request->session()->put('admin_email', $user->email);
 
         return redirect()->intended(route('backend.dashboard'));
     }
@@ -64,7 +68,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request): RedirectResponse
     {
-        $request->session()->forget(['admin_logged_in', 'admin_email']);
+        $request->session()->forget(['admin_logged_in', 'admin_id', 'admin_name', 'admin_email']);
         $request->session()->regenerate();
 
         return redirect()->route('backend.auth.login');

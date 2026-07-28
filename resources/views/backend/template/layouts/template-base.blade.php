@@ -40,6 +40,9 @@
         </div>
     </div>
 
+    {{-- Toasts + confirm dialog. Before @stack so its @push lands in the stack. --}}
+    @include('backend.partials.feedback')
+
     @include('backend.template.layouts.common-js')
     @stack('scripts')
 </body>

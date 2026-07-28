@@ -69,7 +69,7 @@
     {{-- ============================== HERO BANNER ==============================
          Compact welcome banner. The cream background + 3D illustration + feature
          circles are the template's banner-right.png; only the left copy is overlaid. --}}
-    <section class="dash-hero">
+    {{-- <section class="dash-hero">
         <div class="dash-hero__content">
             <span class="dash-hero__badge">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v4c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-4"/></svg>
@@ -90,7 +90,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </a>
         </div>
-    </section>
+    </section> --}}
 
     {{-- ============================== KPI ROW ============================== --}}
     <div class="row g-3 mb-3">
@@ -102,7 +102,7 @@
                         <span class="kpi-card__icon">{!! $ic($k['icon']) !!}</span>
                     </div>
                     <div class="kpi-card__num">{{ $k['num'] }}</div>
-                    <div class="kpi-card__trend">&uarr; {{ $k['trend'] }} <span>from last month</span></div>
+                    <div class="kpi-card__trend">{{ $k['trend'] }}</div>
 
                 </div>
             </div>
@@ -112,23 +112,31 @@
     {{-- ============================== CHARTS ============================== --}}
     <div class="row g-3 mb-3">
         <div class="col-12 col-xl-8">
-            <div class="hm-card h-100">
+            <div class="hm-card h-100 analytics-card">
                 <div class="hm-card__head">
-                    <h2 class="hm-card__title">Enquiries Overview</h2>
-                    <span class="hm-card__link">This year</span>
+                    <div>
+                        <h2 class="hm-card__title">Enquiries Overview</h2>
+                        <p class="analytics-card__sub">Enquiry analytics</p>
+                    </div>
+                    <span class="hm-card__link">{{ now()->year }}</span>
                 </div>
                 <div class="hm-card__body">
                     <svg class="linechart" viewBox="0 0 720 300" preserveAspectRatio="none" role="img" aria-label="Enquiries over the year">
                         <defs>
+                            <pattern id="enquiryDots" width="7" height="7" patternUnits="userSpaceOnUse">
+                                <circle cx="1.5" cy="1.5" r="1" fill="#C8CDD9" opacity=".48"/>
+                            </pattern>
                             <linearGradient id="gNew" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0" stop-color="#D8A64D" stop-opacity=".22"/>
-                                <stop offset="1" stop-color="#D8A64D" stop-opacity="0"/>
+                                <stop offset="0" stop-color="#FF747A" stop-opacity=".10"/>
+                                <stop offset="1" stop-color="#FF747A" stop-opacity="0"/>
                             </linearGradient>
                             <linearGradient id="gConv" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0" stop-color="#6E5AA6" stop-opacity=".18"/>
-                                <stop offset="1" stop-color="#6E5AA6" stop-opacity="0"/>
+                                <stop offset="0" stop-color="#6F8FFF" stop-opacity=".10"/>
+                                <stop offset="1" stop-color="#6F8FFF" stop-opacity="0"/>
                             </linearGradient>
                         </defs>
+
+                        <rect class="linechart__dots" x="45" y="22" width="655" height="244" rx="18" fill="url(#enquiryDots)"/>
 
                         {{-- gridlines + y labels (auto-scaled to the data) --}}
                         @foreach ([0, 0.25, 0.5, 0.75, 1] as $frac)
@@ -140,12 +148,12 @@
                         {{-- areas + lines --}}
                         <path d="{{ $smooth($newVals, true) }}"  fill="url(#gNew)"  stroke="none"/>
                         <path d="{{ $smooth($conVals, true) }}" fill="url(#gConv)" stroke="none"/>
-                        <path d="{{ $smooth($newVals) }}"  fill="none" stroke="#D8A64D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="{{ $smooth($conVals) }}" fill="none" stroke="#6E5AA6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="{{ $smooth($newVals) }}"  fill="none" stroke="#FF747A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="{{ $smooth($conVals) }}" fill="none" stroke="#6F8FFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
 
                         {{-- points --}}
                         @foreach ($newVals as $i => $v)
-                            <circle cx="{{ round($plotX($i), 1) }}" cy="{{ round($plotY($v), 1) }}" r="3.4" fill="#fff" stroke="#D8A64D" stroke-width="2"/>
+                            <circle cx="{{ round($plotX($i), 1) }}" cy="{{ round($plotY($v), 1) }}" r="3.4" fill="#fff" stroke="#FF747A" stroke-width="2"/>
                         @endforeach
 
                         {{-- x labels --}}
@@ -155,26 +163,29 @@
                     </svg>
 
                     <ul class="chart-legend">
-                        <li><span class="line" style="background:#D8A64D"></span> New Enquiries</li>
-                        <li><span class="line" style="background:#6E5AA6"></span> Converted Enquiries</li>
+                        <li><span class="line" style="background:#FF747A"></span> New Enquiries</li>
+                        <li><span class="line" style="background:#6F8FFF"></span> Converted Enquiries</li>
                     </ul>
                 </div>
             </div>
         </div>
 
         <div class="col-12 col-xl-4">
-            <div class="hm-card h-100">
+            <div class="hm-card h-100 donut-card">
                 <div class="hm-card__head">
-                    <h2 class="hm-card__title">Enquiries by Type</h2>
+                    <div>
+                        <p class="donut-card__period">All time</p>
+                        <h2 class="hm-card__title">Enquiries by Type</h2>
+                    </div>
                 </div>
                 <div class="hm-card__body">
                     <div class="donut-wrap">
-                        <div class="donut" style="background: conic-gradient(#C89B3C 0 {{ $coursePct }}%, #6E5AA6 {{ $coursePct }}% 100%);">
-                            <div class="donut__center"><b>{{ number_format($stats['total']) }}</b><span>Total</span></div>
+                        <div class="donut" style="background: conic-gradient(#FF8278 0 {{ $coursePct }}%, #7664C7 {{ $coursePct }}% 100%);">
+                            <div class="donut__center"><span>Total enquiries</span><b>{{ number_format($stats['total']) }}</b></div>
                         </div>
                         <ul class="donut-legend">
-                            <li><span class="dot" style="background:#C89B3C"></span> Course <b>{{ $coursePct }}%</b></li>
-                            <li><span class="dot" style="background:#6E5AA6"></span> Contact <b>{{ $contactPct }}%</b></li>
+                            <li><span class="dot" style="background:#FF8278"></span> Course <b>{{ $coursePct }}%</b></li>
+                            <li><span class="dot" style="background:#7664C7"></span> Contact <b>{{ $contactPct }}%</b></li>
                         </ul>
                     </div>
                 </div>
@@ -185,7 +196,7 @@
     {{-- ===================== RECENT ENQUIRIES + ACTIVITY ===================== --}}
     <div class="row g-3">
         <div class="col-12 col-xl-8">
-            <div class="hm-card h-100">
+            <div class="hm-card recent-enquiries-card">
                 <div class="hm-card__head">
                     <h2 class="hm-card__title">Recent Enquiries</h2>
                     <a href="#" class="hm-card__link">View all</a>
@@ -194,11 +205,11 @@
                     <table class="hm-table">
                         <thead>
                             <tr>
-                                <th>Enquirer</th><th>Interest</th><th>Type</th><th>Status</th><th>When</th>
+                                <th>Enquirer</th><th>Interest</th><th>Type</th><th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($recent as $r)
+                            @foreach ($recent->take(4) as $r)
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center">
@@ -212,7 +223,6 @@
                                     <td>{{ $r['course'] }}</td>
                                     <td>{{ $r['type'] }}</td>
                                     <td><span class="pill pill--{{ $r['status'] }}">{{ ucfirst($r['status']) }}</span></td>
-                                    <td class="hm-table__sub">{{ $r['time'] }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -222,9 +232,10 @@
         </div>
 
         <div class="col-12 col-xl-4">
-            <div class="hm-card h-100">
+            <div class="hm-card content-overview-card">
                 <div class="hm-card__head">
-                    <h2 class="hm-card__title">Recent Activity</h2>
+                    <h2 class="hm-card__title">Content Overview</h2>
+                    <span class="content-overview-card__badge">Website</span>
                 </div>
                 <div class="hm-card__body">
                     <ul class="feed">
@@ -246,6 +257,17 @@
                             </li>
                         @endforelse
                     </ul>
+                    <table class="content-overview-table">
+                        <thead><tr><th>Content</th><th>Total</th></tr></thead>
+                        <tbody>
+                            @foreach ($chips as $chip)
+                                <tr>
+                                    <td><span class="content-overview-table__icon">{!! $ic($chip['icon']) !!}</span><span>{{ $chip['label'] }}</span></td>
+                                    <td><span class="content-overview-table__count">{{ number_format($chip['num']) }}</span></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

@@ -153,6 +153,7 @@
             </a>
             <ul class="app-nav__sub">
                 <li><a class="app-nav__sublink {{ request()->routeIs('backend.settings.general') ? 'is-active' : '' }}" href="{{ route('backend.settings.general') }}">{!! $ic('general') !!}<span>General</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.settings.logo') ? 'is-active' : '' }}" href="{{ route('backend.settings.logo') }}">{!! $ic('general') !!}<span>Logo</span></a></li>
                 <li><a class="app-nav__sublink {{ request()->routeIs('backend.settings.contact') ? 'is-active' : '' }}" href="{{ route('backend.settings.contact') }}">{!! $ic('contact') !!}<span>Contact</span></a></li>
                 <li><a class="app-nav__sublink {{ request()->routeIs('backend.settings.social') ? 'is-active' : '' }}" href="{{ route('backend.settings.social') }}">{!! $ic('social') !!}<span>Social Media</span></a></li>
                 <li><a class="app-nav__sublink {{ request()->routeIs('backend.settings.email') ? 'is-active' : '' }}" href="{{ route('backend.settings.email') }}">{!! $ic('email') !!}<span>Email / SMTP</span></a></li>
@@ -160,19 +161,23 @@
             </ul>
             <div class="app-nav__flyout">
                 <div class="app-nav__flyout-title">Settings</div>
-                <a href="{{ route('backend.settings.general') }}">General</a><a href="{{ route('backend.settings.contact') }}">Contact</a><a href="{{ route('backend.settings.social') }}">Social Media</a>
+                <a href="{{ route('backend.settings.general') }}">General</a><a href="{{ route('backend.settings.logo') }}">Logo</a><a href="{{ route('backend.settings.contact') }}">Contact</a><a href="{{ route('backend.settings.social') }}">Social Media</a>
                 <a href="{{ route('backend.settings.email') }}">Email / SMTP</a><a href="{{ route('backend.settings.seo') }}">SEO Defaults</a>
             </div>
         </div>
 
         <div class="app-nav__item">
-            <a class="app-nav__link" href="#">{!! $ic('seo') !!}<span class="app-nav__label">SEO</span></a>
-            <div class="app-nav__flyout"><div class="app-nav__flyout-title">SEO</div></div>
+            <a class="app-nav__link {{ request()->routeIs('backend.seo-pages.*') ? 'is-active' : '' }}"
+               href="{{ route('backend.seo-pages.index') }}">{!! $ic('seo') !!}<span class="app-nav__label">SEO</span></a>
+            <div class="app-nav__flyout"><div class="app-nav__flyout-title">SEO</div>
+                <a href="{{ route('backend.seo-pages.index') }}">Page SEO</a></div>
         </div>
 
         <div class="app-nav__item">
-            <a class="app-nav__link" href="#">{!! $ic('users') !!}<span class="app-nav__label">Users</span></a>
-            <div class="app-nav__flyout"><div class="app-nav__flyout-title">Users</div></div>
+            <a class="app-nav__link {{ request()->routeIs('backend.users.*') ? 'is-active' : '' }}"
+               href="{{ route('backend.users.index') }}">{!! $ic('users') !!}<span class="app-nav__label">Users</span></a>
+            <div class="app-nav__flyout"><div class="app-nav__flyout-title">Users</div>
+                <a href="{{ route('backend.users.index') }}">All Users</a></div>
         </div>
 
     </nav>

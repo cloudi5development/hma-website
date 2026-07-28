@@ -17,19 +17,14 @@
         </a>
     </div>
 
-    @if (session('success'))
-        <div class="alert-hm alert-hm--success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            {{ session('success') }}
-        </div>
-    @endif
 
     <div class="hm-card">
+        @include("backend.partials.table-toolbar", ["placeholder" => "Search blog title"])
         <div class="table-responsive">
             <table class="hm-table">
                 <thead>
                     <tr>
-                        <th>Cover</th><th>Title</th><th>Category</th><th>Date</th><th>Shows On</th><th>Order</th><th>Status</th><th class="text-end">Actions</th>
+                        <th>Cover</th><th>Title</th><th>Category</th><th>Date</th><th>Shows On</th><th>Status</th><th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,10 +35,10 @@
                             <td>{{ $blog->category }}</td>
                             <td>{{ $blog->display_date }}</td>
                             <td>
-                                @if ($blog->show_home) <span class="pill pill--interested pill--tiny">Home</span> @endif
-                                @if ($blog->is_latest) <span class="pill pill--interested pill--tiny">Latest</span> @endif
+                                <span class="flag-text">
+                                    {{ collect([$blog->show_home ? "Home" : null, $blog->is_latest ? "Latest" : null])->filter()->implode(" · ") ?: "—" }}
+                                </span>
                             </td>
-                            <td>{{ $blog->sort_order }}</td>
                             <td>
                                 <span class="pill pill--tiny {{ $blog->is_active ? 'pill--active' : 'pill--inactive' }}">
                                     {{ $blog->is_active ? 'Active' : 'Hidden' }}
@@ -55,7 +50,7 @@
                                         <span class="act-ico act-ico--edit" aria-hidden="true"></span>
                                     </a>
                                     <form method="POST" action="{{ route('backend.blogs.destroy', $blog) }}"
-                                          onsubmit="return confirm('Delete this blog post?');" class="d-inline">
+                                          data-confirm="Delete this blog post?" class="d-inline">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn-danger-soft btn-icon" aria-label="Delete">
                                             <span class="act-ico act-ico--delete" aria-hidden="true"></span>
@@ -65,7 +60,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="text-center py-5 hm-table__sub">No blog posts yet. Add your first one.</td></tr>
+                        <tr><td colspan="7" class="text-center py-5 hm-table__sub">No blog posts yet. Add your first one.</td></tr>
                     @endforelse
                 </tbody>
             </table>

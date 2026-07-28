@@ -17,19 +17,14 @@
         </a>
     </div>
 
-    @if (session('success'))
-        <div class="alert-hm alert-hm--success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            {{ session('success') }}
-        </div>
-    @endif
 
     <div class="hm-card">
+        @include("backend.partials.table-toolbar", ["placeholder" => "Search counter label"])
         <div class="table-responsive">
             <table class="hm-table">
                 <thead>
                     <tr>
-                        <th>Value</th><th>Label</th><th>Order</th><th>Visible On</th><th>Status</th><th class="text-end">Actions</th>
+                        <th>Value</th><th>Label</th><th>Visible On</th><th>Status</th><th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -37,11 +32,10 @@
                         <tr>
                             <td class="hm-table__name">{{ $counter->number }}</td>
                             <td>{{ $counter->label }}</td>
-                            <td>{{ $counter->sort_order }}</td>
                             <td>
-                                @if ($counter->show_home)         <span class="pill pill--interested pill--tiny">Home</span> @endif
-                                @if ($counter->show_about)        <span class="pill pill--interested pill--tiny">About</span> @endif
-                                @if ($counter->show_testimonials) <span class="pill pill--interested pill--tiny">Testimonials</span> @endif
+                                <span class="flag-text">
+                                    {{ collect([$counter->show_home ? "Home" : null, $counter->show_about ? "About" : null, $counter->show_testimonials ? "Testimonials" : null])->filter()->implode(" · ") ?: "—" }}
+                                </span>
                             </td>
                             <td>
                                 <span class="pill pill--tiny {{ $counter->is_active ? 'pill--active' : 'pill--inactive' }}">
@@ -54,7 +48,7 @@
                                         <span class="act-ico act-ico--edit" aria-hidden="true"></span>
                                     </a>
                                     <form method="POST" action="{{ route('backend.counters.destroy', $counter) }}"
-                                          onsubmit="return confirm('Delete this counter?');" class="d-inline">
+                                          data-confirm="Delete this counter?" class="d-inline">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn-danger-soft btn-icon" aria-label="Delete">
                                             <span class="act-ico act-ico--delete" aria-hidden="true"></span>
@@ -64,7 +58,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-center py-5 hm-table__sub">No counters yet. Add your first one.</td></tr>
+                        <tr><td colspan="5" class="text-center py-5 hm-table__sub">No counters yet. Add your first one.</td></tr>
                     @endforelse
                 </tbody>
             </table>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\SuccessStoryRequest;
 use App\Models\SuccessStory;
@@ -11,9 +12,13 @@ use Illuminate\View\View;
 
 class SuccessStoryController extends Controller
 {
+    use HandlesTableQuery;
+
     public function index(): View
     {
-        $stories = SuccessStory::orderBy('sort_order')->orderBy('id')->paginate(10);
+        $stories = $this->applyTableFilters(SuccessStory::query(), ['name', 'role', 'salary'])
+            ->orderBy('sort_order')->orderBy('id')
+            ->paginate($this->perPage())->withQueryString();
 
         return view('backend.success-stories.index', compact('stories'));
     }

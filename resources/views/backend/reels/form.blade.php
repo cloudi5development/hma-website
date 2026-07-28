@@ -21,12 +21,14 @@
         @csrf
         @if ($editing) @method('PUT') @endif
 
-        <div class="row g-3">
-            <div class="col-12 col-lg-8">
-                <div class="hm-card">
-                    <div class="hm-card__body">
+        {{-- One container for the whole form --}}
+        <div class="hm-card mb-3">
+            <div class="hm-card__body">
 
-                        <div class="form-row">
+                {{-- Row 1 — title + active toggle --}}
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="title">Title</label>
                             <input type="text" id="title" name="title"
                                    class="form-control-hm @error('title') is-invalid @enderror"
@@ -34,25 +36,44 @@
                             <p class="form-hint">A short description of the reel (used for accessibility and the hover label).</p>
                             @error('title') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
-
-                        <div class="form-row">
-                            <label class="form-label" for="video">Reel Video</label>
-                            <div class="d-flex align-items-start gap-3 mb-2">
-                                <span class="tbl-logo" style="width:64px;height:96px;background:#000">
-                                    <video id="videoPreview" src="{{ $editing ? $reel->video_url : '' }}"
-                                           muted playsinline
-                                           style="width:100%;height:100%;object-fit:cover;{{ $editing ? '' : 'display:none' }}"></video>
-                                </span>
-                                <div>
-                                    <input type="file" id="video" name="video" accept="video/*"
-                                           class="form-control-hm @error('video') is-invalid @enderror" style="height:auto;padding:9px 12px">
-                                    <p class="form-hint">MP4 / WebM / MOV · max 40 MB · a <strong>portrait (9:16)</strong> clip works best. It <strong>autoplays (muted) right in the card</strong> — no cover needed.</p>
-                                </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
+                            <label class="form-label">Status</label>
+                            <div class="d-flex align-items-center" style="height:48px">
+                                <label class="switch">
+                                    <input type="hidden" name="is_active" value="0">
+                                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', $reel->is_active ?? true) ? 'checked' : '' }}>
+                                    <span class="switch__track"></span>
+                                    <span class="switch__label">Active</span>
+                                </label>
                             </div>
-                            @error('video') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
+                    </div>
+                </div>
 
-                        <div class="form-row">
+                {{-- Row 2 — video --}}
+                <div class="form-row mt-4">
+                    <label class="form-label" for="video">Reel Video</label>
+                    <div class="d-flex align-items-start gap-3 flex-wrap">
+                        <span class="tbl-logo" style="width:64px;height:96px;background:#000">
+                            <video id="videoPreview" src="{{ $editing ? $reel->video_url : '' }}"
+                                   muted playsinline
+                                   style="width:100%;height:100%;object-fit:cover;{{ $editing ? '' : 'display:none' }}"></video>
+                        </span>
+                        <div>
+                            <input type="file" id="video" name="video" accept="video/*"
+                                   class="form-control-hm @error('video') is-invalid @enderror" style="height:auto;padding:9px 12px">
+                            <p class="form-hint">MP4 / WebM / MOV · max 40 MB · a <strong>portrait (9:16)</strong> clip works best. It <strong>autoplays (muted) right in the card</strong> — no cover needed.</p>
+                        </div>
+                    </div>
+                    @error('video') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Row 3 — instagram link + display order --}}
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="instagram_url">Instagram Link <span class="form-hint" style="display:inline">(optional)</span></label>
                             <input type="url" id="instagram_url" name="instagram_url"
                                    class="form-control-hm @error('instagram_url') is-invalid @enderror"
@@ -61,22 +82,9 @@
                             <p class="form-hint">Optional — if set, clicking the card opens the full reel on Instagram.</p>
                             @error('instagram_url') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
-
                     </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-lg-4">
-                <div class="hm-card">
-                    <div class="hm-card__head"><h2 class="hm-card__title">Status</h2></div>
-                    <div class="hm-card__body">
-                        <label class="switch">
-                            <input type="hidden" name="is_active" value="0">
-                            <input type="checkbox" name="is_active" value="1" {{ old('is_active', $reel->is_active ?? true) ? 'checked' : '' }}>
-                            <span class="switch__track"></span>
-                            <span class="switch__label">Active (visible on site)</span>
-                        </label>
-                        <div class="form-row mt-3" style="margin-bottom:0">
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="sort_order">Display Order</label>
                             <input type="number" id="sort_order" name="sort_order" min="0"
                                    class="form-control-hm @error('sort_order') is-invalid @enderror"
@@ -86,10 +94,10 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
-
-        <div class="mt-3 d-flex gap-2">
+        <div class="d-flex gap-2">
             <button type="submit" class="btn-brand">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                 {{ $editing ? 'Save Changes' : 'Add Reel' }}

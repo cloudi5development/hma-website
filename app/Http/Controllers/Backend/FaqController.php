@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\FaqRequest;
 use App\Models\Faq;
@@ -10,9 +11,13 @@ use Illuminate\View\View;
 
 class FaqController extends Controller
 {
+    use HandlesTableQuery;
+
     public function index(): View
     {
-        $faqs = Faq::orderBy('sort_order')->orderBy('id')->paginate(10);
+        $faqs = $this->applyTableFilters(Faq::query(), ['question', 'answer'])
+            ->orderBy('sort_order')->orderBy('id')
+            ->paginate($this->perPage())->withQueryString();
 
         return view('backend.faqs.index', compact('faqs'));
     }

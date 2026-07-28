@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\CounterRequest;
 use App\Models\Counter;
@@ -10,9 +11,13 @@ use Illuminate\View\View;
 
 class CounterController extends Controller
 {
+    use HandlesTableQuery;
+
     public function index(): View
     {
-        $counters = Counter::orderBy('sort_order')->orderBy('id')->paginate(10);
+        $counters = $this->applyTableFilters(Counter::query(), ['label', 'number'])
+            ->orderBy('sort_order')->orderBy('id')
+            ->paginate($this->perPage())->withQueryString();
 
         return view('backend.counters.index', compact('counters'));
     }

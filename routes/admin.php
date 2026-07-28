@@ -15,9 +15,11 @@ use App\Http\Controllers\Backend\HeroController;
 use App\Http\Controllers\Backend\NotificationController;
 use App\Http\Controllers\Backend\PartnerController;
 use App\Http\Controllers\Backend\ReelController;
+use App\Http\Controllers\Backend\SeoPageController;
 use App\Http\Controllers\Backend\SettingController;
 use App\Http\Controllers\Backend\SuccessStoryController;
 use App\Http\Controllers\Backend\TestimonialController;
+use App\Http\Controllers\Backend\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -73,10 +75,16 @@ Route::prefix('admin')->name('backend.')->group(function () {
         // Blog posts (listing + details + home Latest Blog)
         Route::resource('blogs', BlogController::class)->except(['show']);
 
+        // System → Users (admin logins) and per-page SEO
+        Route::resource("users", UserController::class)->except(["show"]);
+        Route::resource("seo-pages", SeoPageController::class)->except(["show"])->parameters(["seo-pages" => "seo_page"]);
+
         // System → Settings (General / Contact / Social / Email / SEO)
         Route::prefix('settings')->name('settings.')->group(function () {
             Route::get('general', [SettingController::class, 'general'])->name('general');
             Route::put('general', [SettingController::class, 'updateGeneral'])->name('general.update');
+            Route::get('logo', [SettingController::class, 'logo'])->name('logo');
+            Route::put('logo', [SettingController::class, 'updateLogo'])->name('logo.update');
             Route::get('contact', [SettingController::class, 'contact'])->name('contact');
             Route::put('contact', [SettingController::class, 'updateContact'])->name('contact.update');
             Route::get('social', [SettingController::class, 'social'])->name('social');

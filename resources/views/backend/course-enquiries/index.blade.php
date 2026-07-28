@@ -23,12 +23,6 @@
         </div>
     </div>
 
-    @if (session('success'))
-        <div class="alert-hm alert-hm--success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            {{ session('success') }}
-        </div>
-    @endif
 
     {{-- Filters --}}
     <div class="hm-card mb-3">
@@ -36,19 +30,6 @@
             <form method="GET" class="row g-2 align-items-end">
                 @if ($course) <input type="hidden" name="course" value="{{ $course->id }}"> @endif
                 <div class="col-12 col-md-4">
-                    <label class="form-label" for="q">Search</label>
-                    <input type="text" id="q" name="q" value="{{ request('q') }}" class="form-control-hm" placeholder="Name, email, mobile or course">
-                </div>
-                <div class="col-6 col-md-3">
-                    <label class="form-label" for="status">Status</label>
-                    <select id="status" name="status" class="form-control-hm">
-                        <option value="">All</option>
-                        @foreach ($statuses as $s)
-                            <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>{{ $s }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-6 col-md-3">
                     <label class="form-label" for="date">Date</label>
                     <input type="date" id="date" name="date" value="{{ request('date') }}" class="form-control-hm">
                 </div>
@@ -61,6 +42,10 @@
     </div>
 
     <div class="hm-card">
+        @include("backend.partials.table-toolbar", [
+            "placeholder" => "Search name, email, mobile or course",
+            "statuses"    => collect($statuses)->mapWithKeys(fn ($s) => [$s => $s])->all(),
+        ])
         <div class="table-responsive">
             <table class="hm-table">
                 <thead>
@@ -76,7 +61,10 @@
                             <td>{{ $enquiry->name }}</td>
                             <td><a href="mailto:{{ $enquiry->email }}" class="hm-table__sub">{{ $enquiry->email }}</a></td>
                             <td>{{ $enquiry->phone }}</td>
-                            <td>{{ $enquiry->created_at->format('d M Y, g:i a') }}</td>
+                            <td class="hm-table__date">
+                                {{ $enquiry->created_at->format('d M Y') }}
+                                <span class="hm-table__sub">{{ $enquiry->created_at->format('g:i a') }}</span>
+                            </td>
                             <td>
                                 <form method="POST" action="{{ route('backend.course-enquiries.status', $enquiry) }}" class="d-inline">
                                     @csrf @method('PATCH')
@@ -94,7 +82,7 @@
                                         <span class="act-ico act-ico--view" aria-hidden="true"></span>
                                     </a>
                                     <form method="POST" action="{{ route('backend.course-enquiries.destroy', $enquiry) }}"
-                                          onsubmit="return confirm('Delete this enquiry?');" class="d-inline">
+                                          data-confirm="Delete this enquiry?" class="d-inline">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn-danger-soft btn-icon" aria-label="Delete">
                                             <span class="act-ico act-ico--delete" aria-hidden="true"></span>

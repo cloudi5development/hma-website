@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\PartnerRequest;
 use App\Models\Partner;
@@ -11,9 +12,13 @@ use Illuminate\View\View;
 
 class PartnerController extends Controller
 {
+    use HandlesTableQuery;
+
     public function index(): View
     {
-        $partners = Partner::orderBy('sort_order')->orderBy('id')->paginate(10);
+        $partners = $this->applyTableFilters(Partner::query(), ['name'])
+            ->orderBy('sort_order')->orderBy('id')
+            ->paginate($this->perPage())->withQueryString();
 
         return view('backend.partners.index', compact('partners'));
     }

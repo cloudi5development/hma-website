@@ -42,39 +42,31 @@
                             <span class="hm-contact__label-text">Let's Connect</span>
                         </span>
                         <h2 class="hm-contact__title" id="hmContactTitle">Let's Start Your Career Journey Together</h2>
-                        <p class="hm-contact__desc">
-                            Have questions about our programs or career support? Fill out the form and our
-                            team will get back to you within 24 hours.
-                        </p>
 
                         <h3 class="hm-contact__subtitle">Office Information</h3>
                         <ul class="hm-contact__list">
-                            <li class="hm-contact__item">
-                                <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/heroicons_map-pin.png') }}" alt=""></span>
-                                <div class="hm-contact__item-body">
-                                    <div class="hm-contact__item-title">Chennai Branch :</div>
-                                    <p class="hm-contact__item-text">No 22 / 97, KGEYES VEDA RANGA NIVAS 4th Floor, 4th Avenue, Ashok Nagar, Chennai – 33</p>
-                                </div>
-                            </li>
-                            <li class="hm-contact__item">
-                                <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/heroicons_map-pin.png') }}" alt=""></span>
-                                <div class="hm-contact__item-body">
-                                    <div class="hm-contact__item-title">Coimbatore Branch :</div>
-                                    <p class="hm-contact__item-text">339, Chinnasamy Naidu Rd, Siddhapudur, Balasundaram Layout, B.K.R Nagar, Coimbatore, Tamil Nadu 641044</p>
-                                </div>
-                            </li>
+                            {{-- One entry per branch, in the order they are listed in Settings. --}}
+                            @foreach ($contact['branches'] as $branch)
+                                <li class="hm-contact__item">
+                                    <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/heroicons_map-pin.png') }}" alt=""></span>
+                                    <div class="hm-contact__item-body">
+                                        <div class="hm-contact__item-title">{{ $branch['name'] }} Branch :</div>
+                                        <p class="hm-contact__item-text">{{ $branch['address'] }}</p>
+                                    </div>
+                                </li>
+                            @endforeach
                             <li class="hm-contact__item">
                                 <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/proicons_call.png') }}" alt=""></span>
                                 <div class="hm-contact__item-body">
                                     <div class="hm-contact__item-title">Phone Number :</div>
-                                    <p class="hm-contact__item-text"><a href="tel:+917824094044">+91 78240 94044</a></p>
+                                    <p class="hm-contact__item-text"><a href="{{ $contact['phone_href'] }}">{{ $contact['phone'] }}</a></p>
                                 </div>
                             </li>
                             <li class="hm-contact__item">
                                 <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/heroicons-outline_mail.png') }}" alt=""></span>
                                 <div class="hm-contact__item-body">
                                     <div class="hm-contact__item-title">Email :</div>
-                                    <p class="hm-contact__item-text"><a href="mailto:info@hiremindsacademy.com">info@hiremindsacademy.com</a></p>
+                                    <p class="hm-contact__item-text"><a href="{{ $contact['email_href'] }}">{{ $contact['email'] }}</a></p>
                                 </div>
                             </li>
                         </ul>
@@ -118,20 +110,6 @@
                                     <option>General Enquiry</option>
                                 </select>
                                 <div class="invalid-feedback">Please choose an option.</div>
-                            </div>
-
-                            <div class="hm-field">
-                                <label class="hm-field__label" for="cfInterest">Area of interest</label>
-                                <select class="form-select hm-input hm-select" id="cfInterest" name="interest" required>
-                                    <option value="" disabled selected hidden>Select the interest</option>
-                                    <option>Data Analytics</option>
-                                    <option>Full Stack Development</option>
-                                    <option>HR Training</option>
-                                    <option>Digital Marketing</option>
-                                    <option>UI/UX Design</option>
-                                    <option>AI &amp; Machine Learning</option>
-                                </select>
-                                <div class="invalid-feedback">Please choose an area of interest.</div>
                             </div>
 
                             <div class="hm-field">

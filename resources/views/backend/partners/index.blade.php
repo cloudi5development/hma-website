@@ -17,19 +17,14 @@
         </a>
     </div>
 
-    @if (session('success'))
-        <div class="alert-hm alert-hm--success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            {{ session('success') }}
-        </div>
-    @endif
 
     <div class="hm-card">
+        @include("backend.partials.table-toolbar", ["placeholder" => "Search partner name"])
         <div class="table-responsive">
             <table class="hm-table">
                 <thead>
                     <tr>
-                        <th>Logo</th><th>Name</th><th>Order</th><th>Visible On</th><th>Status</th><th class="text-end">Actions</th>
+                        <th>Logo</th><th>Name</th><th>Visible On</th><th>Status</th><th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -37,11 +32,10 @@
                         <tr>
                             <td><span class="tbl-logo"><img src="{{ $partner->logo_url }}" alt="{{ $partner->name }}"></span></td>
                             <td class="hm-table__name">{{ $partner->name }}</td>
-                            <td>{{ $partner->sort_order }}</td>
                             <td>
-                                @if ($partner->show_home)         <span class="pill pill--interested pill--tiny">Home</span> @endif
-                                @if ($partner->show_about)        <span class="pill pill--interested pill--tiny">About</span> @endif
-                                @if ($partner->show_testimonials) <span class="pill pill--interested pill--tiny">Testimonials</span> @endif
+                                <span class="flag-text">
+                                    {{ collect([$partner->show_home ? "Home" : null, $partner->show_about ? "About" : null, $partner->show_testimonials ? "Testimonials" : null])->filter()->implode(" · ") ?: "—" }}
+                                </span>
                             </td>
                             <td>
                                 <span class="pill pill--tiny {{ $partner->is_active ? 'pill--active' : 'pill--inactive' }}">
@@ -54,7 +48,7 @@
                                         <span class="act-ico act-ico--edit" aria-hidden="true"></span>
                                     </a>
                                     <form method="POST" action="{{ route('backend.partners.destroy', $partner) }}"
-                                          onsubmit="return confirm('Delete this partner?');" class="d-inline">
+                                          data-confirm="Delete this partner?" class="d-inline">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn-danger-soft btn-icon" aria-label="Delete">
                                             <span class="act-ico act-ico--delete" aria-hidden="true"></span>
@@ -64,7 +58,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-center py-5 hm-table__sub">No partners yet. Add your first one.</td></tr>
+                        <tr><td colspan="5" class="text-center py-5 hm-table__sub">No partners yet. Add your first one.</td></tr>
                     @endforelse
                 </tbody>
             </table>

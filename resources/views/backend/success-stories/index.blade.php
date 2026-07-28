@@ -17,19 +17,14 @@
         </a>
     </div>
 
-    @if (session('success'))
-        <div class="alert-hm alert-hm--success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            {{ session('success') }}
-        </div>
-    @endif
 
     <div class="hm-card">
+        @include("backend.partials.table-toolbar", ["placeholder" => "Search student name"])
         <div class="table-responsive">
             <table class="hm-table">
                 <thead>
                     <tr>
-                        <th>Photo</th><th>Name</th><th>Role</th><th>Package</th><th>Tone</th><th>Order</th><th>Status</th><th class="text-end">Actions</th>
+                        <th>Photo</th><th>Name</th><th>Role</th><th>Package</th><th>Tone</th><th>Status</th><th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,7 +35,6 @@
                             <td>{{ $story->role }}</td>
                             <td>₹{{ $story->salary }} LPA</td>
                             <td><span class="pill pill--tiny pill--interested">{{ ucfirst($story->tone) }}</span></td>
-                            <td>{{ $story->sort_order }}</td>
                             <td>
                                 <span class="pill pill--tiny {{ $story->is_active ? 'pill--active' : 'pill--inactive' }}">
                                     {{ $story->is_active ? 'Active' : 'Hidden' }}
@@ -52,7 +46,7 @@
                                         <span class="act-ico act-ico--edit" aria-hidden="true"></span>
                                     </a>
                                     <form method="POST" action="{{ route('backend.success-stories.destroy', $story) }}"
-                                          onsubmit="return confirm('Delete this success story?');" class="d-inline">
+                                          data-confirm="Delete this success story?" class="d-inline">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn-danger-soft btn-icon" aria-label="Delete">
                                             <span class="act-ico act-ico--delete" aria-hidden="true"></span>
@@ -62,7 +56,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="text-center py-5 hm-table__sub">No success stories yet. Add your first one.</td></tr>
+                        <tr><td colspan="7" class="text-center py-5 hm-table__sub">No success stories yet. Add your first one.</td></tr>
                     @endforelse
                 </tbody>
             </table>

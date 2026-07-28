@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Exports\ArrayExport;
+use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\ContactEnquiry;
@@ -17,9 +18,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ContactEnquiryController extends Controller
 {
+    use HandlesTableQuery;
+
     public function index(Request $request): View
     {
-        $enquiries = $this->filtered($request)->paginate(10)->withQueryString();
+        $enquiries = $this->filtered($request)->paginate($this->perPage())->withQueryString();
 
         return view('backend.contact-enquiries.index', [
             'enquiries' => $enquiries,
