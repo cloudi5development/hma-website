@@ -33,7 +33,12 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Off on purpose. With this true, Laravel registers a GET
+            // storage/{path} route that serves from app/private — and it wins
+            // over our own, so every /storage/<upload> URL 404s whenever the
+            // public/storage symlink is missing. Nothing here is served over
+            // HTTP; admin uploads go to the "public" disk below.
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

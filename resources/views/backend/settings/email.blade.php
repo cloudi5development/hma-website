@@ -118,7 +118,6 @@
             <div class="hm-card">
                 <div class="hm-card__head"><h2 class="hm-card__title">Send a Test Email</h2></div>
                 <div class="hm-card__body">
-                    <p class="form-hint" style="margin-bottom:10px">Save your settings first, then send a test to confirm they work. Failures show the exact SMTP error.</p>
                     <form method="POST" action="{{ route('backend.settings.email.test') }}">
                         @csrf
                         <div class="form-row">

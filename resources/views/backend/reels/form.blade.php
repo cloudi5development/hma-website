@@ -64,7 +64,26 @@
                         <div>
                             <input type="file" id="video" name="video" accept="video/*"
                                    class="form-control-hm @error('video') is-invalid @enderror" style="height:auto;padding:9px 12px">
-                            <p class="form-hint">MP4 / WebM / MOV · max 40 MB · a <strong>portrait (9:16)</strong> clip works best. It <strong>autoplays (muted) right in the card</strong> — no cover needed.</p>
+                            @php
+                                $maxKb   = \App\Support\UploadLimit::cap(\App\Http\Requests\Backend\ReelRequest::PREFERRED_MAX_KB);
+                                $capped  = \App\Support\UploadLimit::isServerCapped(\App\Http\Requests\Backend\ReelRequest::PREFERRED_MAX_KB);
+                            @endphp
+                            <p class="form-hint">
+                                MP4 / WebM / MOV · max {{ \App\Support\UploadLimit::label($maxKb) }} ·
+                                a <strong>portrait (9:16)</strong> clip works best.
+                                It <strong>autoplays (muted) right in the card</strong> — no cover needed.
+                            </p>
+                            @if ($capped)
+                                {{-- The server, not the app, is what caps this — say so up front
+                                     rather than letting the upload fail after the wait. --}}
+                                <p class="form-hint" style="color:#A6741F">
+                                    This server currently accepts uploads up to
+                                    <strong>{{ \App\Support\UploadLimit::label($maxKb) }}</strong>
+                                    ({{ ini_get('upload_max_filesize') }} upload_max_filesize /
+                                    {{ ini_get('post_max_size') }} post_max_size).
+                                    Ask your host to raise both to 40M for full-length reels.
+                                </p>
+                            @endif
                         </div>
                     </div>
                     @error('video') <p class="form-error">{{ $message }}</p> @enderror
