@@ -297,3 +297,12 @@
     .hm-contact__deco--star,
     .hm-contact__submit::before { animation: none !important; }
 }
+
+/* Small screens — same heading scale as the other sections (see home.css). */
+@media (max-width: 767.98px) {
+    .hm-contact__title {
+        margin-bottom: 12px;
+        font-size: clamp(1.15rem, 4.6vw, 1.6rem);
+        line-height: 1.25;
+    }
+}

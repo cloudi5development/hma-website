@@ -516,6 +516,37 @@
     .hm-cd-btn { justify-content: center; }
 }
 
+/* Phones — Course Highlight and Continue Your Learning both run two per row
+   (col-6 in the markup). The course card's own compact rules come from
+   courses.css, which this page also loads; the highlight card is sized here. */
+@media (max-width: 575.98px) {
+    .hm-cd-hls,
+    .hm-cd-related .hm-crs-grid {
+        --bs-gutter-x: 12px;
+        --bs-gutter-y: 12px;
+    }
+
+    /* Title beside a 34px icon does not fit at ~46vw, so the card stacks:
+       icon on top, title beneath. */
+    .hm-cd-hl {
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 10px;
+        padding: 14px;
+        border-radius: 12px;
+    }
+
+    .hm-cd-hl__icon {
+        order: -1;             /* icon first once stacked */
+        width: 30px;
+        height: 30px;
+        font-size: 12.5px;
+    }
+
+    .hm-cd-hl__title { font-size: clamp(11.5px, 3.4vw, 13.5px); }
+}
+
 /* Reduced motion — hold the aurora and every travel, keep the states. */
 @media (prefers-reduced-motion: reduce) {
     #main-content::before { animation: none; }

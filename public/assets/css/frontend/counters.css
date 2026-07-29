@@ -48,6 +48,37 @@
 .hm-counters.is-in .hm-stat--d3 { transition-delay: .25s; }
 .hm-counters.is-in .hm-stat--d4 { transition-delay: .35s; }
 
+/* ---- Mobile — keep all four figures on a single row ----
+   Overrides Bootstrap's .col-6 (2-up) from the markup, so the row reads as one
+   compact strip of stats instead of a 2x2 block. ---- */
+@media (max-width: 575.98px) {
+    .hm-counters {
+        flex-wrap: nowrap;
+        margin-top: 40px;
+        padding-top: 30px;
+        row-gap: 0;
+    }
+
+    .hm-counters .hm-stat {
+        flex: 1 1 0;
+        width: auto;
+        max-width: none;
+        min-width: 0;
+        padding-inline: 5px;
+    }
+
+    .hm-stat__num {
+        font-size: clamp(17px, 5.6vw, 26px);
+    }
+
+    .hm-stat__label {
+        margin-top: 5px;
+        font-size: clamp(9px, 2.8vw, 12px);
+        line-height: 1.35;
+        overflow-wrap: break-word;
+    }
+}
+
 /* ---- Reduced motion — show the figures, skip the travel ---- */
 @media (prefers-reduced-motion: reduce) {
     .hm-counters .hm-stat {

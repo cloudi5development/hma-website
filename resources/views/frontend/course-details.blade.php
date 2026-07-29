@@ -200,7 +200,8 @@
 
                 <div class="row hm-cd-hls">
                     @foreach ($highlights as $highlight)
-                        <div class="col-12 col-md-6 col-xl-3">
+                        {{-- col-6 from the smallest screen up: two per row on phones. --}}
+                        <div class="col-6 col-xl-3">
                             <div class="hm-cd-hl hm-cd-hl--{{ $highlight['tone'] }}">
                                 <h3 class="hm-cd-hl__title">{{ $highlight['title'] }}</h3>
                                 <span class="hm-cd-hl__icon" aria-hidden="true">
@@ -251,7 +252,10 @@
 
                 <div class="row hm-crs-grid">
                     @foreach ($relatedCourses as $i => $related)
-                        <div class="col-12 col-md-6 col-xl-3">
+                        {{-- col-6 from the smallest screen up. The row carries
+                             .hm-crs-grid, so the card gets the same compact phone
+                             treatment as the courses listing (courses.css). --}}
+                        <div class="col-6 col-xl-3">
                             @include('frontend.partials.course-card', ['course' => $related, 'i' => $i])
                         </div>
                     @endforeach

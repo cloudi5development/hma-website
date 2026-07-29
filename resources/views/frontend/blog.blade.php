@@ -95,7 +95,9 @@
             <div class="row hm-blog__grid">
                 @forelse ($blogs as $blog)
                     @php $blogUrl = route('frontend.blog-details', $blog->slug); @endphp
-                    <div class="col-12 col-md-6">
+                    {{-- col-6 from the smallest screen up: two cards per row on
+                         phones too (blog.css tightens the card to suit). --}}
+                    <div class="col-6">
                         <article class="hm-blog-card hm-blog-card--{{ $tints[$loop->index % count($tints)] }}">
 
                             <div class="hm-blog-card__media">

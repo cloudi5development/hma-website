@@ -143,14 +143,15 @@ class AppServiceProvider extends ServiceProvider
             $view->with('reels', Reel::active()->get());
         });
 
-        // FAQ accordion — home / about / contact. Capped at Faq::MAX. When a
-        // caller already provides $faqs (the course-details page passes that
-        // course's own FAQs), the composer stands down and keeps them.
+        // FAQ accordion — home / about / contact. Every active question flagged
+        // for the current page is shown; the module is not capped. When a caller
+        // already provides $faqs (the course-details page passes that course's
+        // own FAQs), the composer stands down and keeps them.
         View::composer('frontend.partials.faq', function ($view) {
             if (array_key_exists('faqs', $view->getData())) {
                 return;
             }
-            $view->with('faqs', Faq::active()->forPage($this->currentPage())->take(Faq::MAX)->get());
+            $view->with('faqs', Faq::active()->forPage($this->currentPage())->get());
         });
     }
 

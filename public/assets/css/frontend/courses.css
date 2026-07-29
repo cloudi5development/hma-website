@@ -229,6 +229,15 @@
 /* ---- Responsive (lifted out of home.css's shared course blocks) ---- */
 @media (max-width: 575.98px) {
     .hm-course__title { font-size: 20px; }
+
+    .hm-course__meta-row {
+        flex-wrap: wrap;
+        gap: 8px 14px;
+    }
+
+    .hm-course__meta-item { white-space: normal; }
+
+    .hm-course__btn { min-height: 48px; }
 }
 
 /* Reduced motion — hold the button shimmer still */
@@ -665,6 +674,13 @@
     .hm-crs-hero { border-radius: 20px; }
     .hm-crs-hero__title { font-size: 24px; }
 
+    /* Two cards per row (col-6 in the markup) — with each card down to ~46vw,
+       the tighter gutter keeps them from touching. */
+    .hm-crs-grid {
+        --bs-gutter-x: 14px;
+        --bs-gutter-y: 14px;
+    }
+
     .hm-crs-bar { flex-wrap: wrap; }
     .hm-crs-bar__filters { width: 100%; flex-wrap: wrap; }
     .hm-crs-bar__search { flex: 1 1 200px; width: auto; }
@@ -675,6 +691,72 @@
         min-width: 0;
         width: min(420px, calc(100vw - 40px));
     }
+}
+
+/* Phones — both grids that use this card run two per row (.hm-crs-grid on the
+   courses listing, .hm-courses__grid in the home page's Popular Courses), so
+   the card steps down a size inside them. Scoped rather than global: any other
+   caller rendering it full width still gets the full-size card.
+   These sit after the shared card's own @media block on purpose — the extra
+   class also outranks it, so both order and specificity agree. */
+@media (max-width: 575.98px) {
+    /* Same as the other pages on phones: the banner keeps its heading, the
+       introductory paragraph is dropped. */
+    .hm-crs-hero__desc { display: none; }
+
+    /* The home grid ships with Bootstrap's g-4 (24px); tighten it to match. */
+    .hm-courses__grid { --bs-gutter-x: 12px; --bs-gutter-y: 12px; }
+
+    :is(.hm-crs-grid, .hm-courses__grid) .hm-course { padding: 10px; border-radius: 12px; }
+
+    :is(.hm-crs-grid, .hm-courses__grid) .hm-course__thumb { margin-bottom: 10px; border-radius: 8px; }
+
+    /* Badge + rating stay on ONE line. At 320px the column is ~141px wide, so a
+       long category ("Cyber Security") used to push the rating onto a second
+       line and make that card taller than its neighbour. The badge shrinks and
+       ellipses instead; the rating never shrinks. */
+    :is(.hm-crs-grid, .hm-courses__grid) .hm-course__tags {
+        flex-wrap: nowrap;
+        gap: 6px;
+        margin-bottom: 8px;
+    }
+
+    :is(.hm-crs-grid, .hm-courses__grid) .hm-course__badge {
+        min-width: 0;
+        padding: 3px 8px;
+        font-size: clamp(9px, 2.8vw, 10.5px);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    :is(.hm-crs-grid, .hm-courses__grid) .hm-course__rating {
+        flex: 0 0 auto;
+        gap: 4px;
+        font-size: clamp(10px, 3vw, 11.5px);
+    }
+    :is(.hm-crs-grid, .hm-courses__grid) .hm-course__rating img { width: 12px; height: 12px; }
+
+    :is(.hm-crs-grid, .hm-courses__grid) .hm-course__title {
+        margin-bottom: 10px;
+        font-size: clamp(12px, 3.6vw, 14px);
+    }
+
+    :is(.hm-crs-grid, .hm-courses__grid) .hm-course__meta { margin-bottom: 12px; gap: 6px; }
+    :is(.hm-crs-grid, .hm-courses__grid) .hm-course__meta-row { gap: 6px 10px; }
+    :is(.hm-crs-grid, .hm-courses__grid) .hm-course__meta-item { gap: 4px; font-size: clamp(9.5px, 2.9vw, 11px); }
+    :is(.hm-crs-grid, .hm-courses__grid) .hm-course__meta-item img { width: 11px; height: 11px; }
+    :is(.hm-crs-grid, .hm-courses__grid) .hm-course__meta-item i { width: 11px; font-size: 10px; }
+
+    /* "View Course" on one line, arrow pinned to the right. */
+    :is(.hm-crs-grid, .hm-courses__grid) .hm-course__btn {
+        gap: 6px;
+        min-height: 40px;
+        padding: 10px clamp(8px, 3vw, 14px);
+        font-size: clamp(11px, 3.2vw, 12.5px);
+    }
+    :is(.hm-crs-grid, .hm-courses__grid) .hm-course__btn span { white-space: nowrap; }
+    :is(.hm-crs-grid, .hm-courses__grid) .hm-course__btn i { flex: 0 0 auto; font-size: .72rem; }
 }
 
 /* Reduced motion — hold the aurora and the float, keep every state. */

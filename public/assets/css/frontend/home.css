@@ -619,19 +619,62 @@
 @media (max-width: 575.98px) {
     .hm-hero {
         min-height: 0;
-        padding: 140px 0 70px;
+        margin-top: 0;
+        padding: 88px 0 56px;
     }
 
     .hm-hero__title {
-        font-size: clamp(2rem, 8vw, 2.6rem);
+        margin-bottom: 16px;
+        font-size: clamp(2rem, 9vw, 2.55rem);
+        line-height: 1.15;
+    }
+
+    .hm-hero__left { transform: none; }
+
+    .hm-hero__text {
+        margin-bottom: 24px;
+        font-size: .98rem;
+        line-height: 1.65;
+    }
+
+    /* Keep both CTAs on one row and let them split the width evenly. */
+    .hm-hero__actions {
+        flex-wrap: nowrap;
+        gap: 10px;
     }
 
     .hm-hero__actions .hm-btn {
-        flex: 1 1 100%;
+        flex: 1 1 0;
+        width: auto;
+        min-width: 0;
+        height: 48px;
+        border-radius: 12px;
+    }
+
+    .hm-hero__actions .hm-btn__label {
+        font-size: clamp(11px, 3.2vw, 14px);
+        white-space: nowrap;
+    }
+
+    .hm-hero__actions .hm-btn--primary {
+        padding: 0 6px 0 14px;
+    }
+
+    .hm-hero__actions .hm-btn--primary .hm-btn__label {
+        gap: 8px;
+    }
+
+    .hm-hero__actions .hm-btn i {
+        flex: 0 0 auto;
+        width: 30px;
+        height: 30px;
+        font-size: .68rem;
+        border-radius: 8px;
     }
 
     .hm-hero__visual {
-        max-width: 340px;
+        width: min(100%, 350px);
+        margin-top: 40px;
     }
 
     .hm-card {
@@ -657,7 +700,7 @@
 
     .hm-card--enroll {
         right: -2%;
-        top: 2%;
+        top: -6%;
     }
 
     .hm-scroll {
@@ -669,6 +712,28 @@
     .hm-scroll__arrow {
         width: 32px;
         height: 32px;
+    }
+
+    .hm-badge__text,
+    .hm-cats__label-text,
+    .hm-courses__label-text,
+    .hm-stories__label-text,
+    .hm-blogs__label-text {
+        font-size: 11px;
+        letter-spacing: .12em;
+    }
+
+    /* Section headings are sized in the small-screen heading scale at the very
+       end of this file — each section's own .hm-*__title rule is declared
+       further down, so a rule here would be overridden by it. */
+
+    .hm-cats__desc,
+    .hm-courses__desc,
+    .hm-stories__desc,
+    .hm-blogs__desc,
+    .hm-events__desc {
+        font-size: .94rem;
+        line-height: 1.65;
     }
 }
 
@@ -957,7 +1022,8 @@
 
 .hm-about__title {
     font-weight: 700;
-    width: 543px;
+    width: auto;
+    max-width: 543px;
     font-size: 34px;
 
 }
@@ -1001,7 +1067,8 @@
         text-align: center;
     }
 
-    .hm-about__text {
+    .hm-about__title {
+        width: auto;
         margin-inline: auto;
     }
 
@@ -1010,8 +1077,25 @@
         margin-inline: auto;
     }
 
+    /* Compact CTA — sits inline (centred by .hm-about__right) instead of
+       stretching the full column width. */
     .hm-about__btn {
-        width: 100%;
+        width: auto;
+        min-height: 46px;
+        padding: 0 6px 0 18px;
+        border-radius: 12px;
+    }
+
+    .hm-about__btn .hm-btn__label {
+        gap: 10px;
+        font-size: 14px;
+    }
+
+    .hm-about__btn i {
+        width: 32px;
+        height: 32px;
+        font-size: .7rem;
+        border-radius: 8px;
     }
 
     .hm-about__deco--circle {
@@ -1284,10 +1368,26 @@
         padding: 56px 0;
     }
 
+    /* Two cards per row (col-6) — at ~46vw the name and the blob no longer fit
+       side by side, so the card stacks: icon on top, name and count beneath. */
+    .hm-cats__grid { --bs-gutter-x: 12px; --bs-gutter-y: 12px; }
+
     .hm-cat {
-        height: 108px;
-        padding: 0 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 10px;
+        height: auto;
+        min-height: 108px;
+        padding: 16px 14px;
+        border-radius: 16px;
     }
+
+    .hm-cat__icon { width: 42px; height: 42px; }
+    .hm-cat__icon-glyph { width: 21px; height: 21px; }
+
+    .hm-cat__name  { margin-bottom: 3px; font-size: clamp(12.5px, 3.7vw, 15px); line-height: 1.3; }
+    .hm-cat__count { font-size: clamp(10.5px, 3vw, 12.5px); }
 }
 
 /* Reduced motion — hold the rotating background still */
@@ -2012,18 +2112,40 @@
 }
 @media (max-width: 575.98px) {
     .hm-blogs { padding: 56px 0; }
+
+    /* Two cards per row (col-6) — each is ~46vw, so the thumb goes on top and
+       everything steps down a size. */
+    .hm-blogs__grid { --bs-gutter-x: 12px; --bs-gutter-y: 12px; }
+
     .hm-blog {
         flex-direction: column;
         height: auto;
         /* The row's align-items: center would centre on the horizontal axis once
            the direction flips, shrinking the body to its content width. */
         align-items: stretch;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 18px;
     }
     .hm-blog__thumb {
         flex: none;
         width: 100%;
-        height: 170px;
+        height: clamp(96px, 30vw, 130px);
+        border-radius: 12px;
     }
+
+    .hm-blog__title { margin-bottom: 6px; font-size: clamp(12.5px, 3.7vw, 15px); }
+    .hm-blog__desc  { font-size: clamp(10.5px, 3.1vw, 12.5px); line-height: 1.55; }
+
+    /* Date over button — they will not sit side by side in a half-width card. */
+    .hm-blog__meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 10px;
+    }
+    .hm-blog__date { gap: 5px; font-size: clamp(10px, 3vw, 11.5px); }
+    .hm-blog__more { padding: 7px 12px; font-size: 11px; }
 }
 
 /* Reduced motion — hold the rotating background still */
@@ -2372,15 +2494,115 @@
     }
     .hm-why__content { padding: 34px 30px; }
     .hm-why__figure  { flex-basis: 38%; }
+
+    /* ---- GSAP takes over: same pinned deck as desktop ----
+       The swipe slider above is the fallback (no JS / reduced motion). Once the
+       timeline is driving, the row of snap-slides becomes one stage with every
+       card stacked on it — card in front sharp, the rest peeking out blurred
+       behind — and the section pins while they hand off, exactly as on desktop.
+       Only the stage size differs, because it has to fit a phone. */
+    .hm-why__pin.is-gsap {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        /* svh = the viewport WITH the address bar showing. Plain vh is the
+           bar-hidden height, so the stage grew taller than the screen the moment
+           the bar reappeared and the pinned card was cut off at the bottom. */
+        height: 100vh;
+        height: 100svh;
+        padding: 84px 12px 24px;
+    }
+
+    .hm-why__stack.is-gsap {
+        display: block;
+        position: relative;
+        width: 100%;
+        max-width: 560px;
+        /* Short enough that the cards behind — which sit up to 12% of this
+           height lower — still fit inside the pinned viewport rather than being
+           clipped by the pin. */
+        height: min(430px, calc(100vh - 200px));
+        height: min(430px, calc(100svh - 200px));
+        margin: 0 auto;
+        gap: 0;
+        padding-bottom: 0;
+        overflow: visible;
+        overflow-x: visible;
+        scroll-snap-type: none;
+    }
+
+    .hm-why__stack.is-gsap .hm-why__card {
+        position: absolute;
+        inset: 0;
+        flex: none;
+        width: 100%;
+        height: 100%;
+        border-radius: 26px;
+        scroll-snap-align: none;
+        will-change: transform, opacity, filter;
+    }
 }
 
 @media (max-width: 575.98px) {
     .hm-why__card { height: auto; }
     .hm-why__card-inner,
     .hm-why__card.is-reverse .hm-why__card-inner { flex-direction: column; }
-    .hm-why__figure   { flex-basis: auto; height: 240px; padding-top: 0; }
-    .hm-why__content  { padding: 28px 24px 12px; }
-    .hm-why__card-desc { max-width: none; }
+    .hm-why__content  { padding: 22px 20px 10px; }
+
+    /* ---- Person framing -------------------------------------------------
+       The four cut-outs are composed very differently — person-1 is a full
+       body portrait (686x1200), 2 and 4 are wide half-body shots (1024x559),
+       3 is square — so one shared object-fit renders them at four different
+       sizes. Instead each card states how tall its image should render
+       (--hm-fig-h) and how far to pull it up (--hm-fig-y), chosen so the
+       head-to-hands part of every photo fills this box exactly. The box clips
+       the rest, and the bottom edge is feathered so the cut is not a hard
+       line. Result: same framing and same head size on every card. */
+    .hm-why__figure {
+        flex-basis: auto;
+        height: 220px;
+        padding-top: 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        overflow: hidden;
+        -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
+        mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
+    }
+
+    .hm-why__figure img {
+        flex: 0 0 auto;
+        width: auto;
+        max-width: none;
+        height: var(--hm-fig-h);
+        margin-top: var(--hm-fig-y);
+        object-fit: contain;
+    }
+
+    .hm-why__card--orange .hm-why__figure { --hm-fig-h: 306px; --hm-fig-y: -32px; }  /* person-1 — full body */
+    .hm-why__card--blue   .hm-why__figure { --hm-fig-h: 214px; --hm-fig-y:  -9px; }  /* person-2 — wide */
+    .hm-why__card--yellow .hm-why__figure { --hm-fig-h: 192px; --hm-fig-y:   2px; }  /* person-3 — square */
+    .hm-why__card--pink   .hm-why__figure { --hm-fig-h: 261px; --hm-fig-y:  -8px; }  /* person-4 — wide */
+
+    /* The paragraph is dropped on phones — the title and the three pills carry
+       the message, and the card stays short enough to read without scrolling. */
+    .hm-why__card-desc { display: none; }
+
+    .hm-why__card-title { margin-bottom: 14px; font-size: 19px; }
+    .hm-why__pills { gap: 9px; }
+    .hm-why__pill  { padding: 9px 18px; font-size: 12.5px; }
+
+    /* Inside the pinned deck the card has a fixed height, so the copy sits at
+       the top and the person is pushed to the foot of the card. The figure may
+       shrink (flex-basis, not a fixed height) so a short phone tightens the
+       photo instead of pushing it past the bottom of the card. */
+    .hm-why__stack.is-gsap .hm-why__content { padding: 20px 18px 6px; }
+    .hm-why__stack.is-gsap .hm-why__figure  {
+        margin-top: auto;
+        flex: 0 1 190px;
+        height: auto;
+        min-height: 120px;
+    }
 }
 
 /* ---- Reduced motion — hold the rotating background + card float still --- */
@@ -2682,4 +2904,44 @@
 
 @media (prefers-reduced-motion: reduce) {
     #main-content::before { animation: none; }
+}
+
+/* ==========================================================================
+   SMALL-SCREEN HEADING SCALE
+   One size for every section heading on phones and small tablets. It lives at
+   the end of the file on purpose: each section declares its own 34px
+   .hm-*__title further up, and those rules carry the same specificity, so an
+   earlier media query would lose to them.
+   ========================================================================== */
+@media (max-width: 767.98px) {
+    .hm-about__title,
+    .hm-cats__title,
+    .hm-courses__title,
+    .hm-stories__title,
+    .hm-blogs__title,
+    .hm-why__title,
+    .hm-events__title {
+        margin-bottom: 12px;
+        font-size: clamp(1.15rem, 4.6vw, 1.6rem);
+        line-height: 1.25;
+    }
+}
+
+/* Phone view keeps each section focused on its heading and primary action.
+   Card details remain visible; only the introductory paragraphs are hidden. */
+@media (max-width: 575.98px) {
+    .hm-hero__text,
+    .hm-about__text,
+    .hm-cats__desc,
+    .hm-courses__desc,
+    .hm-stories__desc,
+    .hm-blogs__desc,
+    .hm-why__lead,
+    .hm-events__desc,
+    .hm-tst__desc,
+    .hm-faq__desc,
+    .hm-contact__desc,
+    .hm-reels__desc {
+        display: none;
+    }
 }

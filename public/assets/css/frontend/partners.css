@@ -90,7 +90,6 @@
 /* Mobile — smaller logos, single row, still smooth */
 @media (max-width: 575.98px) {
     .hm-partners { padding: 56px 0; }
-    .hm-partners__title { font-size: 26px; margin-bottom: 30px; }
     .hm-partners__item  { margin: 0 18px; }
     .hm-partners__logo  { height: 30px; }
 }
@@ -98,4 +97,13 @@
 /* Respect reduced-motion — hold the logos still */
 @media (prefers-reduced-motion: reduce) {
     .hm-partners__track { animation: none; }
+}
+
+/* Small screens — same heading scale as the other sections (see home.css). */
+@media (max-width: 767.98px) {
+    .hm-partners__title {
+        margin-bottom: 30px;
+        font-size: clamp(1.15rem, 4.6vw, 1.6rem);
+        line-height: 1.25;
+    }
 }

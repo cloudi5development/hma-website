@@ -306,6 +306,21 @@
 .hm-reel-modal__close:hover,
 .hm-reel-modal__close:focus-visible { transform: rotate(90deg); }
 
+/* Mobile — quieter eyebrow / intro (the heading is sized at the end of the file) */
+@media (max-width: 575.98px) {
+    .hm-reels__label-text { font-size: 11px; letter-spacing: .12em; }
+    .hm-reels__desc { font-size: 14px; line-height: 1.7; }
+}
+
 @media (max-width: 480px) {
     .hm-reel-modal__close { top: -8px; right: -8px; }
+}
+
+/* Small screens — same heading scale as the other sections (see home.css). */
+@media (max-width: 767.98px) {
+    .hm-reels__title {
+        margin-bottom: 12px;
+        font-size: clamp(1.15rem, 4.6vw, 1.6rem);
+        line-height: 1.25;
+    }
 }

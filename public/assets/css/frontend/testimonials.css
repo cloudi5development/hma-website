@@ -517,3 +517,12 @@
     .hm-tst-page__banner-img { transition: none; }
     .hm-tst-page__banner:hover .hm-tst-page__banner-img { transform: none; }
 }
+
+/* Small screens — same heading scale as the other sections (see home.css). */
+@media (max-width: 767.98px) {
+    .hm-tst__title {
+        margin-bottom: 16px;
+        font-size: clamp(1.15rem, 4.6vw, 1.6rem);
+        line-height: 1.25;
+    }
+}

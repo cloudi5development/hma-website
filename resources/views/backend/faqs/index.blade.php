@@ -1,39 +1,21 @@
 @extends('backend.template.layouts.template-base')
 
-@php $atMax = $faqs->total() >= \App\Models\Faq::MAX; @endphp
-
 @section('title', 'FAQ')
 @section('page_title', 'FAQ')
-@section('page_sub', 'Accordion shown on the home, about, contact and course pages (max ' . \App\Models\Faq::MAX . ')')
+@section('page_sub', 'Accordion shown on the home, about, contact and course pages')
 
 @section('content')
 
     <div class="page-head">
         <div>
             <h1 class="page-head__title">FAQ</h1>
-            <p class="page-head__sub">{{ $faqs->total() }} of {{ \App\Models\Faq::MAX }} question{{ $faqs->total() === 1 ? '' : 's' }}</p>
+            <p class="page-head__sub">{{ $faqs->total() }} question{{ $faqs->total() === 1 ? '' : 's' }}</p>
         </div>
-        @if ($atMax)
-            <button type="button" class="btn-brand is-disabled" data-faq-max>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                Add FAQ
-            </button>
-        @else
-            <a href="{{ route('backend.faqs.create') }}" class="btn-brand">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                Add FAQ
-            </a>
-        @endif
+        <a href="{{ route('backend.faqs.create') }}" class="btn-brand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Add FAQ
+        </a>
     </div>
-
-
-
-    @if ($atMax)
-        <div class="alert-hm alert-hm--error">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>
-            You've reached the maximum of {{ \App\Models\Faq::MAX }} FAQs. Delete one before adding another.
-        </div>
-    @endif
 
     <div class="hm-card">
         @include("backend.partials.table-toolbar", ["placeholder" => "Search question"])
@@ -82,13 +64,3 @@
     </div>
 
 @endsection
-
-@push('scripts')
-    <script>
-        // At the cap, the Add button pops an alert instead of navigating.
-        var maxBtn = document.querySelector('[data-faq-max]');
-        if (maxBtn) maxBtn.addEventListener('click', function () {
-            window.alert('Maximum {{ \App\Models\Faq::MAX }} FAQs allowed.');
-        });
-    </script>
-@endpush

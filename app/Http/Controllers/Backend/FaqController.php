@@ -22,21 +22,13 @@ class FaqController extends Controller
         return view('backend.faqs.index', compact('faqs'));
     }
 
-    public function create(): RedirectResponse|View
+    public function create(): View
     {
-        if ($redirect = $this->guardMax()) {
-            return $redirect;
-        }
-
         return view('backend.faqs.form', ['faq' => new Faq(['is_active' => true, 'show_home' => true])]);
     }
 
     public function store(FaqRequest $request): RedirectResponse
     {
-        if ($redirect = $this->guardMax()) {
-            return $redirect;
-        }
-
         Faq::create($request->validated());
 
         return redirect()->route('backend.faqs.index')->with('success', 'FAQ added.');
@@ -59,19 +51,5 @@ class FaqController extends Controller
         $faq->delete();
 
         return redirect()->route('backend.faqs.index')->with('success', 'FAQ deleted.');
-    }
-
-    /**
-     * The FAQ section is designed for at most Faq::MAX questions. Block adding a
-     * new one past the cap and bounce back with an error the index popup shows.
-     */
-    private function guardMax(): ?RedirectResponse
-    {
-        if (Faq::count() >= Faq::MAX) {
-            return redirect()->route('backend.faqs.index')
-                ->with('error', 'Maximum ' . Faq::MAX . ' FAQs allowed.');
-        }
-
-        return null;
     }
 }

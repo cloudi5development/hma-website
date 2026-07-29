@@ -550,14 +550,25 @@
                 return;
             }
 
-            // threshold 0.98 — hold the deck together until the cards are
-            // *fully* in view, so the split never starts while they are still
-            // half cut off at the bottom of the screen.
+            // Desktop: threshold 0.98 — hold the deck together until the cards
+            // are *fully* in view, so the split never starts while they are
+            // still half cut off at the bottom of the screen.
+            //
+            // Phones stack the four cards into a column far taller than the
+            // screen, so that ratio is unreachable and the deck would never
+            // open. There the pile sits on the first card, so watch for the top
+            // of the track crossing into the lower third of the viewport
+            // instead — the fan-out then plays exactly as the deck comes level.
+            var phone = window.matchMedia('(max-width: 767.98px)').matches;
+
             new IntersectionObserver(function (entries, obs) {
                 entries.forEach(function (e) {
                     if (e.isIntersecting) { spread(); obs.disconnect(); }
                 });
-            }, { threshold: 0.98 }).observe(track);
+            }, phone
+                ? { threshold: 0, rootMargin: '0px 0px -35% 0px' }
+                : { threshold: 0.98 }
+            ).observe(track);
 
             // Hovering the deck splits it early.
             track.addEventListener('mouseenter', spread);
@@ -579,15 +590,25 @@
 
             var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-            // Mobile / reduced-motion: every chapter is just a stacked card (CSS
+            // Reduced motion / no GSAP: every chapter is just a stacked card (CSS
             // handles it) — nothing to drive.
             if (reduce || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
 
             gsap.registerPlugin(ScrollTrigger);
 
-            /* ---- Desktop / tablet: pinned, scrubbed storytelling ---- */
+            {{-- Mobile browsers resize the viewport when the address bar slides
+                 away, which fires a refresh mid-scroll and makes the pin jump.
+                 Orientation changes still refresh. --}}
+            ScrollTrigger.config({ ignoreMobileResize: true });
+
+            /* ---- Pinned, scrubbed storytelling (every screen size) ---- */
             function initStory() {
+                var small = window.matchMedia('(max-width: 767.98px)').matches;
+
                 grid.classList.add('is-gsap');
+                // The pin needs the class too: on phones it switches the section
+                // from the stacked-card fallback to the pinned single column.
+                pin.classList.add('is-gsap');
 
                 // Depth layers. Index 0 is the sharp photo on top; the four behind
                 // are scattered at alternating, deliberately uneven angles so their
@@ -638,10 +659,17 @@
                     scrollTrigger: {
                         trigger: pin,
                         start: 'top top',
-                        end: '+=3200',
+                        // Phones scroll a shorter distance for the same five
+                        // hand-offs, so the story does not overstay its welcome.
+                        // Function form re-reads on refresh (orientation change).
+                        end: function () {
+                            return '+=' + (window.matchMedia('(max-width: 767.98px)').matches ? 2200 : 3200);
+                        },
                         pin: pin,
                         scrub: 1.5,
-                        anticipatePin: 1,
+                        // Touch scrolling has no momentum to hide, so the early
+                        // pin switch just reads as a jump on phones.
+                        anticipatePin: small ? 0 : 1,
                         invalidateOnRefresh: true,
                         onUpdate: function (self) {
                             // Keep the screen-reader view on the story being told.
@@ -692,13 +720,20 @@
 
                 return function () {
                     grid.classList.remove('is-gsap');
+                    pin.classList.remove('is-gsap');
                     if (tl.scrollTrigger) tl.scrollTrigger.kill();
                     tl.kill();
                     gsap.set(cards.concat(copy), { clearProps: 'all' });
                 };
             }
 
-            gsap.matchMedia().add('(min-width: 768px)', initStory);
+            // Every width — phones get the same storytelling, laid out in one
+            // column (see the mobile .is-gsap rules in about.css). matchMedia is
+            // kept so the timeline is rebuilt when the layout crosses the
+            // breakpoint, which re-measures the pin at the new column widths.
+            var mm = gsap.matchMedia();
+            mm.add('(min-width: 768px)', initStory);
+            mm.add('(max-width: 767.98px)', initStory);
         });
     </script>
 @endpush

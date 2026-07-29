@@ -6,7 +6,7 @@
         <div class="row gy-5">
 
             {{-- Column 1 — Brand --}}
-            <div class="col-lg-3 col-md-6 hm-footer__col hm-footer__brand">
+            <div class="col-12 col-lg-3 col-md-6 hm-footer__col hm-footer__brand">
                 <a href="{{ route('frontend.index') }}" class="hm-footer__logo-link" aria-label="Hire Minds Academy — home">
                     <img src="{{ \App\Models\Setting::image('site_logo', 'assets/images/branding/logo.png') }}" alt="Hire Minds Academy"
                          class="hm-footer__logo" width="160" height="54">
@@ -30,8 +30,10 @@
                 @endif
             </div>
 
-            {{-- Column 2 — Quick Links --}}
-            <div class="col-lg-2 col-md-6 hm-footer__col">
+            {{-- Column 2 — Quick Links.
+                 col-6 so this and "Our Programs" sit side by side on phones
+                 instead of each taking a full-width row. --}}
+            <div class="col-6 col-lg-2 col-md-6 hm-footer__col">
                 <h2 class="hm-footer__heading">Quick Links</h2>
                 <nav class="hm-footer__nav" aria-label="Quick links">
                     <ul class="hm-footer__links">
@@ -44,8 +46,8 @@
                 </nav>
             </div>
 
-            {{-- Column 3 — Our Programs --}}
-            <div class="col-lg-3 col-md-6 hm-footer__col">
+            {{-- Column 3 — Our Programs (pairs with Quick Links on phones) --}}
+            <div class="col-6 col-lg-3 col-md-6 hm-footer__col">
                 <h2 class="hm-footer__heading">Our Programs</h2>
                 <nav class="hm-footer__nav" aria-label="Our programs">
                     <ul class="hm-footer__links">
@@ -58,8 +60,8 @@
                 </nav>
             </div>
 
-            {{-- Column 4 — Contact --}}
-            <div class="col-lg-4 col-md-6 hm-footer__col">
+            {{-- Column 4 — Contact (full width on phones — the addresses are long) --}}
+            <div class="col-12 col-lg-4 col-md-6 hm-footer__col">
                 <h2 class="hm-footer__heading">Contact Us</h2>
                 <ul class="hm-footer__contact">
                     {{-- $contact comes from Settings → Contact via AppServiceProvider. --}}

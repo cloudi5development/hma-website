@@ -13,9 +13,9 @@
 | MUST also load the Bootstrap JS bundle.
 --}}
     @php
-        // Fed by AppServiceProvider's view composer (already capped at Faq::MAX).
-        // Mapped to the exact q/a array shape the accordion markup expects, so the
-        // rendered output is unchanged.
+        // Fed by AppServiceProvider's view composer (every active question for
+        // this page — the module is not capped). Mapped to the exact q/a array
+        // shape the accordion markup expects, so the rendered output is unchanged.
         $faqs = collect($faqs ?? [])->map(fn ($f) => [
             'q' => $f->question,
             'a' => $f->answer,

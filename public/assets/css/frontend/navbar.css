@@ -370,35 +370,147 @@
 
 /* Tablet & below — collapse the mega panel inline inside the mobile menu */
 @media (max-width: 991.98px) {
-    .hm-mega-toggle {
+    /* The item is an inline-flex ROW: label, caret, panel. On desktop that is
+       fine because the panel is absolutely positioned and out of flow — but
+       here it turns static, joins the row as a third item and gets squeezed
+       into a sliver beside the caret. Wrapping the row fixes it: label + caret
+       on line one, panel full width on line two. */
+    .hm-nav-item--mega {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
         width: 100%;
-        justify-content: space-between;
+    }
+
+    .hm-mega-toggle {
+        flex: 1 1 auto;
+        width: auto;
+        justify-content: flex-start;
         padding: 12px 16px;
     }
+
+    /* Caret pushed to the far edge — a big, obvious target for the panel. */
+    .hm-mega-caret {
+        flex: 0 0 auto;
+        margin-left: auto;
+        padding: 12px 14px;
+    }
+
     .hm-mega {
+        flex: 0 0 100%;
         position: static;
+        width: 100%;
+        max-width: none;
         opacity: 1;
         visibility: hidden;
         transform: none;
         pointer-events: auto;
-        max-height: 0;
         padding: 0 12px;
         overflow: hidden;
         background: rgba(255, 255, 255, .05);
         border-radius: 14px;
         box-shadow: none;
-        transition: max-height .3s var(--hm-ease), padding .3s var(--hm-ease);
+        /* 0fr → 1fr animates to the content's real height, so a long category
+           list is never clipped the way a fixed max-height cap clipped it. */
+        display: grid;
+        grid-template-rows: 0fr;
+        transition:
+            grid-template-rows .32s var(--hm-ease),
+            padding .32s var(--hm-ease),
+            visibility .32s;
     }
+
+    .hm-mega > .hm-mega__grid { min-height: 0; overflow: hidden; }
+
     .hm-nav-item--mega.is-open .hm-mega {
         visibility: visible;
-        max-height: 1400px;
+        grid-template-rows: 1fr;
         padding: 12px;
         margin-top: 8px;
     }
+
     .hm-mega__grid { grid-template-columns: 1fr 1fr; gap: 16px; }
     .hm-mega__thumb { display: none; }
     .hm-mega__title { margin-top: 0; color: #fff; font-size: .95rem; }
     .hm-mega__list a { color: rgba(255, 255, 255, .8); }
     .hm-mega__list a:hover,
     .hm-mega__list a.is-featured { color: #F9B11D; }
+}
+
+/* Phone navigation: keep the fixed bar comfortable under device safe areas and
+   make every control a full-width, thumb-friendly target. */
+@media (max-width: 575.98px) {
+    .hm-navbar {
+        top: max(10px, env(safe-area-inset-top));
+        width: calc(100% - 20px);
+        gap: 10px;
+        padding: 8px 10px 8px 14px;
+        border-radius: 22px;
+    }
+
+    .hm-navbar__logo img { height: 38px; }
+
+    .hm-navbar__toggle {
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+    }
+
+    .hm-navbar__menu {
+        top: calc(100% + 8px);
+        max-height: calc(100vh - 82px - env(safe-area-inset-bottom));
+        overflow-y: auto;
+        padding: 12px;
+        border-radius: 18px;
+    }
+
+    .hm-navbar__links a,
+    .hm-mega-toggle {
+        min-height: 46px;
+        display: flex;
+        align-items: center;
+        padding: 12px 14px;
+    }
+
+    .hm-mega-caret {
+        min-width: 46px;
+        min-height: 46px;
+        padding: 10px;
+    }
+
+    .hm-navbar__cta {
+        min-height: 48px;
+        padding: 7px 14px;
+    }
+
+    /* One department per row — two columns of category names are unreadable at
+       this width. Each department reads as its own labelled group. */
+    .hm-mega__grid { grid-template-columns: 1fr; gap: 0; }
+
+    .hm-mega__col + .hm-mega__col {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255, 255, 255, .12);
+    }
+
+    .hm-mega__title {
+        margin-bottom: 4px;
+        font-size: .72rem;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: #F9B11D;
+    }
+
+    /* Thumb-sized rows, and long category names wrap instead of overflowing. */
+    .hm-mega__list a {
+        display: flex;
+        align-items: center;
+        min-height: 40px;
+        padding: 6px 8px;
+        border-radius: 8px;
+        font-size: .9rem;
+        line-height: 1.35;
+    }
+    .hm-mega__list a:hover,
+    .hm-mega__list a:active { padding-left: 8px; background: rgba(255, 255, 255, .06); }
 }

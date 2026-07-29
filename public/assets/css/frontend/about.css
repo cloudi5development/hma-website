@@ -919,48 +919,105 @@
     .hm-story__text { min-height: 260px; }
 }
 
-/* Mobile — no sticky storytelling; every chapter is a normal stacked card */
+/* Mobile — the pinned storytelling runs here too, in a single column: the photo
+   deck on top, the copy beneath it. The JS adds .is-gsap to the pin and the grid
+   once ScrollTrigger is driving; until then (and with no JS at all) the
+   :not(.is-gsap) fallback below renders every chapter as a plain stacked card. */
 @media (max-width: 767.98px) {
-    .hm-story__pin {
+    .hm-story__deco-star-a,
+    .hm-story__deco-star-b,
+    .hm-story__deco-strokes { display: none; }
+
+    /* ---- Fallback: no GSAP (also the pre-init paint) ---- */
+    .hm-story__pin:not(.is-gsap) {
         display: block;
         min-height: 0;
         padding: 56px 0;
     }
 
-    .hm-story__grid { display: block; }
+    .hm-story__grid:not(.is-gsap) { display: block; }
 
-    .hm-story__label { display: inline-flex; margin-bottom: 26px; }
-    .hm-story__blob { display: none; }
+    .hm-story__grid:not(.is-gsap) .hm-story__blob { display: none; }
 
     /* Each article becomes its own little section */
-    .hm-story__chapter {
+    .hm-story__grid:not(.is-gsap) .hm-story__chapter {
         display: block;
         margin-bottom: 54px;
     }
-    .hm-story__chapter:last-of-type { margin-bottom: 0; }
+    .hm-story__grid:not(.is-gsap) .hm-story__chapter:last-of-type { margin-bottom: 0; }
 
-    .hm-story__card {
+    .hm-story__grid:not(.is-gsap) .hm-story__card {
         width: 100%;
         max-width: 100%;
         margin: 0 0 20px;
         aspect-ratio: 4 / 3;
-        /* flat, unrotated cards — neutralise the stack fan and GSAP's transform */
+        /* flat, unrotated cards — neutralise the stack fan */
         transform: none !important;
         filter: none !important;
         opacity: 1 !important;
         box-shadow: 0 16px 36px rgba(42, 29, 20, .18);
     }
 
-    .hm-story__text {
+    .hm-story__grid:not(.is-gsap) .hm-story__text {
         min-height: 0;
         transform: none !important;
         opacity: 1 !important;
         visibility: visible !important;
     }
 
-    .hm-story__deco-star-a,
-    .hm-story__deco-star-b,
-    .hm-story__deco-strokes { display: none; }
+    /* ---- Pinned storytelling, one column ---- */
+    /* svh keeps the stage at the address-bar-showing height, so the pinned
+       column is never taller than the screen when the bar slides back in. */
+    .hm-story__pin.is-gsap { height: 100svh; padding: 40px 0; }
+
+    .hm-story__grid.is-gsap {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        column-gap: 0;
+        justify-items: center;
+    }
+
+    .hm-story__grid.is-gsap .hm-story__label {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: center;
+        align-self: center;
+        margin-bottom: 14px;
+    }
+
+    /* Blob and every photo share row 2; the copy owns row 3. GSAP sets a
+       z-index on the cards, so they always sit above the blob. */
+    .hm-story__grid.is-gsap .hm-story__blob {
+        display: block;
+        grid-column: 1;
+        grid-row: 2;
+        max-width: min(300px, 78vw);
+    }
+
+    /* The pin holds the viewport, so the column has to fit inside it: the photo
+       is capped against the viewport height as well as its width, and the copy
+       is set a little tighter than on desktop. The longest chapter still fits on
+       a 640px-tall phone. */
+    .hm-story__grid.is-gsap .hm-story__card {
+        grid-column: 1;
+        grid-row: 2;
+        width: min(200px, 50vw, 23svh);
+        max-width: none;
+        margin: 0;
+    }
+
+    .hm-story__grid.is-gsap .hm-story__text {
+        grid-column: 1;
+        grid-row: 3;
+        align-self: start;
+        max-width: 100%;
+        min-height: 0;
+        margin-top: 16px;
+        text-align: center;
+    }
+
+    .hm-story__grid.is-gsap .hm-story__title { margin-bottom: 10px; font-size: 18px; }
+    .hm-story__grid.is-gsap .hm-story__desc  { font-size: 12.5px; line-height: 1.7; }
 }
 
 /* ---------------------------- Reduced motion ---------------------------- */
@@ -1176,7 +1233,8 @@
     .hm-purpose { padding: 64px 0; }
     .hm-purpose__lead { font-size: 16px; }
     .hm-purpose__card { padding: 24px; }
-    .hm-purpose__card-text { font-size: 15.5px; text-align: left; }
+    .hm-purpose__card-text {         font-size: 11.5px;
+        text-align: left; }
     .hm-purpose__cards { gap: 18px; }
 
     /* keep the canvas calm on small screens */
@@ -1476,6 +1534,21 @@
     .hm-feat__card--purple { height: 353px; }
 
     .hm-feat__eyes { bottom: 34px; }
+
+    /* ---- Deck state, vertical ----
+       The same pile-then-fan-out as the desktop row, turned 90°: every card
+       starts on top of the purple one and slides down into its own slot as the
+       section arrives. The offsets are % of each card's own height, derived from
+       the column's real geometry — purple 353px, the rest 300px, 14px gaps — so
+       all four centres land on the purple card's centre.
+       (These re-enable the deck that the tablet block above switches off, where
+       the 4-across offsets would have thrown the cards off-screen.) */
+    .hm-feat__track:not(.is-spread) .hm-feat__card { pointer-events: none; }
+
+    .hm-feat__track:not(.is-spread) .hm-feat__card:nth-child(1) { transform: rotate(-8deg);                      z-index: 4; transition-delay: .21s; }
+    .hm-feat__track:not(.is-spread) .hm-feat__card:nth-child(2) { transform: translateY(-113.5%) rotate(7deg);   z-index: 3; transition-delay: .14s; }
+    .hm-feat__track:not(.is-spread) .hm-feat__card:nth-child(3) { transform: translateY(-218.2%) rotate(-14deg); z-index: 2; transition-delay: .07s; }
+    .hm-feat__track:not(.is-spread) .hm-feat__card:nth-child(4) { transform: translateY(-322.8%) rotate(12deg);  z-index: 1; transition-delay: 0s; }
 }
 
 /* ---------------------------- Reduced motion ---------------------------- */
@@ -1759,55 +1832,55 @@
     .hm-appr__chip { height: 48px; line-height: 48px; padding: 0 18px; font-size: 14px; }
 }
 
-/* Mobile — image first, then the pills in a plain 2-column grid */
+/* Mobile — the same constellation as desktop, scaled to the screen: rings,
+   centre photo and six drifting pills, three each side. A phone is nowhere near
+   wide enough for the desktop ±1.95r spread (that needs ~5.2r of width), so the
+   pills are pulled in to a single ±1.35r column per side and their labels wrap
+   to two lines. They then float just over the circle's rim instead of standing
+   clear of it — everything else, orbit included, is exactly as on desktop. */
 @media (max-width: 767.98px) {
     .hm-appr { padding: 64px 0 72px; }
     .hm-appr__lead { font-size: 16px; }
 
+    /* Radius drives the whole composition — photo, rings and pill offsets all
+       derive from it, so this one value scales the constellation. */
     .hm-appr__stage {
-        height: auto;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 30px;
+        --hm-appr-r: min(84px, 23vw);
+        height: calc(var(--hm-appr-r) * 3.3);
+        max-width: 100%;
     }
-
-    /* Rings and absolute placement make no sense once it stacks. */
-    .hm-appr__ring { display: none; }
 
     .hm-appr__figure {
-        position: static;
-        width: min(280px, 76vw);
-        height: min(280px, 76vw);
-        transform: none;
-    }
-    .hm-appr__figure:hover { transform: scale(1.03); }
-
-    .hm-appr__pills {
-        position: static;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        width: 100%;
+        width: calc(var(--hm-appr-r) * 2);
+        height: calc(var(--hm-appr-r) * 2);
     }
 
-    /* margin MUST be reset too — the orbit offsets are margins, and they would
-       otherwise drag each pill out of its grid cell. */
-    .hm-appr__pill {
-        position: static;
-        transform: none;
-        margin: 0;
-        display: flex;
-        justify-content: center;
-    }
+    /* The outer two overrun the screen and are cropped by the section, which is
+       what draws the arcs — same as desktop. */
+    .hm-appr__ring--1 { width: calc(var(--hm-appr-r) * 2.7); height: calc(var(--hm-appr-r) * 2.7); }
+    .hm-appr__ring--2 { width: calc(var(--hm-appr-r) * 3.5); height: calc(var(--hm-appr-r) * 3.5); }
+    .hm-appr__ring--3 { width: calc(var(--hm-appr-r) * 4.4); height: calc(var(--hm-appr-r) * 4.4); }
 
-    .hm-appr__drift { animation: none; }   /* no orbit in a fixed grid */
+    /* Six points of a hexagon rather than two columns: the top pair sits above
+       the circle, the bottom pair below it, and only the middle pair is level
+       with it — so the pills ring the photo instead of stacking down each side.
+       Every centre is 1.5r from the middle (1.125r across / 1.30r up = 1.5r
+       diagonally), which is what keeps them on one orbit. */
+    .hm-appr__pill--lt { margin-left: calc(-1.125 * var(--hm-appr-r)); margin-top: calc(-1.30 * var(--hm-appr-r)); }
+    .hm-appr__pill--lm { margin-left: calc(-1.500 * var(--hm-appr-r)); margin-top: calc( 0.04 * var(--hm-appr-r)); }
+    .hm-appr__pill--lb { margin-left: calc(-1.125 * var(--hm-appr-r)); margin-top: calc( 1.30 * var(--hm-appr-r)); }
+    .hm-appr__pill--rt { margin-left: calc( 1.125 * var(--hm-appr-r)); margin-top: calc(-1.30 * var(--hm-appr-r)); }
+    .hm-appr__pill--rm { margin-left: calc( 1.500 * var(--hm-appr-r)); margin-top: calc( 0.04 * var(--hm-appr-r)); }
+    .hm-appr__pill--rb { margin-left: calc( 1.125 * var(--hm-appr-r)); margin-top: calc( 1.30 * var(--hm-appr-r)); }
 
+    /* Two-line labels keep each pill narrow enough to clear the screen edge. */
     .hm-appr__chip {
         height: auto;
-        line-height: 1.4;
-        padding: 12px 14px;
-        font-size: 13.5px;
+        line-height: 1.3;
+        padding: 8px 10px;
+        max-width: min(90px, 23vw);
+        font-size: 10.5px;
+        font-weight: 500;
         text-align: center;
         white-space: normal;
     }
@@ -1820,6 +1893,41 @@
     .hm-appr__drift { animation: none !important; }
     .hm-appr__figure,
     .hm-appr__chip { transition: none !important; }
+}
+
+/* ==========================================================================
+   SMALL-SCREEN HEADING SCALE
+   The page's section titles are 34px by default, which runs to three or four
+   lines on a phone. Same scale as the home page's headings (see home.css).
+   ========================================================================== */
+@media (max-width: 767.98px) {
+    .hm-purpose__title,
+    .hm-feat__title-main,
+    .hm-appr__title {
+        margin-bottom: 14px;
+        font-size: clamp(1.15rem, 4.6vw, 1.6rem);
+        line-height: 1.25;
+    }
+
+    .hm-story__title { font-size: 20px; }
+}
+
+/* ==========================================================================
+   PHONE VIEW — each section keeps its heading and its content; the
+   introductory paragraphs are dropped, exactly as on the home page.
+   .hm-tst__desc / .hm-faq__desc are the shared partials' intros: the home
+   page hides them from home.css, which does not load here.
+   The Our Story descriptions stay — there they ARE the content.
+   ========================================================================== */
+@media (max-width: 575.98px) {
+    .hm-abt-desc,
+    .hm-purpose__lead,
+    .hm-feat__lead,
+    .hm-appr__lead,
+    .hm-tst__desc,
+    .hm-faq__desc {
+        display: none;
+    }
 }
 
 

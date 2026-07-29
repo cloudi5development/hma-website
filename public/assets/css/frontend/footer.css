@@ -254,6 +254,68 @@
     .hm-footer__legal { justify-content: center; }
 }
 
+/* Phones — the two link columns pair up (col-6 in the markup) while the brand
+   and contact blocks stay full width, and the whole footer steps down a size so
+   it does not run on for two screens. */
+@media (max-width: 575.98px) {
+    .hm-footer {
+        padding: 44px 0 22px;
+        font-size: 14.5px;
+    }
+
+    /* gy-5 is 48px between rows — too airy once everything is stacked. */
+    .hm-footer .row { --bs-gutter-y: 30px; }
+
+    .hm-footer__logo { height: 44px; margin-bottom: 16px; }
+
+    .hm-footer__about {
+        margin-bottom: 18px;
+        font-size: 14px;
+        line-height: 1.65;
+    }
+
+    .hm-footer__socials { gap: 10px; }
+    .hm-footer__social {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        font-size: .92rem;
+    }
+
+    .hm-footer__heading {
+        margin-bottom: 14px;
+        font-size: .8rem;
+        letter-spacing: .1em;
+    }
+
+    .hm-footer__links li { margin-bottom: 9px; }
+    .hm-footer__links a { font-size: 13.5px; line-height: 1.5; }
+
+    .hm-footer__contact-item {
+        gap: 10px;
+        margin-bottom: 14px;
+        font-size: 13.5px;
+    }
+    .hm-footer__contact-icon { width: 16px; font-size: .85rem; }
+
+    .hm-footer__divider { margin: 26px 0; }
+
+    .hm-footer__bottom { gap: 10px; }
+    .hm-footer__copy,
+    .hm-footer__legal a { font-size: 12.5px; }
+    /* "Developed by …" gets its own line rather than breaking mid-sentence. */
+    .hm-footer__dev-line { display: block; }
+
+    /* Smaller and tucked further into the corner, so it stops covering card
+       content on narrow screens. */
+    .hm-scrolltop {
+        right: 14px;
+        bottom: 14px;
+        width: 42px;
+        height: 42px;
+    }
+}
+
 /* ------------------------------ Reduced motion ------------------------------ */
 @media (prefers-reduced-motion: reduce) {
     .hm-footer--reveal .hm-footer__col {

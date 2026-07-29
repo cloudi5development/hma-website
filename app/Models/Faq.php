@@ -23,9 +23,6 @@ class Faq extends Model
         'sort_order'        => 'integer',
     ];
 
-    /** The whole module is capped at this many rows. */
-    public const MAX = 5;
-
     /** FAQ adds a Courses page (course-details); contact still falls back to home. */
     protected function pageColumn(string $page): string
     {

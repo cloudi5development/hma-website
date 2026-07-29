@@ -248,16 +248,21 @@
                     Discover industry-focused programs designed to build practical skills, boost your
                     confidence, and prepare you for successful careers.
                 </p>
-                <a class="hm-cats__seeall hm-anim hm-anim--up hm-anim--d2" href="#">
+                <a class="hm-cats__seeall hm-anim hm-anim--up hm-anim--d2" href="{{ route('frontend.courses') }}">
                     See all <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
                 </a>
             </div>
 
-            {{-- Grid: 4 columns desktop · 2 tablet · 1 mobile --}}
+            {{-- Grid: 4 columns desktop · 2 tablet · 2 mobile --}}
             <div class="row g-4 hm-cats__grid">
                 @foreach ($categories as $i => $cat)
-                    <div class="col-md-6 col-lg-3">
-                        <a class="hm-cat hm-cat--{{ $cat['tone'] }} hm-anim hm-anim--up hm-anim--d{{ ($i % 8) + 1 }}" href="#">
+                    <div class="col-6 col-lg-3">
+                        {{-- ?category=<slug> — the courses page pre-ticks that
+                             filter and shows only its courses (see $preselect in
+                             HomeController@courses). --}}
+                        <a class="hm-cat hm-cat--{{ $cat['tone'] }} hm-anim hm-anim--up hm-anim--d{{ ($i % 8) + 1 }}"
+                           href="{{ $cat['url'] }}"
+                           aria-label="{{ $cat['name'] }} courses">
                             <span class="hm-cat__text">
                                 <span class="hm-cat__name">{{ $cat['name'] }}</span>
                                 <span class="hm-cat__count">{{ $cat['count'] }}</span>
@@ -322,15 +327,15 @@
                     Choose from industry-focused courses designed to build practical skills, boost
                     confidence, and prepare you for today's most in-demand careers.
                 </p>
-                <a class="hm-courses__seeall hm-anim hm-anim--up hm-anim--d2" href="#">
+                <a class="hm-courses__seeall hm-anim hm-anim--up hm-anim--d2" href="{{ route('frontend.courses') }}">
                     See all <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
                 </a>
             </div>
 
-            {{-- Grid: 4 cards desktop · 2 tablet · 1 mobile --}}
-            <div class="row g-4">
+            {{-- Grid: 4 cards desktop · 2 tablet · 2 mobile --}}
+            <div class="row g-4 hm-courses__grid">
                 @foreach ($courses as $i => $course)
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-6 col-lg-3">
                         {{-- Shared with the courses listing page — markup in
                              partials/course-card.blade.php, CSS in courses.css. --}}
                         @include('frontend.partials.course-card', ['course' => $course, 'i' => $i])
@@ -614,10 +619,10 @@
                 </a>
             </div>
 
-            {{-- 2 × 2 grid (2 columns on tablet & desktop, 1 on mobile) --}}
+            {{-- 2 × 2 grid — two columns at every size, phones included --}}
             <div class="row g-4 hm-blogs__grid">
                 @foreach ($blogs as $i => $blog)
-                    <div class="col-md-6">
+                    <div class="col-6">
                         <article class="hm-blog hm-blog--{{ $blog['tone'] }} hm-anim hm-anim--up hm-anim--d{{ ($i % 4) + 1 }}">
                             <div class="hm-blog__thumb">
                                 <img src="{{ $blog['img_url'] }}"
@@ -704,6 +709,12 @@
             if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
             gsap.registerPlugin(ScrollTrigger);
 
+            {{-- Mobile browsers resize the viewport when the address bar slides
+                 away, which fires a ScrollTrigger refresh mid-scroll: the pin
+                 re-measures and the deck visibly jumps. Ignoring that resize is
+                 the documented fix — orientation changes still refresh. --}}
+            ScrollTrigger.config({ ignoreMobileResize: true });
+
             var section = document.querySelector('.hm-why');
             var pin     = section && section.querySelector('.hm-why__pin');
             var stack   = document.getElementById('hmWhyStack');
@@ -714,18 +725,16 @@
 
             var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-            // Slide the brown pills in from the left, one after another.
-            function pillsFromTo(card) {
-                return gsap.fromTo(card.querySelectorAll('.hm-why__pill'),
-                    { xPercent: -45, autoAlpha: 0 },
-                    { xPercent: 0, autoAlpha: 1, duration: .55, ease: 'power3.out', stagger: 0.16, overwrite: 'auto' });
-            }
-
             var mm = gsap.matchMedia();
 
-            /* ---- Desktop: pinned, scrubbed, stacked storytelling ------------- */
-            mm.add('(min-width: 992px)', function () {
+            /* ---- Pinned, scrubbed, stacked storytelling (every screen size) ---
+                 Phones and tablets run the identical timeline; only the stage
+                 size differs, and that is CSS (see .is-gsap under the
+                 max-width: 991.98px block in home.css). --------------------- */
+            function initWhyStack() {
                 if (reduce) { gsap.set(cards, { clearProps: 'all' }); return; }
+
+                var small = window.matchMedia('(max-width: 991.98px)').matches;
 
                 stack.classList.add('is-gsap');
                 pin.classList.add('is-gsap');   // switches the pin to fixed-viewport sizing
@@ -759,11 +768,20 @@
                         {{-- Was +=3000. The timeline lost card 4's exit tween
                              (~1 unit of ~6.2), so the pin no longer needs to hold
                              for it — 2500 keeps the same scroll feel per card and
-                             releases right after card 4 rests. --}}
-                        end: '+=2500',
+                             releases right after card 4 rests. Phones cover the
+                             same four hand-offs in less scroll, so the section
+                             does not hold the screen for too long. --}}
+                        end: function () {
+                            return '+=' + (window.matchMedia('(max-width: 991.98px)').matches ? 1900 : 2500);
+                        },
                         pin: pin,
                         scrub: 1.5,
-                        anticipatePin: 1,
+                        {{-- anticipatePin pre-applies the pin a few pixels early
+                             to hide the flash desktop momentum scrolling can
+                             cause. Touch scrolling has no such momentum, and the
+                             early switch reads as a jump — so phones/tablets go
+                             without it. --}}
+                        anticipatePin: small ? 0 : 1,
                         invalidateOnRefresh: true
                     }
                 });
@@ -783,38 +801,35 @@
                 // (HOLD) before it slides away (MOVE) and the next rises up.
                 var HOLD = 0.55;   // scroll distance a card stays fully shown
                 var MOVE = 1;      // the exit / rise transition
-                var t = 0;
+                var n    = cards.length;
+                var t    = 0;
 
                 pillsIn(cards[0], 0.1);        // card 1 pills reveal while it rests
                 t += HOLD;                      // card 1 fully shown
 
-                // Card 1 → out, card 2 → front, deck shifts forward.
-                toExit(cards[0], t);
-                toSlot(cards[1], 0, t);
-                toSlot(cards[2], 1, t);
-                toSlot(cards[3], 2, t);
-                pillsIn(cards[1], t + 0.35);
-                t += MOVE + HOLD;               // card 2 fully shown
+                // One hand-off per card: the front card leaves, everything under
+                // it moves up a slot, and the new front card's pills slide in.
+                // Written for any number of cards — it used to address cards[3]
+                // directly, so changing the deck would have thrown here and left
+                // the section half-built.
+                for (var i = 0; i < n - 1; i++) {
+                    toExit(cards[i], t);
+                    for (var j = i + 1; j < n; j++) {
+                        toSlot(cards[j], Math.min(j - i - 1, slots.length - 1), t);
+                    }
+                    pillsIn(cards[i + 1], t + 0.35);
 
-                // Card 2 → out, card 3 → front.
-                toExit(cards[1], t);
-                toSlot(cards[2], 0, t);
-                toSlot(cards[3], 1, t);
-                pillsIn(cards[2], t + 0.35);
-                t += MOVE + HOLD;               // card 3 fully shown
+                    // Every card but the last gets its own rest before the next
+                    // hand-off; the last one rests below instead.
+                    t += MOVE + (i === n - 2 ? 0 : HOLD);
+                }
 
-                // Card 3 → out, card 4 → front.
-                toExit(cards[2], t);
-                toSlot(cards[3], 0, t);
-                pillsIn(cards[3], t + 0.35);
-                t += MOVE;                      // t = card 4 has arrived at the front
-
-                // Card 4 rests at the front, then the pin releases straight into
-                // the next section. It is NOT slid away — exiting it (as the other
-                // cards do) left the pinned viewport EMPTY for the rest of the
-                // scroll, which was the big blank gap before Upcoming Events.
-                tl.to(cards[3], { yPercent: slots[0].yp, duration: HOLD }, t);
-                t += HOLD;                      // card 4 held, pin about to release
+                // The final card rests at the front, then the pin releases straight
+                // into the next section. It is NOT slid away — exiting it (as the
+                // other cards do) left the pinned viewport EMPTY for the rest of
+                // the scroll, which was the big blank gap before Upcoming Events.
+                tl.to(cards[n - 1], { yPercent: slots[0].yp, duration: HOLD }, t);
+                t += HOLD;                      // last card held, pin about to release
 
                 return function () {
                     stack.classList.remove('is-gsap');
@@ -824,26 +839,14 @@
                     gsap.set(cards, { clearProps: 'all' });
                     gsap.set(stack.querySelectorAll('.hm-why__pill'), { clearProps: 'all' });
                 };
-            });
+            }
 
-            /* ---- Mobile: native scroll-snap slider, pills reveal per card ---- */
-            mm.add('(max-width: 991.98px)', function () {
-                gsap.set(cards, { clearProps: 'all' });
-                if (reduce || !('IntersectionObserver' in window)) return;
-
-                gsap.set(stack.querySelectorAll('.hm-why__pill'), { xPercent: -45, autoAlpha: 0 });
-                var io = new IntersectionObserver(function (entries) {
-                    entries.forEach(function (e) {
-                        if (e.isIntersecting) { pillsFromTo(e.target); io.unobserve(e.target); }
-                    });
-                }, { threshold: 0.5 });
-                cards.forEach(function (c) { io.observe(c); });
-
-                return function () {
-                    io.disconnect();
-                    gsap.set(stack.querySelectorAll('.hm-why__pill'), { clearProps: 'all' });
-                };
-            });
+            // Registered per range so the deck is rebuilt — and the pin
+            // re-measured — whenever the layout crosses the 992px breakpoint.
+            mm.add('(min-width: 992px)', initWhyStack);
+            mm.add('(max-width: 991.98px)', initWhyStack);
+            // Reduced motion: initWhyStack bails out, .is-gsap is never added and
+            // the CSS swipe slider stays — with the pills already visible.
         });
     </script>
 

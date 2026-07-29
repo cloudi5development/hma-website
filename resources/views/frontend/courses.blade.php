@@ -54,6 +54,55 @@
         $total = count($courses);
         $from  = $total ? 1 : 0;
         $to    = $total;
+
+        // ------------------------------------------------------------------
+        // Breadcrumb — driven by ?category=<slug>, the same param the category
+        // cards and the mega-menu links carry. The slug may be a category
+        // (Home › Department › Category), a department (Home › Department), or
+        // the "top-courses" filter value. With none of those it is the full
+        // listing, so the trail ends at "Courses".
+        // ------------------------------------------------------------------
+        $crumbDept = null;
+        $crumbCat  = null;
+
+        if ($preselect ?? null) {
+            foreach ($departments ?? [] as $dept) {
+                if ($dept->slug === $preselect) {
+                    $crumbDept = $dept;
+                    break;
+                }
+                foreach ($dept->categories as $cat) {
+                    if ($cat->slug === $preselect) {
+                        $crumbDept = $dept;
+                        $crumbCat  = $cat;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        $crumbs = [];
+
+        if ($crumbDept) {
+            $crumbs[] = [
+                'label' => $crumbDept->name,
+                'url'   => route('frontend.courses', ['category' => $crumbDept->slug]),
+            ];
+        }
+
+        if ($crumbCat) {
+            $crumbs[] = ['label' => $crumbCat->name, 'url' => null];
+        }
+
+        if (! $crumbs) {
+            // Unmatched slug (a category whose department is hidden from the
+            // filter panel, or "top-courses") still names itself rather than
+            // silently reading as the unfiltered listing.
+            $crumbs[] = [
+                'label' => ($preselect ?? null) ? \Illuminate\Support\Str::headline($preselect) : 'Courses',
+                'url'   => null,
+            ];
+        }
     @endphp
 
     {{-- .hm-crs-page is also the gate the page-shell CSS keys off (see the
@@ -77,10 +126,19 @@
 
                 <div class="hm-crs-hero__body">
                     <nav aria-label="Breadcrumb">
-                        <ol class="hm-crs-hero__crumbs">
+                        <ol class="hm-crs-hero__crumbs" data-hm-crumbs>
                             <li><a href="{{ route('frontend.index') }}">Home</a></li>
-                            <li class="hm-crs-hero__crumb-sep" aria-hidden="true">&rsaquo;</li>
-                            <li aria-current="page">IT &amp; Software</li>
+                            @foreach ($crumbs as $crumb)
+                                <li class="hm-crs-hero__crumb-sep" aria-hidden="true">&rsaquo;</li>
+                                @if ($crumb['url'] && ! $loop->last)
+                                    <li><a href="{{ $crumb['url'] }}">{{ $crumb['label'] }}</a></li>
+                                @else
+                                    {{-- data-hm-crumb-current: the filter panel
+                                         rewrites this label when the visitor picks
+                                         a different category without navigating. --}}
+                                    <li aria-current="page" data-hm-crumb-current>{{ $crumb['label'] }}</li>
+                                @endif
+                            @endforeach
                         </ol>
                     </nav>
 
@@ -162,7 +220,9 @@
                         {{-- data-* are what the category filter matches against —
                              on the col wrapper so the shared card partial stays
                              untouched. --}}
-                        <div class="col-12 col-md-6 col-lg-4 col-xl-3 hm-crs-item"
+                        {{-- col-6 from the smallest screen up: two cards per row
+                             on phones (courses.css tightens the card to suit). --}}
+                        <div class="col-6 col-lg-4 col-xl-3 hm-crs-item"
                              data-category="{{ $course['category'] }}"
                              data-group="{{ $course['group'] }}"
                              @if ($course['top']) data-top="1" @endif>
@@ -195,7 +255,14 @@
             var cards  = Array.prototype.slice.call(document.querySelectorAll('.hm-crs-item'));
             var count  = document.getElementById('hmCrsCount');
             var search = document.getElementById('hmCrsSearch');
+            var crumb  = document.querySelector('[data-hm-crumb-current]');
             var total  = cards.length;   // real total; only the shown figure moves
+
+            // Category passed in the URL (?category=slug) — set by the home
+            // category cards and the navbar mega-menu links.
+            var preselect  = @json($preselect ?? null);
+            var orphanSlug = null;       // set when no checkbox carries that slug
+            var userPicked = false;      // true once the visitor touches the panel
 
             function close() { root.classList.remove('is-open'); btn.setAttribute('aria-expanded', 'false'); }
             function open()  { root.classList.add('is-open');    btn.setAttribute('aria-expanded', 'true'); }
@@ -212,6 +279,11 @@
                 var chosen = boxes
                     .filter(function (b) { return b.checked && b.value !== 'all'; })
                     .map(function (b) { return b.value; });
+
+                // ?category=slug with no matching checkbox (its department is
+                // hidden from the filter panel, say) still has to filter — the
+                // slug joins the selection until the visitor changes it.
+                if (orphanSlug && !userPicked) chosen = chosen.concat([orphanSlug]);
 
                 var term = (search && search.value ? search.value : '').trim().toLowerCase();
                 var shown = 0;
@@ -235,20 +307,48 @@
                 if (chosen.length === 0) {
                     label.textContent = 'Categories';
                     root.classList.remove('is-filtered');
+                    setCrumb('Courses');
                 } else if (chosen.length === 1) {
                     var one = boxes.filter(function (b) { return b.value === chosen[0]; })[0];
-                    label.textContent = one ? one.parentNode.querySelector('span').textContent : 'Categories';
+                    // No checkbox for it → name it from the URL slug instead of
+                    // falling back to "Categories", which would read as unfiltered.
+                    var oneLabel = one
+                        ? one.parentNode.querySelector('span').textContent
+                        : slugLabel(chosen[0]);
+                    label.textContent = oneLabel;
                     root.classList.add('is-filtered');
+                    setCrumb(oneLabel);
                 } else {
                     label.textContent = chosen.length + ' Categories';
                     root.classList.add('is-filtered');
+                    setCrumb(chosen.length + ' Categories');
                 }
 
                 if (count) count.innerHTML = 'Showing ' + shown + ' of ' + total + ' Results';
             }
 
+            // "slug-like-this" → "Slug Like This", for a category the filter
+            // panel has no checkbox for.
+            function slugLabel(slug) {
+                return slug.split('-').map(function (w) {
+                    return w.charAt(0).toUpperCase() + w.slice(1);
+                }).join(' ');
+            }
+
+            // The breadcrumb is rendered server-side from ?category=…; filtering
+            // here never navigates, so the trail is retitled in place. Only the
+            // last crumb moves — any department crumb before it stays put.
+            function setCrumb(text) {
+                if (!crumb || text === crumb.textContent) return;
+                crumb.textContent = text;
+            }
+
             boxes.forEach(function (box) {
                 box.addEventListener('change', function () {
+                    // Any manual change drops the URL's category — otherwise it
+                    // would keep narrowing every later selection.
+                    userPicked = true;
+
                     if (box === allBox && box.checked) {
                         // "All Categories" clears every other choice.
                         boxes.forEach(function (b) { if (b !== allBox) b.checked = false; });
@@ -262,12 +362,15 @@
             // Live search filters the grid as you type.
             if (search) search.addEventListener('input', apply);
 
-            // Pre-select the category passed in the URL (?category=slug) — set by
-            // the home category cards and the navbar mega-menu links.
-            var preselect = @json($preselect ?? null);
             if (preselect) {
                 var pre = boxes.filter(function (b) { return b.value === preselect; })[0];
-                if (pre) { pre.checked = true; if (allBox) allBox.checked = false; }
+                if (pre) {
+                    pre.checked = true;
+                    if (allBox) allBox.checked = false;
+                } else {
+                    // No checkbox carries this slug — apply() filters on it directly.
+                    orphanSlug = preselect;
+                }
             }
             apply();
 
