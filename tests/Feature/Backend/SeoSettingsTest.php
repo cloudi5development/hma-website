@@ -3,6 +3,7 @@
 namespace Tests\Feature\Backend;
 
 use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\View;
 use Tests\TestCase;
@@ -13,7 +14,11 @@ class SeoSettingsTest extends TestCase
 
     public function test_seo_defaults_can_be_updated_and_rendered(): void
     {
-        $response = $this->withSession(['admin_logged_in' => true])
+        // Module access is resolved from the signed-in account, so the session has
+        // to name one — see App\Support\AdminAuth.
+        $admin = User::where('is_super_admin', true)->firstOrFail();
+
+        $response = $this->withSession(['admin_logged_in' => true, 'admin_id' => $admin->id])
             ->put(route('backend.settings.seo.update'), [
                 'seo_meta_title' => 'New SEO title',
                 'seo_meta_description' => 'New SEO description',

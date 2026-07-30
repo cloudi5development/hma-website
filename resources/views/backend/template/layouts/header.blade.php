@@ -96,15 +96,21 @@
                 </a>
             @endif
 
-            <a class="app-menu__item" role="menuitem" href="{{ route('backend.users.index') }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-5.4 6-5.4s6 2.1 6 5.4"/><path d="M16 4.6a3.4 3.4 0 0 1 0 6.8M21 20c0-2.6-1.5-4.3-4-5"/></svg>
-                Users
-            </a>
+            {{-- Both of these are gated modules, so only show what this admin can
+                 actually open — "My Profile" above stays available to everyone. --}}
+            @if (\App\Support\AdminAuth::isSuperAdmin())
+                <a class="app-menu__item" role="menuitem" href="{{ route('backend.users.index') }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-5.4 6-5.4s6 2.1 6 5.4"/><path d="M16 4.6a3.4 3.4 0 0 1 0 6.8M21 20c0-2.6-1.5-4.3-4-5"/></svg>
+                    Users
+                </a>
+            @endif
 
-            <a class="app-menu__item" role="menuitem" href="{{ route('backend.settings.general') }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
-                Settings
-            </a>
+            @if (\App\Support\AdminAuth::can('settings'))
+                <a class="app-menu__item" role="menuitem" href="{{ route('backend.settings.general') }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+                    Settings
+                </a>
+            @endif
 
             <div class="app-menu__sep"></div>
 

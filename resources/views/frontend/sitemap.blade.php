@@ -1,10 +1,11 @@
-{{-- XML sitemap body. Rendered by Frontend\SitemapController with an
-     application/xml content type — no HTML layout is involved.
+{{-- XML sitemap body, rendered by Frontend\SitemapController.
 
-     The <?xml ?> declaration is echoed rather than written literally: Blade
-     compiles to PHP, and PHP's short_open_tag would otherwise swallow "<?xml"
-     as an opening tag. --}}
-{!! '<?xml version="1.0" encoding="UTF-8"?>' !!}
+     The XML prolog is NOT written here. Blade tokenises the template with
+     token_get_all(), so on a server with PHP's short_open_tag enabled (the live
+     host has it on) a literal prolog is read as an opening PHP tag and this
+     view fails to compile with a ParseError. The controller prepends it to the
+     rendered output instead — which also keeps the prolog on the very first
+     line, where XML requires it. --}}
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 @foreach ($urls as $url)
     <url>

@@ -81,8 +81,16 @@ class SitemapController extends Controller
             }
         }
 
-        return response()
-            ->view('frontend.sitemap', ['urls' => $urls])
+        // The prolog is prepended here rather than written in the Blade file: a
+        // literal "<?xml" in a template is read as an opening PHP tag on hosts
+        // with short_open_tag enabled (live is one), and the view then fails to
+        // compile. Doing it here also guarantees the prolog is the first thing
+        // in the document, with no leading blank line for a strict XML parser
+        // to reject.
+        $body = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
+            . ltrim(view('frontend.sitemap', ['urls' => $urls])->render());
+
+        return response($body)
             ->header('Content-Type', 'application/xml; charset=UTF-8');
     }
 

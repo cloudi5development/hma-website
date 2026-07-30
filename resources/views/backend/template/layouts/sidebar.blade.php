@@ -37,6 +37,17 @@
     $ic = fn ($name) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' . ($icons[$name] ?? '') . '</svg>';
 
     $isDash = request()->routeIs('backend.dashboard');
+
+    // Module permissions for the signed-in admin (Users → Module Access). A menu
+    // entry they cannot open is not rendered at all — and a group or heading whose
+    // every child is hidden goes with it, so nobody is left staring at an empty
+    // "Leads" label. The admin.module middleware enforces the same list on the
+    // way in, so hiding here is presentation, not the guard.
+    $can    = fn ($module) => \App\Support\AdminAuth::can($module);
+    $canAny = fn (...$modules) => \App\Support\AdminAuth::canAny(...$modules);
+    $isMain = \App\Support\AdminAuth::isSuperAdmin();
+
+    $sectionModules = ['hero', 'partners', 'counters', 'events', 'success-stories', 'reels', 'testimonials', 'faqs'];
 @endphp
 
 <aside class="app-sidebar" id="appSidebar">
@@ -60,6 +71,7 @@
         </div>
 
         {{-- ---- CATALOG ---- --}}
+        @if ($canAny('departments', 'categories', 'courses'))
         <p class="app-sidebar__heading">Catalog</p>
 
         {{-- Courses (group) --}}
@@ -71,20 +83,26 @@
                 <span class="app-nav__caret">{!! $ic('chevron') !!}</span>
             </a>
             <ul class="app-nav__sub">
-                <li><a class="app-nav__sublink {{ request()->routeIs('backend.departments.*') ? 'is-active' : '' }}" href="{{ route('backend.departments.index') }}">{!! $ic('department') !!}<span>Departments</span></a></li>
-                <li><a class="app-nav__sublink {{ request()->routeIs('backend.categories.*') ? 'is-active' : '' }}" href="{{ route('backend.categories.index') }}">{!! $ic('category') !!}<span>Categories</span></a></li>
-                <li><a class="app-nav__sublink {{ request()->routeIs('backend.courses.*') ? 'is-active' : '' }}" href="{{ route('backend.courses.index') }}">{!! $ic('book') !!}<span>Courses</span></a></li>
+                @if ($can('departments'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.departments.*') ? 'is-active' : '' }}" href="{{ route('backend.departments.index') }}">{!! $ic('department') !!}<span>Departments</span></a></li>@endif
+                @if ($can('categories'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.categories.*') ? 'is-active' : '' }}" href="{{ route('backend.categories.index') }}">{!! $ic('category') !!}<span>Categories</span></a></li>@endif
+                @if ($can('courses'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.courses.*') ? 'is-active' : '' }}" href="{{ route('backend.courses.index') }}">{!! $ic('book') !!}<span>Courses</span></a></li>@endif
             </ul>
             <div class="app-nav__flyout">
                 <div class="app-nav__flyout-title">Courses</div>
-                <a href="{{ route('backend.departments.index') }}">Departments</a><a href="{{ route('backend.categories.index') }}">Categories</a><a href="{{ route('backend.courses.index') }}">Courses</a>
+                @if ($can('departments'))<a href="{{ route('backend.departments.index') }}">Departments</a>@endif
+                @if ($can('categories'))<a href="{{ route('backend.categories.index') }}">Categories</a>@endif
+                @if ($can('courses'))<a href="{{ route('backend.courses.index') }}">Courses</a>@endif
             </div>
         </div>
+        @endif
 
         {{-- ---- WEBSITE CONTENT ---- --}}
+        @if ($canAny(...$sectionModules) || $can('blogs'))
         <p class="app-sidebar__heading">Website Content</p>
+        @endif
 
         {{-- Sections (group) --}}
+        @if ($canAny(...$sectionModules))
         @php $sectionsOpen = request()->routeIs('backend.hero.*', 'backend.partners.*', 'backend.counters.*', 'backend.events.*', 'backend.success-stories.*', 'backend.reels.*', 'backend.testimonials.*', 'backend.faqs.*'); @endphp
         <div class="app-nav__item {{ $sectionsOpen ? 'is-open' : '' }}" data-group>
             <a class="app-nav__link" role="button" tabindex="0">
@@ -93,28 +111,38 @@
                 <span class="app-nav__caret">{!! $ic('chevron') !!}</span>
             </a>
             <ul class="app-nav__sub">
-                <li><a class="app-nav__sublink {{ request()->routeIs('backend.hero.*') ? 'is-active' : '' }}" href="{{ route('backend.hero.index') }}">{!! $ic('hero') !!}<span>Hero Section</span></a></li>
-                <li><a class="app-nav__sublink {{ request()->routeIs('backend.partners.*') ? 'is-active' : '' }}" href="{{ route('backend.partners.index') }}">{!! $ic('partners') !!}<span>Trusted Partners</span></a></li>
-                <li><a class="app-nav__sublink {{ request()->routeIs('backend.counters.*') ? 'is-active' : '' }}" href="{{ route('backend.counters.index') }}">{!! $ic('counters') !!}<span>Counters</span></a></li>
-                <li><a class="app-nav__sublink {{ request()->routeIs('backend.events.*') ? 'is-active' : '' }}" href="{{ route('backend.events.index') }}">{!! $ic('events') !!}<span>Upcoming Events</span></a></li>
-                <li><a class="app-nav__sublink {{ request()->routeIs('backend.success-stories.*') ? 'is-active' : '' }}" href="{{ route('backend.success-stories.index') }}">{!! $ic('stories') !!}<span>Success Stories</span></a></li>
-                <li><a class="app-nav__sublink {{ request()->routeIs('backend.reels.*') ? 'is-active' : '' }}" href="{{ route('backend.reels.index') }}">{!! $ic('journey') !!}<span>Our Journey</span></a></li>
-                <li><a class="app-nav__sublink {{ request()->routeIs('backend.testimonials.*') ? 'is-active' : '' }}" href="{{ route('backend.testimonials.index') }}">{!! $ic('testimonials') !!}<span>Testimonials</span></a></li>
-                <li><a class="app-nav__sublink {{ request()->routeIs('backend.faqs.*') ? 'is-active' : '' }}" href="{{ route('backend.faqs.index') }}">{!! $ic('faq') !!}<span>FAQ</span></a></li>
+                @if ($can('hero'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.hero.*') ? 'is-active' : '' }}" href="{{ route('backend.hero.index') }}">{!! $ic('hero') !!}<span>Hero Section</span></a></li>@endif
+                @if ($can('partners'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.partners.*') ? 'is-active' : '' }}" href="{{ route('backend.partners.index') }}">{!! $ic('partners') !!}<span>Trusted Partners</span></a></li>@endif
+                @if ($can('counters'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.counters.*') ? 'is-active' : '' }}" href="{{ route('backend.counters.index') }}">{!! $ic('counters') !!}<span>Counters</span></a></li>@endif
+                @if ($can('events'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.events.*') ? 'is-active' : '' }}" href="{{ route('backend.events.index') }}">{!! $ic('events') !!}<span>Upcoming Events</span></a></li>@endif
+                @if ($can('success-stories'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.success-stories.*') ? 'is-active' : '' }}" href="{{ route('backend.success-stories.index') }}">{!! $ic('stories') !!}<span>Success Stories</span></a></li>@endif
+                @if ($can('reels'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.reels.*') ? 'is-active' : '' }}" href="{{ route('backend.reels.index') }}">{!! $ic('journey') !!}<span>Our Journey</span></a></li>@endif
+                @if ($can('testimonials'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.testimonials.*') ? 'is-active' : '' }}" href="{{ route('backend.testimonials.index') }}">{!! $ic('testimonials') !!}<span>Testimonials</span></a></li>@endif
+                @if ($can('faqs'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.faqs.*') ? 'is-active' : '' }}" href="{{ route('backend.faqs.index') }}">{!! $ic('faq') !!}<span>FAQ</span></a></li>@endif
             </ul>
             <div class="app-nav__flyout">
                 <div class="app-nav__flyout-title">Sections</div>
-                <a href="{{ route('backend.hero.index') }}">Hero Section</a><a href="{{ route('backend.partners.index') }}">Trusted Partners</a><a href="{{ route('backend.counters.index') }}">Counters</a><a href="{{ route('backend.events.index') }}">Upcoming Events</a>
-                <a href="{{ route('backend.success-stories.index') }}">Success Stories</a><a href="{{ route('backend.reels.index') }}">Our Journey</a><a href="{{ route('backend.testimonials.index') }}">Testimonials</a><a href="{{ route('backend.faqs.index') }}">FAQ</a>
+                @if ($can('hero'))<a href="{{ route('backend.hero.index') }}">Hero Section</a>@endif
+                @if ($can('partners'))<a href="{{ route('backend.partners.index') }}">Trusted Partners</a>@endif
+                @if ($can('counters'))<a href="{{ route('backend.counters.index') }}">Counters</a>@endif
+                @if ($can('events'))<a href="{{ route('backend.events.index') }}">Upcoming Events</a>@endif
+                @if ($can('success-stories'))<a href="{{ route('backend.success-stories.index') }}">Success Stories</a>@endif
+                @if ($can('reels'))<a href="{{ route('backend.reels.index') }}">Our Journey</a>@endif
+                @if ($can('testimonials'))<a href="{{ route('backend.testimonials.index') }}">Testimonials</a>@endif
+                @if ($can('faqs'))<a href="{{ route('backend.faqs.index') }}">FAQ</a>@endif
             </div>
         </div>
+        @endif
 
+        @if ($can('blogs'))
         <div class="app-nav__item">
             <a class="app-nav__link {{ request()->routeIs('backend.blogs.*') ? 'is-active' : '' }}" href="{{ route('backend.blogs.index') }}">{!! $ic('blog') !!}<span class="app-nav__label">Blog</span></a>
             <div class="app-nav__flyout"><div class="app-nav__flyout-title">Blog</div></div>
         </div>
+        @endif
 
         {{-- ---- LEADS ---- --}}
+        @if ($canAny('course-enquiries', 'contact-enquiries'))
         <p class="app-sidebar__heading">Leads</p>
 
         {{-- Enquiries (group) --}}
@@ -131,19 +159,24 @@
                 <span class="app-nav__caret">{!! $ic('chevron') !!}</span>
             </a>
             <ul class="app-nav__sub">
-                <li><a class="app-nav__sublink {{ request()->routeIs('backend.course-enquiries.*') ? 'is-active' : '' }}" href="{{ route('backend.course-enquiries.index') }}">{!! $ic('course-enquiry') !!}<span>Course Enquiry</span></a></li>
-                <li><a class="app-nav__sublink {{ request()->routeIs('backend.contact-enquiries.*') ? 'is-active' : '' }}" href="{{ route('backend.contact-enquiries.index') }}">{!! $ic('contact-enquiry') !!}<span>Contact Enquiry</span></a></li>
+                @if ($can('course-enquiries'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.course-enquiries.*') ? 'is-active' : '' }}" href="{{ route('backend.course-enquiries.index') }}">{!! $ic('course-enquiry') !!}<span>Course Enquiry</span></a></li>@endif
+                @if ($can('contact-enquiries'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.contact-enquiries.*') ? 'is-active' : '' }}" href="{{ route('backend.contact-enquiries.index') }}">{!! $ic('contact-enquiry') !!}<span>Contact Enquiry</span></a></li>@endif
             </ul>
             <div class="app-nav__flyout">
                 <div class="app-nav__flyout-title">Enquiries</div>
-                <a href="{{ route('backend.course-enquiries.index') }}">Course Enquiry</a><a href="{{ route('backend.contact-enquiries.index') }}">Contact Enquiry</a>
+                @if ($can('course-enquiries'))<a href="{{ route('backend.course-enquiries.index') }}">Course Enquiry</a>@endif
+                @if ($can('contact-enquiries'))<a href="{{ route('backend.contact-enquiries.index') }}">Contact Enquiry</a>@endif
             </div>
         </div>
+        @endif
 
         {{-- ---- SYSTEM ---- --}}
+        @if ($canAny('settings', 'seo-pages') || $isMain)
         <p class="app-sidebar__heading">System</p>
+        @endif
 
         {{-- Settings (group) --}}
+        @if ($can('settings'))
         @php $settingsOpen = request()->routeIs('backend.settings.*'); @endphp
         <div class="app-nav__item {{ $settingsOpen ? 'is-open' : '' }}" data-group>
             <a class="app-nav__link" role="button" tabindex="0">
@@ -165,20 +198,27 @@
                 <a href="{{ route('backend.settings.email') }}">Email / SMTP</a><a href="{{ route('backend.settings.seo') }}">SEO Defaults</a>
             </div>
         </div>
+        @endif
 
+        @if ($can('seo-pages'))
         <div class="app-nav__item">
             <a class="app-nav__link {{ request()->routeIs('backend.seo-pages.*') ? 'is-active' : '' }}"
                href="{{ route('backend.seo-pages.index') }}">{!! $ic('seo') !!}<span class="app-nav__label">SEO</span></a>
             <div class="app-nav__flyout"><div class="app-nav__flyout-title">SEO</div>
                 <a href="{{ route('backend.seo-pages.index') }}">Page SEO</a></div>
         </div>
+        @endif
 
+        {{-- Users is the main admin's alone — creating accounts and granting
+             module access lives here, so it is never shown to anyone else. --}}
+        @if ($isMain)
         <div class="app-nav__item">
             <a class="app-nav__link {{ request()->routeIs('backend.users.*') ? 'is-active' : '' }}"
                href="{{ route('backend.users.index') }}">{!! $ic('users') !!}<span class="app-nav__label">Users</span></a>
             <div class="app-nav__flyout"><div class="app-nav__flyout-title">Users</div>
                 <a href="{{ route('backend.users.index') }}">All Users</a></div>
         </div>
+        @endif
 
     </nav>
 </aside>

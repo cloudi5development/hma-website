@@ -34,6 +34,10 @@ return Application::configure(basePath: dirname(__DIR__))
             // Session-based guard for the admin panel (temporary until the real
             // auth module is built — see Backend\AuthController).
             'admin.auth' => \App\Http\Middleware\AdminAuthenticate::class,
+
+            // Per-module access. Derives the module from the route name, so it
+            // guards the whole panel from one place — see Support\AdminModules.
+            'admin.module' => \App\Http\Middleware\EnsureModuleAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

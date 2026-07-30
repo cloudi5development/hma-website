@@ -45,8 +45,12 @@ Route::prefix('admin')->name('backend.')->group(function () {
         Route::post('/logout', 'logout')->name('logout');
     });
 
-    // Authenticated admin area — guarded by the session flag (admin.auth).
-    Route::middleware('admin.auth')->group(function () {
+    // Authenticated admin area — guarded by the session flag (admin.auth), then
+    // by the signed-in user's module permissions (admin.module). The second
+    // middleware reads the module off each route's name, so routes added below
+    // are guarded automatically as long as they keep the "backend.<module>.*"
+    // naming — see App\Support\AdminModules.
+    Route::middleware(['admin.auth', 'admin.module'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // Topbar notification bell
@@ -75,8 +79,12 @@ Route::prefix('admin')->name('backend.')->group(function () {
         // Blog posts (listing + details + home Latest Blog)
         Route::resource('blogs', BlogController::class)->except(['show']);
 
-        // System → Users (admin logins) and per-page SEO
+        // System → Users (admin logins). Listed in AdminModules::SUPER_ADMIN_ONLY,
+        // so admin.module lets only the main admin through — creating accounts and
+        // handing out module access is theirs alone.
         Route::resource("users", UserController::class)->except(["show"]);
+
+        // System → per-page SEO
         Route::resource("seo-pages", SeoPageController::class)->except(["show"])->parameters(["seo-pages" => "seo_page"]);
 
         // System → Settings (General / Contact / Social / Email / SEO)

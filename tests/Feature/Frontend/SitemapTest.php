@@ -48,6 +48,28 @@ class SitemapTest extends TestCase
         $response->assertSee(route('frontend.about-us'), false);
     }
 
+    public function test_output_is_well_formed_xml_with_the_prolog_first(): void
+    {
+        $xml = $this->get('/sitemap.xml')->getContent();
+
+        $this->assertStringStartsWith('<?xml version="1.0" encoding="UTF-8"?>' . "\n", $xml);
+
+        // What a crawler's parser does. Leading whitespace or a stray tag fails here.
+        $this->assertInstanceOf(\SimpleXMLElement::class, simplexml_load_string($xml));
+    }
+
+    public function test_the_template_carries_no_php_open_tag(): void
+    {
+        // Blade tokenises templates with token_get_all(), so a literal "<?" in
+        // this template is read as an opening PHP tag on any host that has
+        // short_open_tag enabled and the view stops compiling — which is how the
+        // live sitemap came to return a 500. The prolog is prepended by the
+        // controller for exactly this reason; keep the template clean of it.
+        $template = file_get_contents(resource_path('views/frontend/sitemap.blade.php'));
+
+        $this->assertStringNotContainsString('<?', $template);
+    }
+
     public function test_sitemap_url_redirects_to_the_xml(): void
     {
         $this->get('/sitemap')->assertRedirect('/sitemap.xml');

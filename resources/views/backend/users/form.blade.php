@@ -3,20 +3,33 @@
 @php
     $editing = $user->exists;
     $isSelf  = $editing && (int) session('admin_id') === $user->id;
+
+    // Module access. The main admin holds everything and cannot be edited down,
+    // so their grid renders ticked and disabled.
+    $isMainAdmin = $editing && $user->is_super_admin;
+    $checked     = collect(old('modules', $user->moduleKeys()));
+
+    // Only the main admin hands out access. Anyone else who gets here is on their
+    // own profile (see EnsureModuleAccess), so the page drops to name / email /
+    // password — the fields they are actually allowed to change.
+    $canManageAccess = \App\Support\AdminAuth::isSuperAdmin();
+    $profileOnly     = ! $canManageAccess;
 @endphp
 
-@section('title', $editing ? 'Edit User' : 'Add User')
-@section('page_title', $editing ? 'Edit User' : 'Add User')
-@section('page_sub', 'Users')
+@section('title', $profileOnly ? 'My Profile' : ($editing ? 'Edit User' : 'Add User'))
+@section('page_title', $profileOnly ? 'My Profile' : ($editing ? 'Edit User' : 'Add User'))
+@section('page_sub', $profileOnly ? 'Your account' : 'Users')
 
 @section('content')
 
-    <div class="page-head">
-        <a href="{{ route('backend.users.index') }}" class="btn-ghost">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            Back to Users
-        </a>
-    </div>
+    @unless ($profileOnly)
+        <div class="page-head">
+            <a href="{{ route('backend.users.index') }}" class="btn-ghost">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                Back to Users
+            </a>
+        </div>
+    @endunless
 
     @include('backend.partials.flash')
 
@@ -43,7 +56,7 @@
                             @error('name') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
                     </div>
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-6" @if ($profileOnly) hidden @endif>
                         <div class="form-row" style="margin-bottom:0">
                             <label class="form-label">Status</label>
                             <div class="d-flex align-items-center" style="height:48px">
@@ -111,13 +124,104 @@
             </div>
         </div>
 
+        {{-- ---------------------------- Module access ----------------------------
+             Which parts of the panel this account can open. Anything not ticked is
+             hidden from their sidebar AND refused if they type the URL — the
+             admin.module middleware checks every admin route against this list.
+             Shown to the main admin only: this is the one place access is handed
+             out, and posting the field as anyone else is discarded server-side. --}}
+        @if ($canManageAccess)
+        <div class="hm-card mb-3">
+            <div class="hm-card__body">
+
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
+                    <div>
+                        <label class="form-label" style="margin-bottom:2px">Module Access</label>
+                        <p class="form-hint" style="margin:0">
+                            @if ($isMainAdmin)
+                                This is the main admin account — it always has access to everything,
+                                including Users.
+                            @else
+                                Tick what this user may open. Everything else stays hidden from them.
+                                The Dashboard is always available; Users is the main admin's only.
+                            @endif
+                        </p>
+                    </div>
+
+                    @unless ($isMainAdmin)
+                        <label class="check-chip" id="userModulesAll">
+                            <input type="checkbox">
+                            <span class="check-chip__box">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                            </span>
+                            <span class="check-chip__label">Select all</span>
+                        </label>
+                    @endunless
+                </div>
+
+                @error('modules') <p class="form-error">{{ $message }}</p> @enderror
+                @error('modules.*') <p class="form-error">{{ $message }}</p> @enderror
+
+                @foreach (\App\Support\AdminModules::GROUPS as $group => $modules)
+                    <div class="form-row" style="margin-bottom:0" @class(['mt-3' => ! $loop->first])>
+                        <label class="form-label" style="font-size:12.5px;text-transform:uppercase;letter-spacing:.04em">
+                            {{ $group }}
+                        </label>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach ($modules as $key => $label)
+                                <label class="check-chip">
+                                    <input type="checkbox" name="modules[]" value="{{ $key }}"
+                                           {{ $isMainAdmin || $checked->contains($key) ? 'checked' : '' }}
+                                           {{ $isMainAdmin ? 'disabled' : '' }}
+                                           data-module-box>
+                                    <span class="check-chip__box">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                    </span>
+                                    <span class="check-chip__label">{{ $label }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+
+            </div>
+        </div>
+        @endif
+
         <div class="d-flex gap-2">
             <button type="submit" class="btn-brand">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                 {{ $editing ? 'Save Changes' : 'Add User' }}
             </button>
-            <a href="{{ route('backend.users.index') }}" class="btn-ghost">Cancel</a>
+            <a href="{{ $profileOnly ? route('backend.dashboard') : route('backend.users.index') }}" class="btn-ghost">Cancel</a>
         </div>
     </form>
+
+    @if ($canManageAccess && ! $isMainAdmin)
+        {{-- "Select all" mirrors the boxes both ways: it ticks/unticks every
+             module, and it reflects whether they are all already ticked. --}}
+        <script>
+            (function () {
+                'use strict';
+
+                var all   = document.querySelector('#userModulesAll input');
+                var boxes = Array.prototype.slice.call(document.querySelectorAll('[data-module-box]'));
+
+                if (!all || !boxes.length) return;
+
+                function syncAll() {
+                    all.checked = boxes.every(function (box) { return box.checked; });
+                }
+
+                all.addEventListener('change', function () {
+                    boxes.forEach(function (box) { box.checked = all.checked; });
+                });
+
+                boxes.forEach(function (box) { box.addEventListener('change', syncAll); });
+
+                syncAll();
+            })();
+        </script>
+    @endif
 
 @endsection
