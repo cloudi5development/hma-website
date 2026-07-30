@@ -6,9 +6,9 @@
     → the page's @section → the site default. Push extra JSON-LD via @push('seo').
 --}}
 @php
-    $metaTitle = $__env->yieldContent('og_title', $__env->yieldContent('title', config('app.name')));
+    $metaTitle = $__env->yieldContent('og_title', $__env->yieldContent('title', \App\Models\Setting::get('seo_meta_title', config('app.name'))));
     $metaDesc  = $__env->yieldContent('og_description', $__env->yieldContent('meta_description', \App\Models\Setting::get('seo_meta_description', '')));
-    $metaImage = $__env->yieldContent('og_image', \App\Models\Setting::image('site_logo', 'assets/images/branding/logo.png'));
+    $metaImage = $__env->yieldContent('og_image', \App\Models\Setting::image('seo_default_og_image', \App\Models\Setting::image('site_logo', 'assets/images/branding/logo.png')));
 
     $ogTitle = $seo?->resolvedOgTitle($metaTitle) ?: $metaTitle;
     $ogDesc  = $seo?->resolvedOgDescription($metaDesc) ?: $metaDesc;

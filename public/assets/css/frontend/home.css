@@ -2552,37 +2552,24 @@
     /* ---- Person framing -------------------------------------------------
        The four cut-outs are composed very differently — person-1 is a full
        body portrait (686x1200), 2 and 4 are wide half-body shots (1024x559),
-       3 is square — so one shared object-fit renders them at four different
-       sizes. Instead each card states how tall its image should render
-       (--hm-fig-h) and how far to pull it up (--hm-fig-y), chosen so the
-       head-to-hands part of every photo fills this box exactly. The box clips
-       the rest, and the bottom edge is feathered so the cut is not a hard
-       line. Result: same framing and same head size on every card. */
+       3 is square. On phones each one is scaled down to fit its box WHOLE
+       (object-fit: contain) and sat on the bottom edge, so no card ever cuts
+       the person off. The earlier version cropped to a fixed per-card height
+       and feathered the cut with a mask, which is what clipped the mentor
+       mid-body on the narrow screens. */
     .hm-why__figure {
-        flex-basis: auto;
+        flex: 0 0 auto;
         height: 220px;
-        padding-top: 0;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
+        padding: 0 10px;
         overflow: hidden;
-        -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
-        mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
     }
 
     .hm-why__figure img {
-        flex: 0 0 auto;
-        width: auto;
-        max-width: none;
-        height: var(--hm-fig-h);
-        margin-top: var(--hm-fig-y);
+        width: 100%;
+        height: 100%;
         object-fit: contain;
+        object-position: center bottom;
     }
-
-    .hm-why__card--orange .hm-why__figure { --hm-fig-h: 306px; --hm-fig-y: -32px; }  /* person-1 — full body */
-    .hm-why__card--blue   .hm-why__figure { --hm-fig-h: 214px; --hm-fig-y:  -9px; }  /* person-2 — wide */
-    .hm-why__card--yellow .hm-why__figure { --hm-fig-h: 192px; --hm-fig-y:   2px; }  /* person-3 — square */
-    .hm-why__card--pink   .hm-why__figure { --hm-fig-h: 261px; --hm-fig-y:  -8px; }  /* person-4 — wide */
 
     /* The paragraph is dropped on phones — the title and the three pills carry
        the message, and the card stays short enough to read without scrolling. */
@@ -2592,16 +2579,21 @@
     .hm-why__pills { gap: 9px; }
     .hm-why__pill  { padding: 9px 18px; font-size: 12.5px; }
 
-    /* Inside the pinned deck the card has a fixed height, so the copy sits at
-       the top and the person is pushed to the foot of the card. The figure may
-       shrink (flex-basis, not a fixed height) so a short phone tightens the
-       photo instead of pushing it past the bottom of the card. */
-    .hm-why__stack.is-gsap .hm-why__content { padding: 20px 18px 6px; }
-    .hm-why__stack.is-gsap .hm-why__figure  {
+    /* Inside the pinned deck the card height is fixed, so the copy takes what
+       it needs at the top and the figure gets a fixed SHARE of the card — a
+       percentage of a definite height, which is what lets the image size itself
+       against the box. On a short phone the share shrinks with the card and the
+       person scales down with it rather than running past the bottom edge. */
+    .hm-why__stack.is-gsap .hm-why__content {
+        flex: 1 1 auto;
+        align-self: stretch;
+        padding: 20px 18px 6px;
+    }
+    .hm-why__stack.is-gsap .hm-why__figure {
+        flex: 0 0 46%;
+        height: 46%;
         margin-top: auto;
-        flex: 0 1 190px;
-        height: auto;
-        min-height: 120px;
+        padding: 0 10px 12px;
     }
 }
 

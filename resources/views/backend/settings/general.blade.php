@@ -29,10 +29,16 @@
                     <input type="text" id="site_tagline" name="site_tagline" class="form-control-hm"
                            value="{{ old('site_tagline', $s('site_tagline')) }}" placeholder="Learn, Practice, Get Hired">
                 </div>
-                <div class="form-row" style="margin-bottom:0">
+                <div class="form-row">
                     <label class="form-label" for="footer_about">Footer About Text</label>
                     <textarea id="footer_about" name="footer_about" rows="3" class="form-control-hm"
                               placeholder="A short line about the academy…">{{ old('footer_about', $s('footer_about')) }}</textarea>
+                </div>
+                <div class="form-row">
+                    <label class="form-label" for="copyright_text">Footer Copyright Text</label>
+                    <input type="text" id="copyright_text" name="copyright_text" class="form-control-hm"
+                           value="{{ old('copyright_text', $s('copyright_text', $s('site_name', config('app.name')) . '. All Rights Reserved.')) }}"
+                           placeholder="Hire Minds Academy. All Rights Reserved.">
                 </div>
                 <div class="mt-3"><button type="submit" class="btn-brand">Save General Settings</button></div>
             </div>

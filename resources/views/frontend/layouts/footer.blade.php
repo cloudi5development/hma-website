@@ -11,9 +11,11 @@
                     <img src="{{ \App\Models\Setting::image('site_logo', 'assets/images/branding/logo.png') }}" alt="Hire Minds Academy"
                          class="hm-footer__logo" width="160" height="54">
                 </a>
+                {{-- Settings → General → Footer About Text. Falls back to the
+                     original copy while the field is left blank. --}}
                 <p class="hm-footer__about">
-                    Empowering aspiring professionals with industry-focused Talent Acquisition training,
-                    practical learning, and career guidance designed for long-term success.
+                    {!! nl2br(e(\App\Models\Setting::get('footer_about',
+                        'Empowering aspiring professionals with industry-focused Talent Acquisition training, practical learning, and career guidance designed for long-term success.'))) !!}
                 </p>
                 {{-- Settings → Social Media. A platform with no link set is left
                      out entirely rather than rendered as a dead icon. --}}
@@ -39,23 +41,28 @@
                     <ul class="hm-footer__links">
                         <li><a href="{{ route('frontend.index') }}">Home</a></li>
                         <li><a href="{{ route('frontend.about-us') }}">About Us</a></li>
-                        <li><a href="#">Programs</a></li>
+                        <li><a href="{{ route('frontend.courses') }}">Courses</a></li>
                         <li><a href="{{ route('frontend.testimonials') }}">Success Stories</a></li>
                         <li><a href="{{ route('frontend.contact-us') }}">Contact Us</a></li>
                     </ul>
                 </nav>
             </div>
 
-            {{-- Column 3 — Our Programs (pairs with Quick Links on phones) --}}
+            {{-- Column 3 — Our Courses (pairs with Quick Links on phones).
+                 $footerCourses comes from AppServiceProvider: the first five
+                 active courses, each linking to its own page. The last item is
+                 the courses listing, so the column always offers a way through
+                 to every course. --}}
             <div class="col-6 col-lg-3 col-md-6 hm-footer__col">
-                <h2 class="hm-footer__heading">Our Programs</h2>
-                <nav class="hm-footer__nav" aria-label="Our programs">
+                <h2 class="hm-footer__heading">Our Courses</h2>
+                <nav class="hm-footer__nav" aria-label="Our courses">
                     <ul class="hm-footer__links">
-                        <li><a href="#">Talent Acquisition Training</a></li>
-                        <li><a href="#">Recruitment Fundamentals</a></li>
-                        <li><a href="#">LinkedIn Sourcing</a></li>
-                        <li><a href="#">Boolean Search Training</a></li>
-                        <li><a href="#">HR Operations</a></li>
+                        @foreach ($footerCourses as $course)
+                            <li>
+                                <a href="{{ route('frontend.course-details', $course->slug) }}">{{ $course->name }}</a>
+                            </li>
+                        @endforeach
+                        <li><a href="{{ route('frontend.courses') }}">View All Courses</a></li>
                     </ul>
                 </nav>
             </div>
@@ -67,11 +74,13 @@
                     {{-- $contact comes from Settings → Contact via AppServiceProvider. --}}
                     <li class="hm-footer__contact-item">
                         <i class="fa-solid fa-phone hm-footer__contact-icon" aria-hidden="true"></i>
-                        <a href="{{ $contact['phone_href'] }}" class="hm-footer__contact-link">{{ $contact['phone'] }}</a>
+                        <span class="hm-footer__contact-text hm-footer__contact-text--desktop">{{ $contact['phone'] }}</span>
+                        <a href="{{ $contact['phone_href'] }}" class="hm-footer__contact-link hm-footer__contact-link--mobile">{{ $contact['phone'] }}</a>
                     </li>
                     <li class="hm-footer__contact-item">
                         <i class="fa-solid fa-envelope hm-footer__contact-icon" aria-hidden="true"></i>
-                        <a href="{{ $contact['email_href'] }}" class="hm-footer__contact-link">{{ $contact['email'] }}</a>
+                        <span class="hm-footer__contact-text hm-footer__contact-text--desktop">{{ $contact['email'] }}</span>
+                        <a href="{{ $contact['email_href'] }}" class="hm-footer__contact-link hm-footer__contact-link--mobile">{{ $contact['email'] }}</a>
                     </li>
                     {{-- One line per branch, in the order they are listed in Settings. --}}
                     @foreach ($contact['branches'] as $branch)
@@ -92,7 +101,7 @@
 
         <div class="hm-footer__bottom">
             <p class="hm-footer__copy">
-                &copy;2026 Hire Minds Academy. All Rights Reserved.
+                &copy;{{ date('Y') }} {{ \App\Models\Setting::get('copyright_text', \App\Models\Setting::get('site_name', config('app.name')) . '. All Rights Reserved.') }}
                 <span class="hm-footer__dev-line">Developed by
                     <a href="https://www.cloudi5.com/" target="_blank" rel="noopener" class="hm-footer__dev">Cloudi5 Technologies</a>
                 </span>

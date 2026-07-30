@@ -59,14 +59,20 @@
                                 <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/proicons_call.png') }}" alt=""></span>
                                 <div class="hm-contact__item-body">
                                     <div class="hm-contact__item-title">Phone Number :</div>
-                                    <p class="hm-contact__item-text"><a href="{{ $contact['phone_href'] }}">{{ $contact['phone'] }}</a></p>
+                                    <p class="hm-contact__item-text">
+                                        <span class="hm-contact__text hm-contact__text--desktop">{{ $contact['phone'] }}</span>
+                                        <a href="{{ $contact['phone_href'] }}" class="hm-contact__link hm-contact__link--mobile">{{ $contact['phone'] }}</a>
+                                    </p>
                                 </div>
                             </li>
                             <li class="hm-contact__item">
                                 <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/heroicons-outline_mail.png') }}" alt=""></span>
                                 <div class="hm-contact__item-body">
                                     <div class="hm-contact__item-title">Email :</div>
-                                    <p class="hm-contact__item-text"><a href="{{ $contact['email_href'] }}">{{ $contact['email'] }}</a></p>
+                                    <p class="hm-contact__item-text">
+                                        <span class="hm-contact__text hm-contact__text--desktop">{{ $contact['email'] }}</span>
+                                        <a href="{{ $contact['email_href'] }}" class="hm-contact__link hm-contact__link--mobile">{{ $contact['email'] }}</a>
+                                    </p>
                                 </div>
                             </li>
                         </ul>

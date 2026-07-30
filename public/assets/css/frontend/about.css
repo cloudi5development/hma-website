@@ -1473,6 +1473,9 @@
     border-radius: 50%;
 }
 
+/* The pupil. It rests dead centre until the section arrives, then starts
+   glancing down and up on a loop — the travel is a variable so the smaller
+   eyes on tablet/phone move proportionally less. */
 .hm-feat__eye::after {
     content: "";
     position: absolute;
@@ -1483,6 +1486,35 @@
     background: #12121A;
     border-radius: 50%;
     transform: translate(-50%, -50%);
+    will-change: transform;
+    --hm-eye-travel: 26px;
+}
+
+/* Driven by .is-spread — the class the observer adds when the cards fan out —
+   so the eyes start looking around exactly as you reach the section rather than
+   having been animating off-screen the whole time. */
+.hm-feat__track.is-spread .hm-feat__eye::after {
+    animation: hm-eye-look 4.6s cubic-bezier(.42, 0, .38, 1) .45s infinite;
+}
+
+/* The second pupil trails the first slightly, so the pair reads as one glance
+   rather than two synchronised dots. */
+.hm-feat__track.is-spread .hm-feat__eye:nth-child(2)::after {
+    animation-delay: .62s;
+}
+
+/* Down · hold · up · hold · back to centre · rest. The holds are what make it
+   read as looking rather than bouncing, and every leg is eased, so there is no
+   hard stop at either end. */
+@keyframes hm-eye-look {
+    0%,
+    8%    { transform: translate(-50%, -50%) translateY(0); }
+    22%   { transform: translate(-50%, -50%) translateY(var(--hm-eye-travel)); }
+    38%   { transform: translate(-50%, -50%) translateY(var(--hm-eye-travel)); }
+    54%   { transform: translate(-50%, -50%) translateY(calc(var(--hm-eye-travel) * -1)); }
+    70%   { transform: translate(-50%, -50%) translateY(calc(var(--hm-eye-travel) * -1)); }
+    84%,
+    100%  { transform: translate(-50%, -50%) translateY(0); }
 }
 
 /* ------------------------------ Responsive ------------------------------ */
@@ -1513,7 +1545,8 @@
 
     .hm-feat__eyes { bottom: 40px; }
     .hm-feat__eye { width: 52px; height: 88px; }
-    .hm-feat__eye::after { width: 28px; height: 28px; }
+    /* Smaller eye, proportionally shorter glance. */
+    .hm-feat__eye::after { width: 28px; height: 28px; --hm-eye-travel: 15px; }
 }
 
 /* Mobile — cards stack full width, each at its natural height */
@@ -1554,7 +1587,9 @@
 /* ---------------------------- Reduced motion ---------------------------- */
 @media (prefers-reduced-motion: reduce) {
     .hm-feat__deco img,
-    .hm-feat__dots { animation: none !important; }
+    .hm-feat__dots,
+    .hm-feat__eye::after,
+    .hm-feat__track.is-spread .hm-feat__eye::after { animation: none !important; }
     .hm-feat__card,
     .hm-feat__text,
     .hm-feat__eyes { transition: none !important; }

@@ -478,9 +478,39 @@
         padding: 10px;
     }
 
+    /* Full-width so it is a comfortable thumb target, but sized like a button
+       rather than a slab: fixed height, label and arrow kept on one line and
+       centred as a pair, and a shadow so the white pill lifts off the dark
+       menu panel instead of reading as a blank white bar. */
     .hm-navbar__cta {
+        display: flex;
+        width: 100%;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        padding: 0 18px;
         min-height: 48px;
-        padding: 7px 14px;
+        font-size: 15px;
+        letter-spacing: .01em;
+        border-radius: 999px;
+        white-space: nowrap;
+        box-shadow: 0 10px 22px rgba(0, 0, 0, .22);
+    }
+
+    /* A fixed circle instead of a padded glyph. Padding on an inline <i> scales
+       with its font size, which is what made the arrow bubble larger than the
+       label sitting next to it. */
+    .hm-navbar__cta i {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        font-size: 12px;
+        line-height: 1;
     }
 
     /* One department per row — two columns of category names are unreadable at

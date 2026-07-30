@@ -22,9 +22,10 @@ class SettingController extends Controller
     public function updateGeneral(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'site_name'    => ['required', 'string', 'max:120'],
-            'site_tagline' => ['nullable', 'string', 'max:200'],
-            'footer_about' => ['nullable', 'string', 'max:600'],
+            'site_name'      => ['required', 'string', 'max:120'],
+            'site_tagline'   => ['nullable', 'string', 'max:200'],
+            'footer_about'   => ['nullable', 'string', 'max:600'],
+            'copyright_text' => ['nullable', 'string', 'max:200'],
         ]);
 
         Setting::putMany($data);
@@ -223,10 +224,21 @@ class SettingController extends Controller
     public function updateSeo(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'seo_meta_title'       => ['nullable', 'string', 'max:180'],
-            'seo_meta_description' => ['nullable', 'string', 'max:320'],
-            'seo_meta_keywords'    => ['nullable', 'string', 'max:320'],
+            'seo_meta_title'                => ['nullable', 'string', 'max:180'],
+            'seo_meta_description'          => ['nullable', 'string', 'max:320'],
+            'seo_meta_keywords'             => ['nullable', 'string', 'max:320'],
+            'seo_meta_robots'               => ['nullable', 'string', 'max:80'],
+            'seo_default_og_image'          => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:2048'],
+            'seo_google_site_verification'  => ['nullable', 'string', 'max:255'],
+            'seo_bing_site_verification'    => ['nullable', 'string', 'max:255'],
+            'seo_google_analytics_id'       => ['nullable', 'string', 'max:120'],
+            'seo_google_tag_manager_id'     => ['nullable', 'string', 'max:120'],
         ]);
+
+        if ($request->hasFile('seo_default_og_image')) {
+            $this->deleteUpload(Setting::get('seo_default_og_image'));
+            $data['seo_default_og_image'] = 'storage/' . $request->file('seo_default_og_image')->store('seo', 'public');
+        }
 
         Setting::putMany($data);
 

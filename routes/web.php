@@ -3,6 +3,7 @@
 use App\Http\Controllers\Frontend\ContactEnquiryController;
 use App\Http\Controllers\Frontend\CourseEnquiryController;
 use App\Http\Controllers\Frontend\HomeController;
+use App\Http\Controllers\Frontend\SitemapController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -32,6 +33,22 @@ Route::controller(HomeController::class)->name('frontend.')->group(function () {
        // Slug-based, so every course card links with route('frontend.course-details', $slug)
        Route::get('/course/{slug}', 'courseDetails')->name('course-details');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Sitemap + robots.txt
+|--------------------------------------------------------------------------
+|
+| /sitemap.xml is the URL crawlers and Search Console expect; /sitemap is
+| kept as a redirect because it is the one people type by hand.
+|
+| robots.txt is generated too, so the "Sitemap:" line always points at the
+| host the site is running on instead of a hardcoded domain.
+|
+*/
+Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('frontend.sitemap');
+Route::redirect('sitemap', '/sitemap.xml', 301);
+Route::get('robots.txt', [SitemapController::class, 'robots'])->name('frontend.robots');
 
 // Shared contact form (home + contact pages) — stores the enquiry + emails the sender.
 Route::post('/contact-enquiry', [ContactEnquiryController::class, 'store'])->name('frontend.contact-enquiry.store');

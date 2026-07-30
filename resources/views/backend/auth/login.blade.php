@@ -47,7 +47,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('backend.auth.authenticate') }}" novalidate>
+                <form method="POST" action="{{ route('backend.auth.authenticate') }}" novalidate autocomplete="off">
                     @csrf
 
                     {{-- Username --}}
@@ -65,8 +65,8 @@
                                    name="username"
                                    class="hm-login__input @error('username') is-invalid @enderror"
                                    placeholder="Username"
-                                   value="{{ old('username', 'admin@gmail.com') }}"
-                                   autocomplete="username"
+                                   value="{{ old('username') }}"
+                                   autocomplete="off"
                                    required>
                         </div>
                         @error('username')
@@ -89,8 +89,8 @@
                                    name="password"
                                    class="hm-login__input hm-login__input--password @error('password') is-invalid @enderror"
                                    placeholder="Password"
-                                   value="12345678"
-                                   autocomplete="current-password"
+                                   value=""
+                                   autocomplete="new-password"
                                    required>
                             <button type="button" class="hm-login__eye" id="hmTogglePw"
                                     aria-label="Show password" aria-pressed="false">

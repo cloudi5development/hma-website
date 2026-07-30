@@ -147,6 +147,22 @@
     transition: color .25s var(--hm-ease, cubic-bezier(.22, .7, .2, 1));
 }
 .hm-contact__item-text a:hover { color: #843D21; }
+.hm-contact__text {
+    color: #6D6357;
+}
+.hm-contact__link--mobile {
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    .hm-contact__text--desktop {
+        display: none;
+    }
+
+    .hm-contact__link--mobile {
+        display: inline;
+    }
+}
 
 /* ------------------------------ Right form ------------------------------ */
 .hm-field { margin-bottom: 18px; }

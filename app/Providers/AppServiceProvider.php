@@ -82,9 +82,13 @@ class AppServiceProvider extends ServiceProvider
             $view->with('contact', Setting::contactDetails());
         });
 
-        // Social profile links (Settings → Social Media) for the footer icons.
+        // Social profile links (Settings → Social Media) for the footer icons,
+        // plus the footer's "Our Courses" column — the first five active courses,
+        // each linking to its own page instead of the dead "#" the column used to
+        // carry. Empty (no courses yet) hides the column.
         View::composer('frontend.layouts.footer', function ($view) {
             $view->with('socialLinks', Setting::socialLinks());
+            $view->with('footerCourses', Course::active()->take(5)->get(['name', 'slug']));
         });
 
         // Home page — hero singleton + the "Top Categories" grid + the four

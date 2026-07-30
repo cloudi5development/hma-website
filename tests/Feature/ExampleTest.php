@@ -2,11 +2,15 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
+    // The home page reads the hero, courses, events and settings tables, so the
+    // schema has to exist before it can be requested.
+    use RefreshDatabase;
+
     /**
      * A basic test example.
      */

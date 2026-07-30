@@ -110,14 +110,30 @@
     font-size: .95rem;
     text-align: center;
 }
+.hm-footer__contact-text {
+    color: var(--hmf-text);
+}
 .hm-footer__contact-link {
     color: var(--hmf-text);
     text-decoration: none;
     transition: color .22s var(--hmf-ease);
 }
+.hm-footer__contact-link--mobile {
+    display: none;
+}
 .hm-footer__contact-link:hover,
 .hm-footer__contact-link:focus-visible { color: var(--hmf-gold); }
 .hm-footer__address { color: var(--hmf-text); }
+
+@media (max-width: 767.98px) {
+    .hm-footer__contact-text--desktop {
+        display: none;
+    }
+
+    .hm-footer__contact-link--mobile {
+        display: inline;
+    }
+}
 .hm-footer__branch {
     display: block;
     margin-bottom: 2px;
