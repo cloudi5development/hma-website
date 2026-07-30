@@ -24,7 +24,7 @@
             <table class="hm-table">
                 <thead>
                     <tr>
-                        <th>Photo</th><th>Speaker</th><th>Title</th><th>Type</th><th>Price</th><th>Tone</th><th>Status</th><th class="text-end">Actions</th>
+                        <th>Photo</th><th>Speaker</th><th>Title</th><th>When</th><th>Where</th><th>Type</th><th>Price</th><th>Tone</th><th>Status</th><th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -33,6 +33,23 @@
                             <td><span class="tbl-logo tbl-logo--round"><img src="{{ $event->image_url }}" alt="{{ $event->speaker }}"></span></td>
                             <td class="hm-table__name">{{ $event->speaker }}</td>
                             <td>{{ $event->title }}</td>
+                            <td class="hm-table__date">
+                                @if ($event->formatted_date || $event->formatted_time)
+                                    {{ $event->formatted_date ?? '—' }}
+                                    @if ($event->formatted_time)
+                                        <span class="hm-table__sub">{{ $event->formatted_time }}</span>
+                                    @endif
+                                @else
+                                    <span class="hm-table__sub">Not scheduled</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if ($event->location)
+                                    <span class="hm-table__sub">{{ Str::limit($event->location, 34) }}</span>
+                                @else
+                                    <span class="hm-table__sub">—</span>
+                                @endif
+                            </td>
                             <td>{{ $event->type }}</td>
                             <td>{{ $event->price }}</td>
                             <td><span class="pill pill--tiny pill--interested">{{ ucfirst($event->tone) }}</span></td>
@@ -57,7 +74,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="text-center py-5 hm-table__sub">No events yet. Add your first one.</td></tr>
+                        <tr><td colspan="10" class="text-center py-5 hm-table__sub">No events yet. Add your first one.</td></tr>
                     @endforelse
                 </tbody>
             </table>

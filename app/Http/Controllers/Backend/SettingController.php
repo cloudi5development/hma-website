@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Http\Controllers\Backend\Concerns\OptimizesImageUploads;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
@@ -12,6 +13,8 @@ use Illuminate\View\View;
 
 class SettingController extends Controller
 {
+    use OptimizesImageUploads;
+
     /* ============================== GENERAL ============================== */
 
     public function general(): View
@@ -193,7 +196,13 @@ class SettingController extends Controller
 
             if ($request->hasFile($key)) {
                 $this->deleteUpload(Setting::get($key));
-                $changes[$key] = 'storage/' . $request->file($key)->store('branding', 'public');
+
+                // The logo is downscaled and re-encoded; the favicon is stored as
+                // uploaded, because it may legitimately be an .ico and the <link>
+                // tags in the layout declare its type.
+                $changes[$key] = $key === 'site_logo'
+                    ? $this->storeOptimizedImage($request->file($key), 'branding', 600)
+                    : 'storage/' . $request->file($key)->store('branding', 'public');
             }
         }
 
@@ -237,7 +246,8 @@ class SettingController extends Controller
 
         if ($request->hasFile('seo_default_og_image')) {
             $this->deleteUpload(Setting::get('seo_default_og_image'));
-            $data['seo_default_og_image'] = 'storage/' . $request->file('seo_default_og_image')->store('seo', 'public');
+            // 1200px is the Open Graph reference width, so nothing larger is useful.
+            $data['seo_default_og_image'] = $this->storeOptimizedImage($request->file('seo_default_og_image'), 'seo', 1200);
         }
 
         Setting::putMany($data);

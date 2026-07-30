@@ -50,7 +50,7 @@
         <div class="hm-course__tags">
             <span class="hm-course__badge">{{ $course['badge'] }}</span>
             <span class="hm-course__rating">
-                <img src="{{ asset('assets/images/courses/star.png') }}" alt="" aria-hidden="true">
+                <img src="{{ asset('assets/images/courses/star.png') }}" alt="" aria-hidden="true" loading="lazy" decoding="async">
                 {{ $course['rating'] }}
             </span>
         </div>
@@ -60,11 +60,11 @@
         <ul class="hm-course__meta">
             <li class="hm-course__meta-row">
                 <span class="hm-course__meta-item">
-                    <img src="{{ asset('assets/images/courses/iconamoon_clock-light.png') }}" alt="" aria-hidden="true">
+                    <img src="{{ asset('assets/images/courses/iconamoon_clock-light.png') }}" alt="" aria-hidden="true" loading="lazy" decoding="async">
                     {{ $course['duration'] ?? '3 months' }}
                 </span>
                 <span class="hm-course__meta-item">
-                    <img src="{{ asset('assets/images/courses/school.png') }}" alt="" aria-hidden="true">
+                    <img src="{{ asset('assets/images/courses/school.png') }}" alt="" aria-hidden="true" loading="lazy" decoding="async">
                     {{ $course['mode'] ?? 'On-Campus Learning' }}
                 </span>
             </li>

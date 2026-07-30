@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Http\Controllers\Backend\Concerns\OptimizesImageUploads;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\HeroRequest;
 use App\Models\Hero;
@@ -16,6 +17,8 @@ use Illuminate\View\View;
  */
 class HeroController extends Controller
 {
+    use OptimizesImageUploads;
+
     public function index(): View
     {
         return view('backend.hero.index', ['hero' => Hero::current()]);
@@ -48,9 +51,7 @@ class HeroController extends Controller
     /** Store the uploaded image on the public disk; return a /public-relative path. */
     private function storeImage(HeroRequest $request): string
     {
-        $path = $request->file('image')->store('hero', 'public');
-
-        return 'storage/' . $path;
+        return $this->storeOptimizedImage($request->file('image'), 'hero');
     }
 
     /** Delete a previously-uploaded image, but never the seeded asset files. */

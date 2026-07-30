@@ -17,6 +17,7 @@ use App\Models\SeoPage;
 use App\Models\Setting;
 use App\Models\SuccessStory;
 use App\Models\Testimonial;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
@@ -47,6 +48,14 @@ class AppServiceProvider extends ServiceProvider
         // page buttons only, no "Showing X to Y of Z results" text. admin.css
         // themes it. Frontend uses its own custom pagination, so it is unaffected.
         Paginator::defaultView('pagination.admin');
+
+        // The password-reset email links into the ADMIN panel. Laravel's default
+        // points at a route named "password.reset", which this app does not have —
+        // every admin route is named "backend.*" — so the URL is built explicitly.
+        ResetPassword::createUrlUsing(fn ($user, string $token) => route(
+            'backend.auth.password.reset',
+            ['token' => $token, 'email' => $user->getEmailForPasswordReset()]
+        ));
 
         // Admin topbar bell — recent notifications + unread count on every page.
         View::composer('backend.template.layouts.header', function ($view) {

@@ -23,3 +23,72 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# ==========================================================================
+# Compression
+# --------------------------------------------------------------------------
+# Text assets are served uncompressed by default, which is most of the cost of
+# a first visit: the CSS/JS this site ships compresses by roughly 4-5x, and the
+# HTML by more. Images and video are already compressed — listing them here
+# would burn CPU for nothing, so they are left alone.
+# ==========================================================================
+<IfModule mod_deflate.c>
+    <IfModule mod_filter.c>
+        AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+        AddOutputFilterByType DEFLATE application/javascript application/x-javascript text/javascript
+        AddOutputFilterByType DEFLATE application/json application/xml application/rss+xml
+        AddOutputFilterByType DEFLATE image/svg+xml
+        AddOutputFilterByType DEFLATE font/ttf font/otf font/woff font/woff2 application/font-woff
+    </IfModule>
+</IfModule>
+
+# ==========================================================================
+# Static asset caching
+# --------------------------------------------------------------------------
+# Without this every asset is re-requested on each page view. The CSS/JS links
+# in the layouts carry a ?v=<filemtime> query string, so a long max-age is safe
+# — editing a file changes its URL and the browser fetches the new copy. Images
+# and fonts are given a year because their names are stable content.
+#
+# HTML is deliberately excluded: it must stay fresh so a content change made in
+# the admin panel shows up immediately.
+# ==========================================================================
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresDefault "access plus 1 hour"
+
+    ExpiresByType text/css                  "access plus 1 year"
+    ExpiresByType application/javascript     "access plus 1 year"
+    ExpiresByType text/javascript            "access plus 1 year"
+
+    ExpiresByType image/webp                 "access plus 1 year"
+    ExpiresByType image/avif                 "access plus 1 year"
+    ExpiresByType image/jpeg                 "access plus 1 year"
+    ExpiresByType image/png                  "access plus 1 year"
+    ExpiresByType image/gif                  "access plus 1 year"
+    ExpiresByType image/svg+xml              "access plus 1 year"
+    ExpiresByType image/x-icon               "access plus 1 year"
+
+    ExpiresByType video/mp4                  "access plus 1 year"
+
+    ExpiresByType font/woff2                 "access plus 1 year"
+    ExpiresByType font/woff                  "access plus 1 year"
+    ExpiresByType font/ttf                   "access plus 1 year"
+
+    ExpiresByType text/html                  "access plus 0 seconds"
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Long-lived + immutable for the fingerprinted/stable assets above.
+    <FilesMatch "\.(css|js|webp|avif|jpe?g|png|gif|svg|ico|mp4|webm|woff2?|ttf|otf|eot)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+
+    # Never cache the HTML itself.
+    <FilesMatch "\.(html|php)$">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </FilesMatch>
+
+    # Uploaded files are served through Laravel's storage fallback route when the
+    # public/storage symlink is missing; that route sets its own Cache-Control.
+</IfModule>

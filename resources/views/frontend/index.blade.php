@@ -142,7 +142,8 @@
                 <img src="{{ asset('assets/images/Hero-section/html.png') }}" alt="HTML5" width="30" height="30" loading="lazy">
             </span> --}}
             <span class="hm-tech hm-tech--js hm-float-b hm-b hm-reveal hm-reveal--fade" data-delay="500" aria-hidden="true">
-                <img src="{{ asset('assets/images/Hero-section/react.png') }}" alt="JavaScript" width="30" height="30" loading="lazy">
+                {{-- WebP at 96px: the PNG was a 1024px, 634 KB file for a 30px icon. --}}
+                <img src="{{ asset('assets/images/Hero-section/react.webp') }}" alt="JavaScript" width="30" height="30" loading="lazy">
             </span>
 
         </div>
@@ -452,6 +453,12 @@
         $events = collect($events ?? [])->map(fn ($e) => [
             'speaker'    => $e->speaker,
             'title'      => $e->title,
+            // Schedule (Admin → Sections → Upcoming Events). Each is null when the
+            // admin left it blank, and the card drops that row rather than
+            // printing an empty one. `location` is stored and editable too, but is
+            // not shown here — see the note beside the schedule rows below.
+            'date'       => $e->formatted_date,
+            'time'       => $e->formatted_time,
             'type'       => $e->type,
             'price'      => $e->price,
             'link'       => $e->link ?: '#',
@@ -486,6 +493,36 @@
                             <div class="hm-ev-card__body">
                                 <span class="hm-ev-card__speaker">{{ $ev['speaker'] }}</span>
                                 <h3 class="hm-ev-card__title">{{ $ev['title'] }}</h3>
+
+                                {{-- When + where. Each row appears only if the admin
+                                     filled that field, so a card with no schedule
+                                     looks exactly as it did before. --}}
+                                @if ($ev['date'] || $ev['time'])
+                                    <ul class="hm-ev-card__when">
+                                        @if ($ev['date'])
+                                            <li class="hm-ev-card__when-row">
+                                                <svg class="hm-ev-card__when-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                    <rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 3v3M16 3v3"/>
+                                                </svg>
+                                                <span>{{ $ev['date'] }}</span>
+                                            </li>
+                                        @endif
+                                        @if ($ev['time'])
+                                            <li class="hm-ev-card__when-row">
+                                                <svg class="hm-ev-card__when-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                    <circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/>
+                                                </svg>
+                                                <span>{{ $ev['time'] }}</span>
+                                            </li>
+                                        @endif
+                                        {{-- Location is deliberately NOT on the card.
+                                             A full venue address needs two or three
+                                             lines, which crowded the speaker photo;
+                                             it stays in the admin (and the database)
+                                             for the event details page. --}}
+                                    </ul>
+                                @endif
+
                                 <div class="hm-ev-card__foot">
                                     <div class="hm-ev-card__meta">
                                         <span class="hm-ev-card__type">{{ $ev['type'] }}</span>

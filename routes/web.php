@@ -32,6 +32,10 @@ Route::controller(HomeController::class)->name('frontend.')->group(function () {
       Route::get('/courses', 'courses')->name('courses');
        // Slug-based, so every course card links with route('frontend.course-details', $slug)
        Route::get('/course/{slug}', 'courseDetails')->name('course-details');
+       // The "Brochure" button on the course page. Streamed through the app rather
+       // than linked at the stored file so it downloads under a readable name and
+       // 404s cleanly when a course has no brochure.
+       Route::get('/course/{slug}/brochure', 'brochure')->name('course-brochure');
 });
 
 /*

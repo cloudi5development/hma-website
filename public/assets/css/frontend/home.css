@@ -2734,6 +2734,10 @@
     padding: 34px 32px;
     display: flex;
     flex-direction: column;
+    /* How much of the card the copy may use before it would reach the speaker
+       photo. One variable, retuned per breakpoint, instead of a max-width on each
+       text element. */
+    --hm-ev-text: 58%;
 }
 .hm-ev-card__speaker { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
 .hm-ev-card--purple .hm-ev-card__speaker { color: #e29bff; }
@@ -2743,19 +2747,61 @@
 .hm-ev-card__title {
     margin: 0;
     font-family: 'Poppins', 'Geist', sans-serif;
-    font-size: 33px;
+    font-size: clamp(26px, 2.1vw, 31px);
     font-weight: 700;
-    line-height: 1.14;
+    line-height: 1.16;
     color: #fff;
-    max-width: 8.5em;
+    /* Allowed wider than the rows beneath it: at this height the photo is only
+       the head, sitting over the faded edge of the gradient. */
+    max-width: 7.4em;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+/* ---- When (date / time) ----
+   Sits between the title and the footer, kept clear of the speaker photo. The
+   venue is not shown on the card — it needs two or three lines and crowded the
+   photo — so these two rows are short by design. */
+.hm-ev-card__when {
+    list-style: none;
+    margin: 18px 0 0;
+    padding: 0;
+    max-width: var(--hm-ev-text);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.hm-ev-card__when-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, .78);
+}
+
+.hm-ev-card__when-icon {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;      /* optical align with the first line of text */
+    color: rgba(255, 255, 255, .55);
+}
+
+/* Kept for the event details page, which does show the venue. */
+.hm-ev-card__when-place {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
 .hm-ev-card__foot { margin-top: auto; }
-.hm-ev-card__meta { margin-bottom: 20px; }
+.hm-ev-card__meta { margin-bottom: 20px; max-width: var(--hm-ev-text); }
 .hm-ev-card__type { display: block; font-size: 13.5px; color: rgba(255, 255, 255, .6); margin-bottom: 4px; }
 .hm-ev-card__price { display: block; font-size: 22px; font-weight: 700; color: #fff; }
 
@@ -2777,19 +2823,27 @@
 .hm-ev-card__btn:hover { background: var(--hm-gold, #E9A320); color: #fff; transform: translateY(-2px); }
 .hm-ev-card__btn i { font-size: 12px; }
 
-/* ---- Speaker cut-out — bottom-right, grayscale, blended into the card ---- */
+/* ---- Speaker cut-out — bottom-right, grayscale, blended into the card ----
+   The box is FIXED (a share of the card, not the image's own aspect ratio) and the
+   photo is fitted inside it, bottom-anchored. That is what makes every slide match:
+   the cut-outs are all different shapes — full body, half body, square, plus
+   whatever an admin uploads — and with `height: auto` each rendered at its own
+   size, so no two cards looked alike and the tall ones reached far enough left to
+   sit under the copy. */
 .hm-ev-card__person {
     position: absolute;
-    right: 2%;
+    right: 0;
     bottom: 0;
-    width: 62%;
-    height: auto;
+    width: 42%;
+    height: 76%;
     object-fit: contain;
-    object-position: bottom center;
+    object-position: bottom right;
     z-index: 1;
     filter: grayscale(1) contrast(1.03) brightness(.98);
-    -webkit-mask-image: linear-gradient(to left, #000 60%, transparent 100%);
-    mask-image: linear-gradient(to left, #000 60%, transparent 100%);
+    /* Only the leading sliver fades now — the copy no longer reaches this far, so
+       a long fade would wash out the person for nothing. */
+    -webkit-mask-image: linear-gradient(to left, #000 84%, transparent 100%);
+    mask-image: linear-gradient(to left, #000 84%, transparent 100%);
     pointer-events: none;
 }
 
@@ -2826,7 +2880,14 @@
     .hm-ev-card { width: 348px; height: 406px; }
     .hm-ev-card.is-left  { transform: translate(calc(-50% - 190px), -50%) scale(.86); }
     .hm-ev-card.is-right { transform: translate(calc(-50% + 190px), -50%) scale(.86); }
-    .hm-ev-card__title { font-size: 27px; }
+    .hm-ev-card__title { font-size: 25px; }
+
+    /* Narrower card: the copy takes a bigger share and the photo gives width back. */
+    .hm-ev-card__body { padding: 28px 26px; --hm-ev-text: 60%; }
+    .hm-ev-card__person { width: 40%; height: 72%; }
+
+    /* The card loses 51px of height here, so the schedule tightens with it. */
+    .hm-ev-card__when { margin-top: 14px; gap: 8px; }
 }
 
 /* ---- Mobile — one card, swipe, buttons below ---- */
@@ -2840,7 +2901,25 @@
         pointer-events: none;
     }
     .hm-ev-card.is-center { transform: translate(-50%, -50%) scale(1); }
-    .hm-ev-card__title { font-size: 28px; }
+
+    /* 396px of card holds speaker + title + 2 schedule rows + footer, so the title
+       gives up its third line — otherwise "Event Details" is pushed off the bottom. */
+    .hm-ev-card__title {
+        font-size: 23px;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+    }
+
+    /* Phones are the tightest split, so the photo is smallest here. */
+    .hm-ev-card__body { padding: 26px 22px; --hm-ev-text: 64%; }
+    .hm-ev-card__person { width: 38%; height: 66%; }
+
+    .hm-ev-card__when { margin-top: 12px; gap: 7px; }
+    .hm-ev-card__when-row { font-size: 12.5px; }
+    .hm-ev-card__when-icon { width: 15px; height: 15px; }
+    .hm-ev-card__price { font-size: 19px; }
+    .hm-ev-card__meta { margin-bottom: 14px; }
+
     .hm-ev-nav { top: auto; bottom: 8px; transform: none; }
     .hm-ev-nav:hover { transform: none; }
     .hm-ev-nav--prev { left: 50%; margin-left: -70px; }

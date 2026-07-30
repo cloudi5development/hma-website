@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
+use App\Http\Controllers\Backend\Concerns\OptimizesImageUploads;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\PartnerRequest;
 use App\Models\Partner;
@@ -13,6 +14,7 @@ use Illuminate\View\View;
 class PartnerController extends Controller
 {
     use HandlesTableQuery;
+    use OptimizesImageUploads;
 
     public function index(): View
     {
@@ -70,9 +72,7 @@ class PartnerController extends Controller
     /** Store the uploaded logo on the public disk; return a /public-relative path. */
     private function storeLogo(PartnerRequest $request): string
     {
-        $path = $request->file('logo')->store('partners', 'public');
-
-        return 'storage/' . $path;
+        return $this->storeOptimizedImage($request->file('logo'), 'partners', 480);
     }
 
     /** Delete a previously-uploaded logo, but never the seeded asset files. */

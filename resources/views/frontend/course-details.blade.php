@@ -24,6 +24,8 @@
         'level'       => $model->skill_level,
         'certificate' => 'Industry Recognized',
         'placement'   => '100% Support',
+        // Null when no brochure has been uploaded — the button is then not rendered.
+        'brochure_url' => $model->has_brochure ? route('frontend.course-brochure', $model->slug) : null,
         'about'       => $model->overview ?: $model->full_description ?: $model->short_description,
     ];
 @endphp
@@ -48,27 +50,30 @@
 @endpush
 
 @php
-    // The five stat cards under the hero. 'icon' is an asset in
-    // assets/images/courses/; 'fa' is the icon-font fallback where no asset
-    // exists for that concept.
+    // Icons for this page come from assets/images/icons-details/ — white outline
+    // glyphs sized for the 34px coloured tiles. 'icon' is the path under
+    // assets/images/; 'fa' stays supported as a fallback for any row that has no
+    // asset. The folder holds 11 distinct glyphs for these 13 slots, so the crown
+    // (icon-12) covers both "Skill Level" and "Deployment & Portfolio Building",
+    // and icon-3 / icon-10 are the same handshake file.
     $features = [
-        ['value' => $course['duration'],    'label' => 'Duration',    'tone' => 'pink',  'icon' => 'iconamoon_clock-light.png'],
-        ['value' => $course['mode'],        'label' => 'Mode',        'tone' => 'blue',  'icon' => 'school.png'],
-        ['value' => $course['level'],       'label' => 'Skill Level', 'tone' => 'red',   'fa'   => 'fa-solid fa-arrow-trend-up'],
-        ['value' => $course['certificate'], 'label' => 'Certificate', 'tone' => 'green', 'fa'   => 'fa-regular fa-circle-check'],
-        ['value' => $course['placement'],   'label' => 'Placement',   'tone' => 'gold',  'fa'   => 'fa-solid fa-briefcase'],
+        ['value' => $course['duration'],    'label' => 'Duration',    'tone' => 'pink',  'icon' => 'icons-details/icon-1.png'],   // clock
+        ['value' => $course['mode'],        'label' => 'Mode',        'tone' => 'blue',  'icon' => 'icons-details/icon-2.png'],   // campus
+        ['value' => $course['level'],       'label' => 'Skill Level', 'tone' => 'red',   'icon' => 'icons-details/icon-12.png'],  // crown
+        ['value' => $course['certificate'], 'label' => 'Certificate', 'tone' => 'green', 'icon' => 'icons-details/icon-4.png'],   // rosette + tick
+        ['value' => $course['placement'],   'label' => 'Placement',   'tone' => 'gold',  'icon' => 'icons-details/icon-5.png'],   // briefcase
     ];
 
     // Highlight cards — the tone drives both the pastel card and its icon tile.
     $highlights = [
-        ['title' => 'Expert-Led Training',          'tone' => 'red',    'fa' => 'fa-solid fa-chalkboard-user'],
-        ['title' => 'Hands-On Live Projects',       'tone' => 'purple', 'fa' => 'fa-solid fa-laptop-code'],
-        ['title' => 'Industry-Focused Curriculum',  'tone' => 'teal',   'fa' => 'fa-solid fa-diagram-project'],
-        ['title' => 'Certification',                'tone' => 'pink',   'fa' => 'fa-solid fa-certificate'],
-        ['title' => 'Placement Assistance',         'tone' => 'blue',   'fa' => 'fa-solid fa-handshake'],
-        ['title' => 'Resume & Interview Support',   'tone' => 'gold',   'fa' => 'fa-regular fa-comments'],
-        ['title' => 'Dedicated Mentor Support',     'tone' => 'peach',  'fa' => 'fa-solid fa-user-tie'],
-        ['title' => 'Deployment & Portfolio Building', 'tone' => 'green', 'fa' => 'fa-solid fa-rocket'],
+        ['title' => 'Expert-Led Training',             'tone' => 'red',    'icon' => 'icons-details/icon-6.png'],   // person + star
+        ['title' => 'Hands-On Live Projects',          'tone' => 'purple', 'icon' => 'icons-details/icon-7.png'],   // project folder
+        ['title' => 'Industry-Focused Curriculum',     'tone' => 'teal',   'icon' => 'icons-details/icon-8.png'],   // telescope
+        ['title' => 'Certification',                   'tone' => 'pink',   'icon' => 'icons-details/icon-9.png'],   // shield + tick
+        ['title' => 'Placement Assistance',            'tone' => 'blue',   'icon' => 'icons-details/icon-3.png'],   // handshake
+        ['title' => 'Resume & Interview Support',      'tone' => 'gold',   'icon' => 'icons-details/icon-11.png'],  // speech bubbles
+        ['title' => 'Dedicated Mentor Support',        'tone' => 'peach',  'icon' => 'icons-details/icon-10.png'],  // handshake
+        ['title' => 'Deployment & Portfolio Building', 'tone' => 'green',  'icon' => 'icons-details/icon-12.png'],  // crown
     ];
 
     $skills = [
@@ -149,10 +154,28 @@
                             <span>Enroll Now</span>
                             <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
                         </button>
-                        <a class="hm-cd-btn hm-cd-btn--ghost" href="#">
-                            <span>Brochure</span>
-                            <i class="fa-solid fa-download" aria-hidden="true"></i>
-                        </a>
+                        {{-- Brochure. The button is always part of this pair, so it
+                             renders either way: as a download link once a PDF has
+                             been uploaded (Admin → Courses → Course Brochure), and
+                             otherwise inert — dimmed and non-clickable rather than a
+                             link that would 404. --}}
+                        @if ($course['brochure_url'])
+                            <a class="hm-cd-btn hm-cd-btn--ghost"
+                               href="{{ $course['brochure_url'] }}"
+                               download
+                               aria-label="Download the {{ $course['title'] }} brochure (PDF)">
+                                <span>Brochure</span>
+                                <i class="fa-solid fa-download" aria-hidden="true"></i>
+                            </a>
+                        @else
+                            <span class="hm-cd-btn hm-cd-btn--ghost is-disabled"
+                                  role="link"
+                                  aria-disabled="true"
+                                  title="The brochure for this course is not available yet.">
+                                <span>Brochure</span>
+                                <i class="fa-solid fa-download" aria-hidden="true"></i>
+                            </span>
+                        @endif
                     </div>
                 </div>
 
@@ -172,7 +195,8 @@
                     <li class="hm-cd-feat hm-cd-feat--{{ $feature['tone'] }}">
                         <span class="hm-cd-feat__icon" aria-hidden="true">
                             @isset($feature['icon'])
-                                <img src="{{ asset('assets/images/courses/' . $feature['icon']) }}" alt="">
+                                <img src="{{ asset('assets/images/' . $feature['icon']) }}"
+                                     alt="" width="17" height="17" loading="lazy" decoding="async">
                             @else
                                 <i class="{{ $feature['fa'] }}"></i>
                             @endisset
@@ -182,7 +206,7 @@
                             <p class="hm-cd-feat__sub">{{ $feature['label'] }}</p>
                         </div>
                     </li>
-                @endforeach
+                @endforeach   
             </ul>
 
             {{-- ============================== ABOUT ============================== --}}
@@ -205,7 +229,12 @@
                             <div class="hm-cd-hl hm-cd-hl--{{ $highlight['tone'] }}">
                                 <h3 class="hm-cd-hl__title">{{ $highlight['title'] }}</h3>
                                 <span class="hm-cd-hl__icon" aria-hidden="true">
-                                    <i class="{{ $highlight['fa'] }}"></i>
+                                    @isset($highlight['icon'])
+                                        <img src="{{ asset('assets/images/' . $highlight['icon']) }}"
+                                             alt="" width="17" height="17" loading="lazy" decoding="async">
+                                    @else
+                                        <i class="{{ $highlight['fa'] }}"></i>
+                                    @endisset
                                 </span>
                             </div>
                         </div>

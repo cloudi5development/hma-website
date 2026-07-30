@@ -63,7 +63,49 @@
                     @error('title') <p class="form-error">{{ $message }}</p> @enderror
                 </div>
 
-                {{-- Row 3 — type + price --}}
+                {{-- Row 3 — when + where. These three drive the date / time /
+                     location rows on the home-page card; leave one blank and that
+                     row is simply not shown. --}}
+                <div class="row g-3 mt-2">
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
+                            <label class="form-label" for="event_date">
+                                Event Date <span class="form-hint" style="display:inline">(optional)</span>
+                            </label>
+                            <input type="date" id="event_date" name="event_date"
+                                   class="form-control-hm @error('event_date') is-invalid @enderror"
+                                   value="{{ old('event_date', $event->event_date?->format('Y-m-d')) }}">
+                            @error('event_date') <p class="form-error">{{ $message }}</p> @enderror
+                            <p class="form-hint">Shown on the card as “20 July, 2026”.</p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
+                            <label class="form-label" for="event_time">
+                                Start Time <span class="form-hint" style="display:inline">(optional)</span>
+                            </label>
+                            <input type="time" id="event_time" name="event_time"
+                                   class="form-control-hm @error('event_time') is-invalid @enderror"
+                                   value="{{ old('event_time', $event->time_input_value) }}">
+                            @error('event_time') <p class="form-error">{{ $message }}</p> @enderror
+                            <p class="form-hint">Shown on the card as “10:00 AM”.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row mt-4">
+                    <label class="form-label" for="location">
+                        Location <span class="form-hint" style="display:inline">(optional)</span>
+                    </label>
+                    <input type="text" id="location" name="location"
+                           class="form-control-hm @error('location') is-invalid @enderror"
+                           value="{{ old('location', $event->location) }}"
+                           placeholder="e.g. Plot 456, T. Nagar, Chennai, Tamil Nadu, 600020">
+                    @error('location') <p class="form-error">{{ $message }}</p> @enderror
+                    <p class="form-hint">The venue as it should read on the card. Keep it short — long addresses are trimmed to two lines.</p>
+                </div>
+
+                {{-- Row 4 — type + price --}}
                 <div class="row g-3">
                     <div class="col-12 col-md-6">
                         <div class="form-row" style="margin-bottom:0">
@@ -85,7 +127,7 @@
                     </div>
                 </div>
 
-                {{-- Row 4 — link --}}
+                {{-- Row 5 — link --}}
                 <div class="form-row mt-4">
                     <label class="form-label" for="link">Event Details Link <span class="form-hint" style="display:inline">(optional)</span></label>
                     <input type="text" id="link" name="link"
@@ -94,7 +136,7 @@
                     @error('link') <p class="form-error">{{ $message }}</p> @enderror
                 </div>
 
-                {{-- Row 5 — speaker photo --}}
+                {{-- Row 6 — speaker photo --}}
                 <div class="form-row">
                     <label class="form-label" for="image">Speaker Photo</label>
                     <div class="d-flex align-items-center gap-3 flex-wrap">
@@ -111,7 +153,7 @@
                     @error('image') <p class="form-error">{{ $message }}</p> @enderror
                 </div>
 
-                {{-- Row 6 — card colour + display order --}}
+                {{-- Row 7 — card colour + display order --}}
                 <div class="row g-3">
                     <div class="col-12 col-md-6">
                         <div class="form-row" style="margin-bottom:0">

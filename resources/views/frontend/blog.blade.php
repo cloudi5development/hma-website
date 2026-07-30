@@ -121,7 +121,7 @@
                                     <span class="hm-blog-card__date">
                                         <img class="hm-blog-card__date-icon"
                                              src="{{ asset('assets/images/blog/calendar.png') }}"
-                                             alt="" aria-hidden="true">
+                                             alt="" aria-hidden="true" loading="lazy" decoding="async">
                                         <time datetime="{{ $blog->iso_date }}">{{ $blog->display_date }}</time>
                                     </span>
 

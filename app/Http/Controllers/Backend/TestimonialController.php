@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
+use App\Http\Controllers\Backend\Concerns\OptimizesImageUploads;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\TestimonialRequest;
 use App\Models\Testimonial;
@@ -13,6 +14,7 @@ use Illuminate\View\View;
 class TestimonialController extends Controller
 {
     use HandlesTableQuery;
+    use OptimizesImageUploads;
 
     public function index(): View
     {
@@ -72,9 +74,7 @@ class TestimonialController extends Controller
     /** Store the uploaded photo on the public disk; return a /public-relative path. */
     private function storePhoto(TestimonialRequest $request): string
     {
-        $path = $request->file('photo')->store('testimonials', 'public');
-
-        return 'storage/' . $path;
+        return $this->storeOptimizedImage($request->file('photo'), 'testimonials', 400);
     }
 
     /** Delete a previously-uploaded photo, but never the seeded asset files. */

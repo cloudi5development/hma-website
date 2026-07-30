@@ -124,15 +124,15 @@
                     <svg class="linechart" viewBox="0 0 720 300" preserveAspectRatio="none" role="img" aria-label="Enquiries over the year">
                         <defs>
                             <pattern id="enquiryDots" width="7" height="7" patternUnits="userSpaceOnUse">
-                                <circle cx="1.5" cy="1.5" r="1" fill="#C8CDD9" opacity=".48"/>
+                                <circle cx="1.5" cy="1.5" r="1" fill="#D8C8BE" opacity=".48"/>
                             </pattern>
                             <linearGradient id="gNew" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0" stop-color="#FF747A" stop-opacity=".10"/>
-                                <stop offset="1" stop-color="#FF747A" stop-opacity="0"/>
+                                <stop offset="0" stop-color="#C24A22" stop-opacity=".10"/>
+                                <stop offset="1" stop-color="#C24A22" stop-opacity="0"/>
                             </linearGradient>
                             <linearGradient id="gConv" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0" stop-color="#6F8FFF" stop-opacity=".10"/>
-                                <stop offset="1" stop-color="#6F8FFF" stop-opacity="0"/>
+                                <stop offset="0" stop-color="#E0952A" stop-opacity=".10"/>
+                                <stop offset="1" stop-color="#E0952A" stop-opacity="0"/>
                             </linearGradient>
                         </defs>
 
@@ -148,12 +148,12 @@
                         {{-- areas + lines --}}
                         <path d="{{ $smooth($newVals, true) }}"  fill="url(#gNew)"  stroke="none"/>
                         <path d="{{ $smooth($conVals, true) }}" fill="url(#gConv)" stroke="none"/>
-                        <path d="{{ $smooth($newVals) }}"  fill="none" stroke="#FF747A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="{{ $smooth($conVals) }}" fill="none" stroke="#6F8FFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="{{ $smooth($newVals) }}"  fill="none" stroke="#C24A22" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="{{ $smooth($conVals) }}" fill="none" stroke="#E0952A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
 
                         {{-- points --}}
                         @foreach ($newVals as $i => $v)
-                            <circle cx="{{ round($plotX($i), 1) }}" cy="{{ round($plotY($v), 1) }}" r="3.4" fill="#fff" stroke="#FF747A" stroke-width="2"/>
+                            <circle cx="{{ round($plotX($i), 1) }}" cy="{{ round($plotY($v), 1) }}" r="3.4" fill="#fff" stroke="#C24A22" stroke-width="2"/>
                         @endforeach
 
                         {{-- x labels --}}
@@ -163,8 +163,8 @@
                     </svg>
 
                     <ul class="chart-legend">
-                        <li><span class="line" style="background:#FF747A"></span> New Enquiries</li>
-                        <li><span class="line" style="background:#6F8FFF"></span> Converted Enquiries</li>
+                        <li><span class="line" style="background:#C24A22"></span> New Enquiries</li>
+                        <li><span class="line" style="background:#E0952A"></span> Converted Enquiries</li>
                     </ul>
                 </div>
             </div>
@@ -180,12 +180,12 @@
                 </div>
                 <div class="hm-card__body">
                     <div class="donut-wrap">
-                        <div class="donut" style="background: conic-gradient(#FF8278 0 {{ $coursePct }}%, #7664C7 {{ $coursePct }}% 100%);">
+                        <div class="donut" style="background: conic-gradient(#C24A22 0 {{ $coursePct }}%, #7A2E12 {{ $coursePct }}% 100%);">
                             <div class="donut__center"><span>Total enquiries</span><b>{{ number_format($stats['total']) }}</b></div>
                         </div>
                         <ul class="donut-legend">
-                            <li><span class="dot" style="background:#FF8278"></span> Course <b>{{ $coursePct }}%</b></li>
-                            <li><span class="dot" style="background:#7664C7"></span> Contact <b>{{ $contactPct }}%</b></li>
+                            <li><span class="dot" style="background:#C24A22"></span> Course <b>{{ $coursePct }}%</b></li>
+                            <li><span class="dot" style="background:#7A2E12"></span> Contact <b>{{ $contactPct }}%</b></li>
                         </ul>
                     </div>
                 </div>

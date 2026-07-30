@@ -1,38 +1,69 @@
 /* ==========================================================================
    HireMinds Academy — Admin theme (premium SaaS)
-   Soft pastel UI, glassmorphism, rounded 24px cards. Palette is a soft take on
-   the HireMinds brand: gold + amber + muted purple + lavender.
+   Soft warm UI, rounded cards. One hue family: a deep terracotta for the sidebar
+   chrome, cream for the page, and an orange-red accent for anything actionable,
+   over blush tints.
    UI only — no markup logic, routes or data are defined here.
+
+   Several variable NAMES below are historical (--purple, --lavender, --gold):
+   they are referenced in hundreds of places in this file, so they were repointed
+   at the new palette rather than renamed. Prefer the semantic names for new work.
    ========================================================================== */
 
 :root {
-    --gold: #C89B3C;
+    /* --- brand + accent --- */
+    --brand: #A5391B;          /* sidebar chrome */
+    --brand-dark: #8C2E13;     /* its gradient foot */
+    --brand-ink: #7A2A11;      /* deep text on warm tints */
+    --accent: #C24A22;         /* actions, active icons, links */
+    --accent-strong: #A83C18;  /* accent, pressed */
+    --accent-soft: #FBEAE2;    /* blush tint behind accents */
+    --accent-line: #F0C9B6;    /* border on tinted things */
+    --amber-accent: #D98A1E;   /* secondary warm (ratings, warnings) */
+
+    /* --- historical names, repointed --- */
+    --gold: var(--amber-accent);
     --amber: #D8A64D;
-    --purple: #6E5AA6;
-    --lavender: #EAE5F8;
-    --bg: #FAF9FD;
+    --purple: var(--accent);
+    --lavender: var(--accent-soft);
+
+    /* --- surfaces --- */
+    --bg: #FCF6F2;             /* warm cream page */
     --card: #FFFFFF;
-    --border: #ECECEC;
-    --ink: #222222;
-    --muted: #777777;
+    --border: #F1E5DD;         /* warm hairline */
+    --ink: #2A1D14;            /* warm near-black */
+    --muted: #8A7466;
+
+    /* --- semantic states, deliberately kept distinct from the accent ---
+       Danger is a deep rose-red rather than the old candy pink (#FF6B81): pink
+       read as decorative next to the warm chrome, and it has to stay clearly
+       separate from the terracotta accent so "delete" never looks like "primary". */
     --success: #34C759;
     --warning: #FFB648;
-    --danger: #FF6B81;
+    --danger: #C4283C;
+    --danger-soft: #FDECEE;
+    --danger-line: #F3CFD4;
 
-    /* Light lavender chrome for the sidebar + topbar, tinted from the theme's
-       purple (#6E5AA6) so the panel reads as one surface with the cards. */
-    --panel: #FBFAFE;
-    --panel-2: #F2EEFA;
-    --panel-border: #E8E2F4;
+    /* Terracotta chrome. These three are read by .app-sidebar only, so the
+       topbar and the cards stay light. */
+    --panel: #A5391B;
+    --panel-2: #8C2E13;
+    --panel-border: rgba(255, 255, 255, .14);
+
+    /* Light-on-dark text for that chrome. */
+    --panel-ink: #FFFFFF;
+    --panel-text: rgba(255, 255, 255, .82);
+    --panel-text-dim: rgba(255, 255, 255, .56);
+    --panel-hover: rgba(255, 255, 255, .12);
 
     --sidebar-w: 268px;
     --rail-w: 84px;
     --topbar-h: 84px;
     --radius: 15px;
     --ease: cubic-bezier(.22, .61, .36, 1);
-    --shadow: 0 10px 34px rgba(46, 39, 74, .06);
-    --shadow-lg: 0 20px 54px rgba(46, 39, 74, .10);
-    --active-grad: linear-gradient(135deg, #7A63B8 0%, #C89B3C 100%);
+    --shadow: 0 10px 34px rgba(74, 40, 22, .06);
+    --shadow-lg: 0 20px 54px rgba(74, 40, 22, .10);
+    --active-grad: linear-gradient(135deg, #C24A22 0%, #D98A1E 100%);
 }
 
 * {
@@ -78,7 +109,7 @@ svg {
     flex-direction: column;
     background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
     border-right: 1px solid var(--panel-border);
-    box-shadow: 10px 0 30px rgba(46, 39, 74, .05);
+    box-shadow: 10px 0 30px rgba(74, 40, 22, .18);
     z-index: 1040;
     transition: width .32s var(--ease);
 }
@@ -124,17 +155,17 @@ body ::-webkit-scrollbar-track {
 }
 
 body ::-webkit-scrollbar-thumb {
-    background: #DCD4EE;
+    background: #E8D6CB;
     border-radius: 999px;
 }
 
 body ::-webkit-scrollbar-thumb:hover {
-    background: #C7BCE4;
+    background: #D8B7A5;
 }
 
 body * {
     scrollbar-width: thin;
-    scrollbar-color: #DCD4EE transparent;
+    scrollbar-color: #E8D6CB transparent;
 }
 
 .app-sidebar__nav::-webkit-scrollbar {
@@ -152,11 +183,11 @@ body * {
 }
 
 .app-sidebar:hover .app-sidebar__nav::-webkit-scrollbar-thumb {
-    background: #DCD4EE;
+    background: rgba(255, 255, 255, .30);
 }
 
 .app-sidebar__nav::-webkit-scrollbar-thumb:hover {
-    background: #C7BCE4;
+    background: rgba(255, 255, 255, .45);
 }
 
 /* Firefox */
@@ -166,7 +197,7 @@ body * {
 }
 
 .app-sidebar:hover .app-sidebar__nav {
-    scrollbar-color: #DCD4EE transparent;
+    scrollbar-color: rgba(255, 255, 255, .30) transparent;
 }
 
 .app-sidebar__heading {
@@ -175,7 +206,7 @@ body * {
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: #AAA49B;
+    color: var(--panel-text-dim);
     white-space: nowrap;
 }
 
@@ -196,7 +227,7 @@ body * {
     padding: 9px 14px 9px 18px;
     margin-bottom: 2px;
     border-radius: 10px;
-    color: #908D87;
+    color: var(--panel-text);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -205,8 +236,8 @@ body * {
 }
 
 .app-nav__link:hover {
-    background: rgba(255, 255, 255, .68);
-    color: #4C4034;
+    background: var(--panel-hover);
+    color: var(--panel-ink);
 }
 
 .app-nav__link svg {
@@ -220,17 +251,36 @@ body * {
     flex: 1 1 auto;
 }
 
-/* Active — soft purple→gold gradient pill, white content, subtle glow */
-.app-nav__link.is-active,
-.app-nav__item.is-open>.app-nav__link {
+/* ---- Two different states, two different looks ----
+   ACTIVE = the page you are on. A white pill; only ever one in the whole menu.
+   OPEN   = a group whose submenu is expanded, which is not the same thing.
+
+   These two used to share the pill, so every group you expanded looked exactly
+   like the current page. On the old near-white sidebar a white pill was almost
+   invisible and it went unnoticed; against the terracotta chrome it read as
+   "everything is selected at once". Open is now only a faint lift, and the
+   rotated caret carries the meaning. */
+.app-nav__link.is-active {
     background: #FFFFFF;
     color: #2A1D14;
     font-weight: 800;
-    box-shadow: 0 2px 10px rgba(46, 39, 74, .07);
+    box-shadow: 0 2px 10px rgba(74, 40, 22, .07);
 }
 
-.app-nav__link.is-active::before,
-.app-nav__item.is-open>.app-nav__link::before {
+.app-nav__item.is-open>.app-nav__link {
+    background: var(--panel-hover);
+    color: var(--panel-ink);
+    font-weight: 600;
+}
+
+/* The active row keeps its pill even while its own submenu is open. */
+.app-nav__item.is-open>.app-nav__link.is-active {
+    background: #FFFFFF;
+    color: #2A1D14;
+    font-weight: 800;
+}
+
+.app-nav__link.is-active::before {
     content: "";
     position: absolute;
     left: -14px;
@@ -238,29 +288,28 @@ body * {
     bottom: 2px;
     width: 3px;
     border-radius: 0 999px 999px 0;
-    background: #97753f;
+    background: #FFC7A4;
 }
 
 /* Current navigation keeps the outline icon set — only the colour changes, so
-   the active row reads as the same icon rather than a different glyph. */
-.app-nav__link.is-active>svg,
-.app-nav__item.is-open>.app-nav__link>svg {
-    color: #C6851A;
+   the active row reads as the same icon rather than a different glyph. The accent
+   icon marks the current page only; an expanded group keeps its light icon. */
+.app-nav__link.is-active>svg {
+    color: #C24A22;
     fill: none;
     stroke: currentColor;
     stroke-width: 1.9;
 }
 
-.app-nav__link.is-active .app-nav__caret,
-.app-nav__item.is-open>.app-nav__link .app-nav__caret {
-    color: #A66D15;
+.app-nav__link.is-active .app-nav__caret {
+    color: #A83C18;
 }
 
 .app-nav__caret {
     width: 16px !important;
     height: 16px !important;
     transition: transform .25s ease;
-    color: #B5AEA5;
+    color: var(--panel-text-dim);
 }
 
 .app-nav__item.is-open>.app-nav__link .app-nav__caret {
@@ -270,16 +319,17 @@ body * {
 .app-nav__badge {
     font-size: 10px;
     font-weight: 700;
-    color: #8A5A14;
-    background: #FFF0D8;
+    color: #FFFFFF;
+    background: #E5642B;
     padding: 2px 9px;
     border-radius: 999px;
 }
 
-.app-nav__link.is-active .app-nav__badge,
-.app-nav__item.is-open>.app-nav__link .app-nav__badge {
+/* On the white pill the badge needs the deeper accent to stay readable; on an
+   expanded row it keeps the standard orange pill. */
+.app-nav__link.is-active .app-nav__badge {
     color: #FFFFFF;
-    background: #C6851A;
+    background: #C24A22;
 }
 
 /* Submenu */
@@ -302,7 +352,7 @@ body * {
     gap: 12px;
     padding: 9px 12px;
     border-radius: 9px;
-    color: #9B978F;
+    color: var(--panel-text);
     font-size: 13.5px;
     font-weight: 500;
     white-space: nowrap;
@@ -310,8 +360,8 @@ body * {
 }
 
 .app-nav__sublink:hover {
-    background: rgba(255, 255, 255, .68);
-    color: #6F5130;
+    background: var(--panel-hover);
+    color: var(--panel-ink);
 }
 
 .app-nav__sublink svg {
@@ -324,12 +374,12 @@ body * {
 .app-nav__sublink.is-active {
     color: #2A1D14;
     background: #FFFFFF;
-    box-shadow: 0 2px 10px rgba(46, 39, 74, .07);
+    box-shadow: 0 2px 10px rgba(74, 40, 22, .07);
     font-weight: 800;
 }
 
 .app-nav__sublink.is-active svg {
-    color: #C6851A;
+    color: #C24A22;
     fill: none;
     stroke: currentColor;
     stroke-width: 1.9;
@@ -402,7 +452,7 @@ body * {
     padding: 8px 10px;
     border-radius: 10px;
     font-size: 13px;
-    color: #837E90;
+    color: #857062;
 }
 
 .app-nav__flyout a:hover {
@@ -430,7 +480,7 @@ body * {
     gap: 14px;
     height: var(--topbar-h);
     padding: 0 30px;
-    background: rgba(251, 250, 254, .82);
+    background: rgba(253, 249, 246, .82);
     -webkit-backdrop-filter: blur(16px) saturate(140%);
     backdrop-filter: blur(16px) saturate(140%);
    
@@ -442,7 +492,7 @@ body * {
     justify-content: center;
     width: 42px;
     height: 42px;
-    color: #6B6676;
+    color: #6E5A4E;
     background: #FFFFFF;
     border: 1px solid var(--border);
     border-radius: 13px;
@@ -475,7 +525,7 @@ body * {
     transform: translateY(-50%);
     width: 19px;
     height: 19px;
-    color: #A9A4B4;
+    color: #A28C7C;
 }
 
 .app-topbar__search input {
@@ -494,12 +544,12 @@ body * {
 }
 
 .app-topbar__search input::placeholder {
-    color: #A9A4B4;
+    color: #A28C7C;
 }
 
 .app-topbar__search input:focus {
-    border-color: #D8CEF0;
-    box-shadow: 0 0 0 4px rgba(110, 90, 166, .08);
+    border-color: #F0C9B6;
+    box-shadow: 0 0 0 4px rgba(194, 74, 34, .08);
 }
 
 .app-topbar__kbd {
@@ -513,7 +563,7 @@ body * {
     padding: 4px 9px;
     font-size: 11.5px;
     font-weight: 600;
-    color: #8B8698;
+    color: #8A7466;
     background: #F4F2F9;
     border-radius: 8px;
 }
@@ -529,7 +579,7 @@ body * {
     justify-content: center;
     width: 46px;
     height: 46px;
-    color: #6B6676;
+    color: #6E5A4E;
     background: #FFFFFF;
     border: 1px solid var(--border);
     border-radius: 50%;
@@ -602,7 +652,7 @@ body * {
 }
 
 .app-topbar__chev {
-    color: #B7B2C2;
+    color: #BCA99B;
 }
 
 .app-topbar__chev svg {
@@ -650,7 +700,7 @@ body * {
     align-items: center;
     justify-content: space-between;
     padding: 20px 24px;
-    border-bottom: 1px solid #F3F1F7;
+    border-bottom: 1px solid #F4E9E2;
 }
 
 .hm-card__title {
@@ -670,7 +720,7 @@ body * {
 }
 
 .hm-card__link:hover {
-    background: #E0D8F4;
+    background: #F8DBCE;
 }
 
 /* ---- Dashboard KPI cards: soft glass gradients ---- */
@@ -719,19 +769,19 @@ body * {
 }
 
 .kpi-card--peach {
-    background: linear-gradient(130deg, #C9C8FB 0%, #FCE7DE 48%, #FF816D 100%);
+    background: linear-gradient(130deg, #F8CBAB 0%, #FDEBE1 48%, #E4703C 100%);
 }
 
 .kpi-card--sky {
-    background: linear-gradient(130deg, #B9E4FC 0%, #9BF1DF 45%, #4D8EFB 100%);
+    background: linear-gradient(130deg, #FCE1B0 0%, #FDF3DE 45%, #E0952A 100%);
 }
 
 .kpi-card--lavender {
-    background: linear-gradient(130deg, #D9CAFF 0%, #EDE5FF 47%, #B29BF0 100%);
+    background: linear-gradient(130deg, #F4C9C0 0%, #FBE8E3 47%, #C9604A 100%);
 }
 
 .kpi-card--cream {
-    background: linear-gradient(130deg, #FFE0A4 0%, #FFF0D4 48%, #F2B86C 100%);
+    background: linear-gradient(130deg, #FFE0A4 0%, #FCE7D6 48%, #F2B86C 100%);
 }
 
 .kpi-card__top {
@@ -874,7 +924,7 @@ body * {
 
 .analytics-card__sub {
     margin: 3px 0 0;
-    color: #969EAD;
+    color: #A08C7E;
     font-size: 12px;
     line-height: 1.2;
 }
@@ -884,7 +934,7 @@ body * {
     align-items: center;
     gap: 8px;
     padding: 11px 16px;
-    color: #22262D;
+    color: #2A1D14;
     background: #FFFFFF;
     border-radius: 999px;
     box-shadow: 0 5px 16px rgba(31, 42, 67, .06);
@@ -892,7 +942,7 @@ body * {
 
 .analytics-card .hm-card__link::before {
     content: "Range:";
-    color: #6E7582;
+    color: #756358;
     font-weight: 500;
 }
 
@@ -925,12 +975,12 @@ body * {
 }
 
 .analytics-card .linechart__ylabel {
-    fill: #A9AFBA;
+    fill: #B0A094;
     font-size: 10.5px;
 }
 
 .analytics-card .linechart__xlabel {
-    fill: #9DA4B1;
+    fill: #A79689;
     font-size: 10.5px;
 }
 
@@ -947,7 +997,7 @@ body * {
     align-items: center;
     gap: 8px;
     font-size: 11.5px;
-    color: #737B89;
+    color: #7C6A5D;
 }
 
 .analytics-card .chart-legend .line {
@@ -1000,7 +1050,7 @@ body * {
     margin: 0 0 4px;
     font-size: 10px;
     font-weight: 600;
-    color: #696F7C;
+    color: #726055;
 }
 
 .donut-card .hm-card__body {
@@ -1022,7 +1072,7 @@ body * {
     padding: 7px;
     border-radius: 50%;
     flex-shrink: 0;
-    box-shadow: 0 8px 16px rgba(63, 66, 88, .08);
+    box-shadow: 0 8px 16px rgba(110, 90, 78, .08);
 }
 
 .donut::before {
@@ -1065,7 +1115,7 @@ body * {
 
 .donut__center span {
     font-size: 10px;
-    color: #A2A5AE;
+    color: #A69488;
 }
 
 .donut-legend {
@@ -1084,7 +1134,7 @@ body * {
     align-items: center;
     gap: 8px;
     font-size: 11px;
-    color: #737985;
+    color: #7C6A5D;
 }
 
 .donut-legend .dot {
@@ -1097,7 +1147,7 @@ body * {
 .donut-legend b {
     margin-left: auto;
     font-size: 10px;
-    color: #555A64;
+    color: #5A4A40;
 }
 
 /* ---- Table ---- */
@@ -1112,14 +1162,14 @@ body * {
     font-weight: 600;
     letter-spacing: .05em;
     text-transform: uppercase;
-    color: #A9A4B4;
+    color: #A28C7C;
     padding: 14px 24px;
-    border-bottom: 1px solid #F3F1F7;
+    border-bottom: 1px solid #F4E9E2;
 }
 
 .hm-table td {
     padding: 15px 24px;
-    border-bottom: 1px solid #F6F4F9;
+    border-bottom: 1px solid #F6ECE5;
     font-size: 13.5px;
 }
 
@@ -1179,8 +1229,8 @@ body * {
 }
 
 .pill--new {
-    color: #C89B3C;
-    background: #FBF2DD;
+    color: #D98A1E;
+    background: #FCEBD8;
 }
 
 .pill--contacted {
@@ -1189,7 +1239,7 @@ body * {
 }
 
 .pill--interested {
-    color: #6E5AA6;
+    color: #C24A22;
     background: var(--lavender);
 }
 
@@ -1199,8 +1249,8 @@ body * {
 }
 
 .pill--closed {
-    color: #8B8698;
-    background: #F1EFF5;
+    color: #8A7466;
+    background: #F5EBE4;
 }
 
 /* ---- Activity feed ---- */
@@ -1214,7 +1264,7 @@ body * {
     display: flex;
     gap: 14px;
     padding: 15px 0;
-    border-bottom: 1px solid #F6F4F9;
+    border-bottom: 1px solid #F6ECE5;
 }
 
 .feed li:last-child {
@@ -1262,14 +1312,14 @@ body * {
     border: 1px solid #ECEAF0;
     border-radius: 18px;
     background: #FFFFFF;
-    box-shadow: 0 10px 30px rgba(34, 30, 48, .055);
+    box-shadow: 0 10px 30px rgba(58, 36, 26, .055);
 }
 
 .recent-enquiries-card .hm-card__head,
 .content-overview-card .hm-card__head {
     min-height: 76px;
     padding: 17px 24px;
-    border-bottom: 1px solid #F0EEF3;
+    border-bottom: 1px solid #F4E9E2;
 }
 
 .recent-enquiries-card .hm-card__title,
@@ -1282,8 +1332,8 @@ body * {
 
 .recent-enquiries-card .hm-card__link {
     padding: 9px 17px;
-    color: #6D58B0;
-    background: #EEE9FA;
+    color: #C24A22;
+    background: #FBEAE2;
     border-radius: 999px;
 }
 
@@ -1298,7 +1348,7 @@ body * {
 
 .recent-enquiries-card .hm-table th {
     padding: 14px 20px;
-    color: #736C84;
+    color: #776055;
     background: #F8F6FC;
     font-size: 10.5px;
     letter-spacing: .07em;
@@ -1307,7 +1357,7 @@ body * {
 
 .recent-enquiries-card .hm-table td {
     padding: 16px 20px;
-    color: #514D5D;
+    color: #55463C;
     font-size: 13px;
     vertical-align: middle;
     overflow-wrap: anywhere;
@@ -1337,8 +1387,8 @@ body * {
     width: 40px;
     height: 40px;
     margin-right: 11px;
-    color: #715BB3;
-    background: #EBE5FA;
+    color: #C24A22;
+    background: #FBEAE2;
 }
 
 .recent-enquiries-card .hm-table__name {
@@ -1374,8 +1424,8 @@ body * {
 .content-overview-card__badge {
     padding: 6px 10px;
     border-radius: 999px;
-    color: #7058B1;
-    background: #EEE9FA;
+    color: #C24A22;
+    background: #FBEAE2;
     font-size: 10px;
     font-weight: 700;
 }
@@ -1387,8 +1437,8 @@ body * {
 
 .content-overview-table th {
     padding: 10px 0;
-    color: #9892A3;
-    border-bottom: 1px solid #F0EEF3;
+    color: #9C8878;
+    border-bottom: 1px solid #F4E9E2;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: .08em;
@@ -1404,7 +1454,7 @@ body * {
 .content-overview-table td {
     padding: 10px 0;
     border-bottom: 1px solid #F3F1F5;
-    color: #4E4958;
+    color: #524339;
     font-size: 12.5px;
 }
 
@@ -1426,8 +1476,8 @@ body * {
     width: 27px;
     height: 27px;
     border-radius: 8px;
-    color: #725DB2;
-    background: #ECE7FA;
+    color: #C24A22;
+    background: #FBEAE2;
 }
 
 .content-overview-table__icon svg {
@@ -1442,7 +1492,7 @@ body * {
     justify-content: center;
     padding: 4px 8px;
     border-radius: 999px;
-    color: #5D536F;
+    color: #5E4B40;
     background: #F6F3FB;
     font-size: 11px;
     font-weight: 700;
@@ -1481,10 +1531,14 @@ body * {
     color: var(--muted);
 }
 
-/* ---- Buttons ---- */
+/* ---- Buttons ----
+   .btn-danger-soft belongs in this group: without it a <button class="btn-danger-soft">
+   fell back to the browser's default chrome — native border, native padding, square
+   corners — so "Delete Enquiry" did not match the .btn-ghost sitting above it. */
 .btn-brand,
 .btn-soft,
-.btn-ghost {
+.btn-ghost,
+.btn-danger-soft {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -1510,16 +1564,16 @@ body * {
 .btn-brand {
     color: #fff;
     /* Purple \u2192 gold, the same blend the active nav pill uses. */
-    background: linear-gradient(135deg, #7A63B8 0%, #C89B3C 100%);
+    background: linear-gradient(135deg, #C24A22 0%, #D98A1E 100%);
     border-radius: 8px;
-    box-shadow: 0 9px 18px rgba(110, 90, 166, .22);
+    box-shadow: 0 9px 18px rgba(194, 74, 34, .22);
 }
 
 .btn-brand:hover {
     transform: translateY(-2px);
     color: #fff;
-    background: linear-gradient(135deg, #6A54A4 0%, #B78A2C 100%);
-    box-shadow: 0 13px 24px rgba(110, 90, 166, .28);
+    background: linear-gradient(135deg, #A83C18 0%, #D98A1E 100%);
+    box-shadow: 0 13px 24px rgba(194, 74, 34, .28);
 }
 
 .btn-brand.is-disabled {
@@ -1540,28 +1594,33 @@ body * {
 
 .btn-soft:hover {
     color: var(--purple);
-    background: #E0D8F4;
+    background: #F8DBCE;
 }
 
 .btn-ghost {
-    color: #6B6676;
+    color: #6E5A4E;
     background: #fff;
     border-color: var(--border);
 }
 
 .btn-ghost:hover {
     color: var(--ink);
-    border-color: #D8CEF0;
+    border-color: #F0C9B6;
 }
 
+/* Soft destructive: quiet at rest — a tinted panel with a hairline, like its
+   .btn-ghost neighbour — then commits to solid red on hover so the action reads
+   as deliberate rather than decorative. */
 .btn-danger-soft {
     color: var(--danger);
-    background: #FFEEF1;
+    background: var(--danger-soft);
+    border-color: var(--danger-line);
 }
 
 .btn-danger-soft:hover {
     color: #fff;
     background: var(--danger);
+    border-color: var(--danger);
 }
 
 .btn-icon {
@@ -1614,8 +1673,8 @@ textarea.form-control-hm {
 }
 
 .form-control-hm:focus {
-    border-color: #D8CEF0;
-    box-shadow: 0 0 0 4px rgba(110, 90, 166, .08);
+    border-color: #F0C9B6;
+    box-shadow: 0 0 0 4px rgba(194, 74, 34, .08);
 }
 
 .form-control-hm.is-invalid {
@@ -1631,7 +1690,7 @@ select.form-control-hm {
     appearance: none;
     -webkit-appearance: none;
     padding-right: 42px;
-    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B6676' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236E5A4E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 15px center;
     background-size: 16px 16px;
@@ -1654,7 +1713,7 @@ select.form-control-hm {
     }
 
     select.form-control-hm::picker-icon {
-        color: #6B6676;
+        color: #6E5A4E;
         transition: transform .2s var(--ease);
     }
 
@@ -1670,7 +1729,7 @@ select.form-control-hm {
         background: #fff;
         border: 1px solid var(--border);
         border-radius: 12px;
-        box-shadow: 0 14px 34px rgba(31, 25, 51, .12);
+        box-shadow: 0 14px 34px rgba(58, 36, 26, .12);
     }
 
     select.form-control-hm option {
@@ -1714,7 +1773,7 @@ select.form-control-hm {
     margin-bottom: 14px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    background: #FCFBFE;
+    background: #FDF9F6;
 }
 
 .branch-row:last-child {
@@ -1765,7 +1824,7 @@ select.form-control-hm {
     height: 230px;
     border: 1px solid var(--border);
     border-radius: 12px;
-    background: #F2EEFA;
+    background: #FBEDE6;
 }
 
 .btn-sm {
@@ -1810,7 +1869,7 @@ select.form-control-hm {
     background: #fff;
     border: 1px solid var(--border);
     border-radius: 14px;
-    box-shadow: 0 20px 50px rgba(31, 25, 51, .16);
+    box-shadow: 0 20px 50px rgba(58, 36, 26, .16);
 }
 
 .app-menu__head {
@@ -1848,7 +1907,7 @@ select.form-control-hm {
     font-family: inherit;
     font-size: 13.5px;
     font-weight: 500;
-    color: #6B6676;
+    color: #6E5A4E;
     text-align: left;
     text-decoration: none;
     cursor: pointer;
@@ -1879,12 +1938,12 @@ select.form-control-hm {
 }
 
 .app-menu__item--danger {
-    color: #D13F44;
+    color: #C4283C;
 }
 
 .app-menu__item--danger:hover,
 .app-menu__item--danger:focus-visible {
-    background: #FDECEF;
+    background: #FDECEE;
     color: #C0363B;
 }
 
@@ -1916,7 +1975,7 @@ select.form-control-hm {
     background: #fff;
     border: 1px solid var(--border);
     border-radius: 14px;
-    box-shadow: 0 18px 44px rgba(46, 39, 74, .16);
+    box-shadow: 0 18px 44px rgba(74, 40, 22, .16);
     pointer-events: auto;
     opacity: 0;
     transform: translateX(18px) scale(.98);
@@ -1978,7 +2037,7 @@ select.form-control-hm {
     margin: 0;
     font-size: 11.5px;
     line-height: 1.45;
-    color: #6B6676;
+    color: #6E5A4E;
     overflow-wrap: anywhere;
 }
 
@@ -1993,7 +2052,7 @@ select.form-control-hm {
     border: 0;
     border-radius: 7px;
     background: none;
-    color: #B4AEC2;
+    color: #B9A698;
     cursor: pointer;
     transition: background .2s ease, color .2s ease;
 }
@@ -2027,11 +2086,11 @@ select.form-control-hm {
 
 .hm-toast--error::before,
 .hm-toast--error .hm-toast__timer { background: var(--danger); }
-.hm-toast--error .hm-toast__icon  { background: #FFEEF1; color: var(--danger); }
+.hm-toast--error .hm-toast__icon  { background: #FDECEE; color: var(--danger); }
 
 .hm-toast--warning::before,
 .hm-toast--warning .hm-toast__timer { background: var(--gold); }
-.hm-toast--warning .hm-toast__icon  { background: #FBF2DD; color: #A6741F; }
+.hm-toast--warning .hm-toast__icon  { background: #FCEBD8; color: #A8631A; }
 
 /* ---- Confirm dialog ---- */
 .hm-dialog {
@@ -2042,7 +2101,7 @@ select.form-control-hm {
     align-items: center;
     justify-content: center;
     padding: 20px;
-    background: rgba(31, 25, 51, .42);
+    background: rgba(58, 36, 26, .42);
     -webkit-backdrop-filter: blur(3px);
     backdrop-filter: blur(3px);
     opacity: 0;
@@ -2063,7 +2122,7 @@ select.form-control-hm {
     background: #fff;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    box-shadow: 0 30px 70px rgba(31, 25, 51, .26);
+    box-shadow: 0 30px 70px rgba(58, 36, 26, .26);
     text-align: center;
     transform: translateY(10px) scale(.97);
     transition: transform .24s var(--ease);
@@ -2083,9 +2142,9 @@ select.form-control-hm {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: #FDECEF;
+    background: #FDECEE;
     box-shadow: 0 0 0 8px #FEF6F7;
-    color: #E5484D;
+    color: #C4283C;
 }
 
 .hm-dialog__icon svg {
@@ -2114,7 +2173,7 @@ select.form-control-hm {
     margin: 0 0 24px;
     font-size: 13.5px;
     line-height: 1.6;
-    color: #6B6676;
+    color: #6E5A4E;
 }
 
 .hm-dialog__actions {
@@ -2140,7 +2199,7 @@ select.form-control-hm {
     font-size: 13.5px;
     font-weight: 600;
     color: #fff;
-    background: #E5484D;
+    background: #C4283C;
     border: 1px solid transparent;
     border-radius: 12px;
     cursor: pointer;
@@ -2151,7 +2210,7 @@ select.form-control-hm {
 
 .btn-danger-solid:hover {
     color: #fff;
-    background: #D13F44;
+    background: #C4283C;
     transform: translateY(-2px);
     box-shadow: 0 13px 24px rgba(229, 72, 77, .3);
 }
@@ -2168,7 +2227,7 @@ select.form-control-hm {
 }
 
 .hm-dialog__actions .btn-ghost:focus-visible {
-    box-shadow: 0 0 0 4px rgba(110, 90, 166, .16);
+    box-shadow: 0 0 0 4px rgba(194, 74, 34, .16);
 }
 
 @media (max-width: 575.98px) {
@@ -2251,7 +2310,7 @@ select.form-control-hm {
     font-weight: 700;
     letter-spacing: .02em;
     text-transform: uppercase;
-    color: #8C86A0;
+    color: #907B6C;
 }
 
 .field-group + .field-group {
@@ -2339,7 +2398,7 @@ select.form-control-hm {
 }
 
 .seo-preview__empty {
-    color: #B9B3C6;
+    color: #BEAB9D;
 }
 
 /* Section heading inside a single-card form — a rule + title that separates
@@ -2432,7 +2491,7 @@ select.form-control-hm {
     border-radius: 12px;
     cursor: pointer;
     font-size: 13.5px;
-    color: #6B6676;
+    color: #6E5A4E;
     transition: border-color .2s ease, background .2s ease, color .2s ease;
 }
 
@@ -2444,7 +2503,7 @@ select.form-control-hm {
 .check-chip__box {
     width: 18px;
     height: 18px;
-    border: 1.8px solid #CFC8DB;
+    border: 1.8px solid #E0CFC3;
     border-radius: 6px;
     display: inline-flex;
     align-items: center;
@@ -2495,7 +2554,7 @@ select.form-control-hm {
     background: #fff;
     border: 1px solid var(--border);
     border-radius: 12px;
-    box-shadow: 0 14px 34px rgba(31, 25, 51, .12);
+    box-shadow: 0 14px 34px rgba(58, 36, 26, .12);
 }
 
 .hm-picker.is-open .hm-picker__menu {
@@ -2612,7 +2671,7 @@ select.form-control-hm {
     padding: 0;
     border: 0;
     border-radius: 50%;
-    background: rgba(110, 90, 166, .16);
+    background: rgba(194, 74, 34, .16);
     color: inherit;
     font-size: 13px;
     line-height: 1;
@@ -2667,8 +2726,8 @@ select.form-control-hm {
 }
 
 .table-toolbar__search input:focus {
-    border-color: #D8CEF0;
-    box-shadow: 0 0 0 4px rgba(110, 90, 166, .08);
+    border-color: #F0C9B6;
+    box-shadow: 0 0 0 4px rgba(194, 74, 34, .08);
 }
 
 .table-toolbar__select {
@@ -2684,15 +2743,15 @@ select.form-control-hm {
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B6676' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236E5A4E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 13px center;
     background-size: 15px 15px;
 }
 
 .table-toolbar__select:focus {
-    border-color: #D8CEF0;
-    box-shadow: 0 0 0 4px rgba(110, 90, 166, .08);
+    border-color: #F0C9B6;
+    box-shadow: 0 0 0 4px rgba(194, 74, 34, .08);
 }
 
 /* Push the length menu to the far right of the row */
@@ -2730,7 +2789,7 @@ select.form-control-hm {
         background: #fff;
         border: 1px solid var(--border);
         border-radius: 12px;
-        box-shadow: 0 14px 34px rgba(31, 25, 51, .12);
+        box-shadow: 0 14px 34px rgba(58, 36, 26, .12);
     }
 
     select.table-toolbar__select option {
@@ -2935,7 +2994,7 @@ select.form-control-hm {
 
 .alert-hm--error {
     color: #C0392B;
-    background: #FBE6E4;
+    background: #FDECEE;
 }
 
 .alert-hm svg {
@@ -2950,8 +3009,8 @@ select.form-control-hm {
 }
 
 .pill--inactive {
-    color: #8B8698;
-    background: #F1EFF5;
+    color: #8A7466;
+    background: #F5EBE4;
 }
 
 .pill--tiny {
@@ -2980,7 +3039,7 @@ select.form-control-hm {
     position: fixed;
     inset: 0;
     z-index: 1035;
-    background: rgba(46, 39, 74, .38);
+    background: rgba(74, 40, 22, .38);
     opacity: 0;
     visibility: hidden;
     transition: opacity .3s ease, visibility .3s;
@@ -3110,7 +3169,7 @@ select.form-control-hm {
     font-weight: 700;
     color: #fff;
     line-height: 1;
-    background: #d9534f;
+    background: #C4283C;
     border-radius: 999px;
     box-shadow: 0 0 0 2px #fff;
 }
@@ -3179,7 +3238,7 @@ select.form-control-hm {
 }
 
 .app-notif__item.is-unread {
-    background: #fff8ec;
+    background: #FDF4EC;
 }
 
 .app-notif__title {
@@ -3199,14 +3258,14 @@ select.form-control-hm {
 .app-notif__time {
     display: block;
     font-size: 11px;
-    color: #9a8b7c;
+    color: #8A7466;
     margin-top: 3px;
 }
 
 .app-notif__empty {
     padding: 24px 15px;
     text-align: center;
-    color: #9a8b7c;
+    color: #8A7466;
     font-size: 13px;
 }
 
@@ -3230,7 +3289,7 @@ select.form-control-hm {
 
 .hm-table thead th {
     background: #F7F5FB;
-    color: #6E6880;
+    color: #6E5A4E;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: .055em;
@@ -3252,7 +3311,7 @@ select.form-control-hm {
     vertical-align: middle;
     border-bottom: 1px solid #F1EEF7;
     font-size: 13.5px;
-    color: #4A4556;
+    color: #4E3F35;
 }
 
 .hm-table tbody tr {
@@ -3260,7 +3319,7 @@ select.form-control-hm {
 }
 
 .hm-table tbody tr:nth-child(even) {
-    background: #FCFBFE;
+    background: #FDF9F6;
 }
 
 /* very subtle zebra */
@@ -3288,7 +3347,7 @@ select.form-control-hm {
     border-radius: 11px;
     border: 1px solid #fff;
     background: #fff;
-    color: #7A7488;
+    color: #7E6A5D;
     cursor: pointer;
     position: relative;
     transition: transform .22s var(--ease), background .22s ease, color .22s ease,
@@ -3302,7 +3361,7 @@ select.form-control-hm {
 
 .btn-icon:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 18px rgba(46, 39, 74, .12);
+    box-shadow: 0 8px 18px rgba(74, 40, 22, .12);
 }
 
 .btn-icon:active {
@@ -3311,14 +3370,14 @@ select.form-control-hm {
 
 .btn-icon:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(110, 90, 166, .16);
+    box-shadow: 0 0 0 4px rgba(194, 74, 34, .16);
 }
 
 /* Per-action colours — matched via the child icon, so no markup changes. */
 .btn-icon:has(.act-ico--view):hover {
     color: var(--purple);
     background: var(--lavender);
-    border-color: #D9CFF1;
+    border-color: #F0C9B6;
 }
 
 .btn-icon:has(.act-ico--edit):hover {
@@ -3329,14 +3388,14 @@ select.form-control-hm {
 
 .btn-icon:has(.act-ico--delete):hover,
 .btn-danger-soft.btn-icon:hover {
-    color: #E4506A;
-    background: #FFECEF;
-    border-color: #F7CBD3;
+    color: #C4283C;
+    background: #FDECEE;
+    border-color: #F3CFD4;
 }
 
 /* Delete hints soft-red even at rest. */
 .btn-danger-soft.btn-icon {
-    color: #E86B7E;
+    color: #C4283C;
     background: #fff;
     border-color: #fff;
 }
@@ -3350,7 +3409,7 @@ select.form-control-hm {
     transform: translateX(-50%) translateY(5px) scale(.96);
     padding: 5px 10px;
     border-radius: 8px;
-    background: #2C2640;
+    background: #3A241A;
     color: #fff;
     font-size: 11px;
     font-weight: 600;
@@ -3368,7 +3427,7 @@ select.form-control-hm {
     left: 50%;
     transform: translateX(-50%) translateY(5px);
     border: 5px solid transparent;
-    border-top-color: #2C2640;
+    border-top-color: #3A241A;
     opacity: 0;
     pointer-events: none;
     z-index: 30;
@@ -3388,7 +3447,7 @@ select.form-control-hm {
 /* ---- Status badges: extra workflow states + the inline status <select> ---- */
 .pill--pending {
     color: #C99A2E;
-    background: #FBF2DD;
+    background: #FCEBD8;
 }
 
 .pill--approved {
@@ -3397,8 +3456,8 @@ select.form-control-hm {
 }
 
 .pill--rejected {
-    color: #D9534F;
-    background: #FBE6E4;
+    color: #C4283C;
+    background: #FDECEE;
 }
 
 select.pill {
@@ -3407,7 +3466,7 @@ select.pill {
     padding-right: 24px;
     border: 0;
     cursor: pointer;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%236E6880' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6l5 5 5-5'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%236E5A4E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6l5 5 5-5'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 7px center;
     background-size: 9px;
@@ -3436,7 +3495,7 @@ select.pill::before {
         background: #fff;
         border: 1px solid var(--border);
         border-radius: 11px;
-        box-shadow: 0 14px 34px rgba(31, 25, 51, .12);
+        box-shadow: 0 14px 34px rgba(58, 36, 26, .12);
     }
 
     select.pill option {
@@ -3460,8 +3519,8 @@ select.pill::before {
 
 /* ---- Search + filter inputs ---- */
 .form-control-hm:focus {
-    border-color: #C9BBEE;
-    box-shadow: 0 0 0 4px rgba(110, 90, 166, .12);
+    border-color: #F0C9B6;
+    box-shadow: 0 0 0 4px rgba(194, 74, 34, .12);
 }
 
 /* ---- Pagination (Bootstrap-5 markup from ->links(), restyled to the theme) ---- */
@@ -3488,7 +3547,7 @@ select.pill::before {
     border-radius: 10px;
     border: 1px solid #ECEAF2;
     background: #fff;
-    color: #6B6676;
+    color: #6E5A4E;
     font-size: 13.5px;
     font-weight: 600;
     line-height: 1;
@@ -3498,7 +3557,7 @@ select.pill::before {
 .page-item .page-link:hover {
     background: var(--lavender);
     color: var(--purple);
-    border-color: #D9CFF1;
+    border-color: #F0C9B6;
     transform: translateY(-1px);
 }
 
@@ -3506,7 +3565,7 @@ select.pill::before {
     color: #fff;
     background: var(--active-grad);
     border-color: transparent;
-    box-shadow: 0 8px 18px rgba(110, 90, 166, .26);
+    box-shadow: 0 8px 18px rgba(194, 74, 34, .26);
 }
 
 .page-item.disabled .page-link {
@@ -3516,7 +3575,7 @@ select.pill::before {
 
 .page-item .page-link:focus {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(110, 90, 166, .14);
+    box-shadow: 0 0 0 4px rgba(194, 74, 34, .14);
 }
 
 /* ---- Table pagination footer (page buttons only) ---- */
@@ -3597,7 +3656,7 @@ select.pill::before {
     font-size: 13px;
     font-weight: 600;
     color: #4A4030;
-    box-shadow: 0 5px 16px rgba(184, 142, 58, .14);
+    box-shadow: 0 5px 16px rgba(217, 138, 30, .14);
 }
 
 .dash-hero__badge svg {
@@ -3617,7 +3676,7 @@ select.pill::before {
 }
 
 .dash-hero__title-accent {
-    color: #DA9A28;
+    color: #D98A1E;
 }
 
 .dash-hero__rule {
@@ -3625,7 +3684,7 @@ select.pill::before {
     width: 46px;
     height: 4px;
     border-radius: 999px;
-    background: #DA9A28;
+    background: #D98A1E;
     margin-top: 14px;
 }
 
@@ -3647,15 +3706,15 @@ select.pill::before {
     font-size: 14px;
     font-weight: 600;
     color: #fff;
-    background: linear-gradient(135deg, #EAB13F 0%, #D68E22 100%);
-    box-shadow: 0 12px 24px rgba(214, 142, 34, .30);
+    background: linear-gradient(135deg, #E09A2A 0%, #C77A1A 100%);
+    box-shadow: 0 12px 24px rgba(199, 122, 26, .30);
     transition: transform .2s var(--ease), box-shadow .2s var(--ease);
 }
 
 .dash-hero__btn:hover {
     transform: translateY(-2px);
     color: #fff;
-    box-shadow: 0 16px 30px rgba(214, 142, 34, .40);
+    box-shadow: 0 16px 30px rgba(199, 122, 26, .40);
 }
 
 .dash-hero__btn svg {

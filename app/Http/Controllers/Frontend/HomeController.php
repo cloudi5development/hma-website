@@ -7,6 +7,7 @@ use App\Models\Blog;
 use App\Models\Course;
 use App\Models\Department;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class HomeController extends Controller
 {
@@ -85,5 +86,28 @@ class HomeController extends Controller
             ->get();
 
         return view('frontend.course-details', compact('course', 'slug', 'continueLearning'));
+    }
+
+    /**
+     * Download a course's brochure PDF (Admin → Courses → Course Brochure).
+     *
+     * Served through the app so the file downloads under a readable name — the
+     * stored file has a random one — and so a course without a brochure, or a row
+     * whose file has gone missing from disk, 404s instead of serving nothing.
+     */
+    public function brochure(string $slug)
+    {
+        $course = Course::active()->where('slug', $slug)->firstOrFail();
+
+        abort_unless($course->has_brochure, 404);
+
+        $headers = ['Content-Type' => 'application/pdf'];
+
+        // Read from whichever place the path points at — the "public" disk for an
+        // admin upload (which does not need the storage symlink to exist), or
+        // straight off /public for a seeded asset.
+        return $course->brochureOnPublicDisk()
+            ? Storage::disk('public')->download($course->brochureDiskPath(), $course->brochure_filename, $headers)
+            : response()->download(public_path($course->brochure), $course->brochure_filename, $headers);
     }
 }

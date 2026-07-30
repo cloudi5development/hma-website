@@ -40,9 +40,11 @@
             <header class="hm-cnt__banner">
                 {{-- The contact icons are part of the photograph, so nothing is
                      overlaid on the right-hand side. --}}
+                {{-- WebP: the source PNG was 5120px wide and 3.2 MB for a banner that
+                     never renders past the 1320px container. --}}
                 <img class="hm-cnt__banner-img"
-                     src="{{ asset('assets/images/contact-us/contact-us.png') }}"
-                     alt="" role="presentation">
+                     src="{{ asset('assets/images/contact-us/contact-us.webp') }}"
+                     alt="" role="presentation" width="1920" height="347" fetchpriority="high">
 
                 <div class="hm-cnt__banner-content">
                     <h1 class="hm-cnt__banner-title">Contact Us</h1>

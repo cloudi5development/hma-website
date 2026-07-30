@@ -23,6 +23,10 @@ class CourseRequest extends FormRequest
             'name'                 => ['required', 'string', 'max:180'],
             'slug'                 => ['nullable', 'string', 'max:200', 'alpha_dash', Rule::unique('courses', 'slug')->ignore($id)],
             'image'                => [$creating ? 'required' : 'nullable', 'image', 'mimes:webp,png,jpg,jpeg', 'max:3072'],
+            // Brochure PDF. Always optional; 'mimetypes' checks the real file
+            // signature, not just the extension, so a renamed .exe is rejected.
+            'brochure'             => ['nullable', 'file', 'mimes:pdf', 'mimetypes:application/pdf', 'max:10240'],
+            'remove_brochure'      => ['nullable', 'boolean'],
             'batch_start_date'     => ['required', 'date'],
             'duration'             => ['required', 'string', 'max:60'],
             'training_mode'        => ['required', Rule::in(Course::TRAINING_MODES)],
@@ -61,6 +65,7 @@ class CourseRequest extends FormRequest
             'is_continue_learning' => $this->boolean('is_continue_learning'),
             'is_featured'          => $this->boolean('is_featured'),
             'sort_order'           => $this->input('sort_order', 0),
+            'remove_brochure'      => $this->boolean('remove_brochure'),
         ]);
     }
 
@@ -68,6 +73,9 @@ class CourseRequest extends FormRequest
     {
         return [
             'image.required'            => 'Please upload a course image.',
+            'brochure.mimes'            => 'The brochure must be a PDF file.',
+            'brochure.mimetypes'        => 'The brochure must be a PDF file.',
+            'brochure.max'              => 'The brochure may not be larger than 10 MB.',
             'category_id.required'      => 'Please choose a category.',
             'batch_start_date.required' => 'Please set the batch start date.',
             'faqs.max'                  => 'Maximum ' . Course::MAX_FAQS . ' FAQs allowed.',

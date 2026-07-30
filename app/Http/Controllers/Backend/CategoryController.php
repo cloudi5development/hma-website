@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
+use App\Http\Controllers\Backend\Concerns\OptimizesImageUploads;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\CategoryRequest;
 use App\Models\Category;
@@ -16,6 +17,7 @@ use Illuminate\View\View;
 class CategoryController extends Controller
 {
     use HandlesTableQuery;
+    use OptimizesImageUploads;
 
     public function index(): View
     {
@@ -127,7 +129,7 @@ class CategoryController extends Controller
 
     private function storeIcon(CategoryRequest $request): string
     {
-        return 'storage/' . $request->file('icon')->store('categories', 'public');
+        return $this->storeOptimizedImage($request->file('icon'), 'categories', 512);
     }
 
     private function deleteIcon(?string $icon): void

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
+use App\Http\Controllers\Backend\Concerns\OptimizesImageUploads;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\BlogRequest;
 use App\Models\Blog;
@@ -13,6 +14,7 @@ use Illuminate\View\View;
 class BlogController extends Controller
 {
     use HandlesTableQuery;
+    use OptimizesImageUploads;
 
     public function index(): View
     {
@@ -72,9 +74,7 @@ class BlogController extends Controller
     /** Store the uploaded image on the public disk; return a /public-relative path. */
     private function storeImage(BlogRequest $request): string
     {
-        $path = $request->file('image')->store('blogs', 'public');
-
-        return 'storage/' . $path;
+        return $this->storeOptimizedImage($request->file('image'), 'blogs');
     }
 
     /** Delete a previously-uploaded image, but never the seeded asset files. */

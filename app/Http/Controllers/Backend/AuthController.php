@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\AdminAuth;
+use App\Support\AdminRemember;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -51,6 +53,26 @@ class AuthController extends Controller
                 ->with('login_error', 'Invalid username or password.');
         }
 
+        $this->openSession($request, $user);
+
+        // "Remember me" — a 30-day cookie that reopens the session after the
+        // session cookie itself has expired. Unticked, the login lasts exactly as
+        // long as the browser session, as before.
+        if ($request->boolean('remember')) {
+            AdminRemember::issue($user);
+        } else {
+            AdminRemember::forget($user);
+        }
+
+        return redirect()->intended(route('backend.dashboard'));
+    }
+
+    /**
+     * Put an authenticated admin into the session. Shared by the login form and by
+     * AdminAuthenticate when it restores a session from a remember cookie.
+     */
+    public static function openSession(Request $request, User $user): void
+    {
         $user->forceFill(['last_login_at' => now()])->save();
 
         // Fresh session ID on privilege change — standard fixation defence.
@@ -59,15 +81,16 @@ class AuthController extends Controller
         $request->session()->put('admin_id', $user->id);
         $request->session()->put('admin_name', $user->name);
         $request->session()->put('admin_email', $user->email);
-
-        return redirect()->intended(route('backend.dashboard'));
     }
 
     /**
-     * End the admin session.
+     * End the admin session. Also rotates the remember token, so signing out here
+     * invalidates any remember cookie this account has on other devices.
      */
     public function logout(Request $request): RedirectResponse
     {
+        AdminRemember::forget(AdminAuth::user());
+
         $request->session()->forget(['admin_logged_in', 'admin_id', 'admin_name', 'admin_email']);
         $request->session()->regenerate();
 

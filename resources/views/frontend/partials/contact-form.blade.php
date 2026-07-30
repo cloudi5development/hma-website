@@ -48,7 +48,7 @@
                             {{-- One entry per branch, in the order they are listed in Settings. --}}
                             @foreach ($contact['branches'] as $branch)
                                 <li class="hm-contact__item">
-                                    <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/heroicons_map-pin.png') }}" alt=""></span>
+                                    <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/heroicons_map-pin.png') }}" alt="" loading="lazy" decoding="async"></span>
                                     <div class="hm-contact__item-body">
                                         <div class="hm-contact__item-title">{{ $branch['name'] }} Branch :</div>
                                         <p class="hm-contact__item-text">{{ $branch['address'] }}</p>
@@ -56,7 +56,7 @@
                                 </li>
                             @endforeach
                             <li class="hm-contact__item">
-                                <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/proicons_call.png') }}" alt=""></span>
+                                <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/proicons_call.png') }}" alt="" loading="lazy" decoding="async"></span>
                                 <div class="hm-contact__item-body">
                                     <div class="hm-contact__item-title">Phone Number :</div>
                                     <p class="hm-contact__item-text">
@@ -66,7 +66,7 @@
                                 </div>
                             </li>
                             <li class="hm-contact__item">
-                                <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/heroicons-outline_mail.png') }}" alt=""></span>
+                                <span class="hm-contact__icon" aria-hidden="true"><img class="hm-contact__icon-img" src="{{ asset('assets/images/contact-form/heroicons-outline_mail.png') }}" alt="" loading="lazy" decoding="async"></span>
                                 <div class="hm-contact__item-body">
                                     <div class="hm-contact__item-title">Email :</div>
                                     <p class="hm-contact__item-text">

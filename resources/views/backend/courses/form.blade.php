@@ -205,6 +205,46 @@
                     </div>
                 </div>
 
+                {{-- ========================= Course Brochure ========================= --}}
+                <div class="form-section">
+                    <h2 class="form-section__title">Course Brochure</h2>
+                </div>
+
+                <div class="form-row">
+                    <label class="form-label" for="brochure">
+                        Brochure PDF <span class="form-hint" style="display:inline">(optional)</span>
+                    </label>
+
+                    @if ($course->brochure)
+                        {{-- What is on file now, with a link to check it. --}}
+                        <div class="d-flex align-items-center flex-wrap gap-3 mb-2">
+                            <a href="{{ asset($course->brochure) }}" target="_blank" rel="noopener" class="btn-ghost">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/>
+                                </svg>
+                                View current brochure
+                            </a>
+                            <label class="check-chip">
+                                <input type="hidden" name="remove_brochure" value="0">
+                                <input type="checkbox" name="remove_brochure" value="1" {{ old('remove_brochure') ? 'checked' : '' }}>
+                                <span class="check-chip__box">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                </span>
+                                <span class="check-chip__label">Remove brochure</span>
+                            </label>
+                        </div>
+                    @endif
+
+                    <input type="file" id="brochure" name="brochure" accept="application/pdf,.pdf"
+                           class="form-control-hm @error('brochure') is-invalid @enderror" style="height:auto;padding:9px 12px">
+                    <p class="form-hint">
+                        PDF only · max 10 MB.
+                        {{ $course->brochure ? 'Uploading a new file replaces the current one.' : '' }}
+                        Visitors download it from the “Brochure” button on the course page — with no file uploaded, that button is hidden.
+                    </p>
+                    @error('brochure') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
+
                 {{-- ====================== Status, order, placement ====================== --}}
                 <div class="form-section">
                     <h2 class="form-section__title">Status &amp; Placement</h2>

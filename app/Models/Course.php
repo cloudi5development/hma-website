@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 class Course extends Model
 {
     protected $fillable = [
-        'category_id', 'name', 'slug', 'image', 'batch_start_date', 'duration',
+        'category_id', 'name', 'slug', 'image', 'brochure', 'batch_start_date', 'duration',
         'training_mode', 'skill_level', 'rating', 'short_description',
         'full_description', 'overview', 'learning_outcomes', 'prerequisites',
         'certification', 'sort_order', 'is_active', 'is_popular',
@@ -91,6 +91,47 @@ class Course extends Model
     public function getImageUrlAttribute(): ?string
     {
         return $this->image ? asset($this->image) : null;
+    }
+
+    /**
+     * True when a brochure PDF has been uploaded AND the file is still there.
+     *
+     * Uploads live on the "public" disk and are stored as "storage/<path>", which
+     * only resolves under public/ when the storage symlink exists — and that link
+     * is gitignored, so plenty of hosts do not have it (see the storage fallback
+     * route in routes/web.php). So the disk is asked directly, and only a seeded
+     * /public asset path falls back to a filesystem check.
+     */
+    public function getHasBrochureAttribute(): bool
+    {
+        if (blank($this->brochure)) {
+            return false;
+        }
+
+        return $this->brochureOnPublicDisk()
+            ? \Illuminate\Support\Facades\Storage::disk('public')->exists($this->brochureDiskPath())
+            : is_file(public_path($this->brochure));
+    }
+
+    /** Whether the stored path points at the "public" disk rather than /public. */
+    public function brochureOnPublicDisk(): bool
+    {
+        return str_starts_with((string) $this->brochure, 'storage/');
+    }
+
+    /** The brochure's path relative to the "public" disk root. */
+    public function brochureDiskPath(): string
+    {
+        return substr((string) $this->brochure, strlen('storage/'));
+    }
+
+    /**
+     * Filename the visitor's browser saves the brochure as. The stored file has a
+     * random name, which would download as "8f3c…pdf" and tell nobody anything.
+     */
+    public function getBrochureFilenameAttribute(): string
+    {
+        return \Illuminate\Support\Str::slug($this->name ?: 'course') . '-brochure.pdf';
     }
 
     /** Category name — the pill/badge text on the course card. */

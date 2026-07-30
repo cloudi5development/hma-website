@@ -196,6 +196,17 @@
 .hm-cd-btn:hover,
 .hm-cd-btn:focus-visible { transform: translateY(-2px); }
 
+/* Brochure button on a course that has no PDF uploaded yet: it keeps its place in
+   the pair so the hero layout is unchanged, but reads as unavailable and does not
+   respond to hover or clicks. */
+.hm-cd-btn.is-disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+.hm-cd-btn.is-disabled:hover,
+.hm-cd-btn.is-disabled:focus-visible { transform: none; }
+
 /* Centres the "Enquire Now" button under the highlights. */
 .hm-cd-enquire {
     display: flex;
@@ -313,11 +324,16 @@
     border-radius: 9px;
 }
 
-.hm-cd-feat__icon img {
+/* Shared by the "at a glance" chips and the highlight cards — both draw an
+   icons-details glyph on a saturated --tint tile.
+   The icons ship white, so the filter is a no-op on them; it is kept because it
+   flattens ANY source colour to white, so swapping in a dark line-art icon later
+   still reads on the tile instead of disappearing into it. */
+.hm-cd-feat__icon img,
+.hm-cd-hl__icon img {
     width: 17px;
     height: 17px;
     object-fit: contain;
-    /* The asset icons are dark line art; invert so they read on the tile. */
     filter: brightness(0) invert(1);
 }
 
@@ -543,6 +559,10 @@
         height: 30px;
         font-size: 12.5px;
     }
+
+    /* Glyph tracks the smaller tile on phones. */
+    .hm-cd-feat__icon img,
+    .hm-cd-hl__icon img { width: 15px; height: 15px; }
 
     .hm-cd-hl__title { font-size: clamp(11.5px, 3.4vw, 13.5px); }
 }

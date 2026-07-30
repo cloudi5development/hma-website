@@ -77,9 +77,13 @@
                                 <div class="hm-reel {{ $reel['url'] ? '' : 'hm-reel--static' }}"
                                      @if ($reel['url']) data-instagram="{{ $reel['url'] }}" role="button" tabindex="0" @endif
                                      aria-label="{{ $reel['title'] }}">
-                                    {{-- Autoplays muted + looped so it plays right in the card. --}}
-                                    <video class="hm-reel__video" src="{{ $reel['video'] }}"
-                                           autoplay muted loop playsinline preload="metadata"></video>
+                                    {{-- Plays muted + looped right in the card, but the file is
+                                         NOT fetched until the card is actually on screen: the
+                                         src lives in data-src and preload is off, so opening the
+                                         page no longer pulls every reel down at once. The
+                                         observer below swaps it in and starts playback. --}}
+                                    <video class="hm-reel__video" data-src="{{ $reel['video'] }}"
+                                           muted loop playsinline preload="none"></video>
                                     <span class="hm-reel__badge" aria-hidden="true"><i class="fa-brands fa-instagram"></i> Instagram Reel</span>
                                     <span class="hm-reel__overlay" aria-hidden="true"></span>
                                 </div>
@@ -125,6 +129,63 @@
                     1200: { slidesPerView: 5, spaceBetween: 20 }
                 }
             });
+
+            /* ---- Load + play only the reels on screen ----------------------------
+                   Every card used to carry autoplay with the src inline, so opening
+                   the page streamed all of them (the deck is rendered twice, so that
+                   was ~10 videos of a few MB each) whether or not the section was
+                   ever reached. Now the src is attached on first approach and
+                   playback follows visibility: off-screen reels pause, which also
+                   stops phones decoding video nobody is looking at.
+
+                   Two observers because the thresholds differ: fetch a little early
+                   so the card is not blank when it arrives, but only play what is
+                   really in view. ------------------------------------------------ */
+            var videos = Array.prototype.slice.call(swiperEl.querySelectorAll('.hm-reel__video[data-src]'));
+
+            function attach(video) {
+                if (!video.src) video.src = video.dataset.src;
+            }
+
+            function play(video) {
+                attach(video);
+                // play() returns a rejected promise when the browser refuses; muted
+                // playback is allowed everywhere, so just swallow it rather than throw.
+                var started = video.play();
+                if (started && started.catch) started.catch(function () {});
+            }
+
+            if ('IntersectionObserver' in window) {
+                // Fetch a little before the card arrives, so it is not blank on entry.
+                var hydrate = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            attach(entry.target);
+                            hydrate.unobserve(entry.target);
+                        }
+                    });
+                }, { rootMargin: '300px 0px' });
+
+                // Play only what is really in view; pause the rest.
+                var player = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            play(entry.target);
+                        } else if (!entry.target.paused) {
+                            entry.target.pause();
+                        }
+                    });
+                }, { threshold: 0.25 });
+
+                videos.forEach(function (video) {
+                    hydrate.observe(video);
+                    player.observe(video);
+                });
+            } else {
+                // No observer support: fall back to the old behaviour so the section
+                // is never a row of blank cards.
+                videos.forEach(play);
+            }
 
             /* ---- Optional click-through — cards with an Instagram link open the
                    full reel in a new tab. Cards without a link just keep playing. ---- */

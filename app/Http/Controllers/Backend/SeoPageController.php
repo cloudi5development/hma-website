@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
+use App\Http\Controllers\Backend\Concerns\OptimizesImageUploads;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\SeoPageRequest;
 use App\Models\SeoPage;
@@ -18,6 +19,7 @@ use Illuminate\View\View;
 class SeoPageController extends Controller
 {
     use HandlesTableQuery;
+    use OptimizesImageUploads;
 
     /** Upload fields on the form, handled identically on store/update/destroy. */
     private const IMAGE_FIELDS = ['og_image', 'twitter_image'];
@@ -115,7 +117,7 @@ class SeoPageController extends Controller
 
     private function storeImage(SeoPageRequest $request, string $field): string
     {
-        return 'storage/' . $request->file($field)->store('seo', 'public');
+        return $this->storeOptimizedImage($request->file($field), 'seo', 1200);
     }
 
     private function deleteImage(?string $image): void

@@ -36,6 +36,17 @@
                     to manage your academy easily.
                 </p>
 
+                {{-- Confirmation coming back from the reset flow --}}
+                @if (session('status_message'))
+                    <div class="hm-login__note" role="status">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+                            <path d="m8.5 12.5 2.2 2.2 4.8-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        {{ session('status_message') }}
+                    </div>
+                @endif
+
                 {{-- Wrong username / password --}}
                 @if (session('login_error'))
                     <div class="hm-login__alert" role="alert">
@@ -112,7 +123,20 @@
                         @enderror
                     </div>
 
-                    <a href="#" class="hm-login__forgot">Forgot Password?</a>
+                    {{-- Remember me keeps the session alive for 30 days via a
+                         signed cookie; unticked, the login ends with the browser
+                         session. --}}
+                    <div class="hm-login__row">
+                        <label class="hm-login__remember">
+                            <input type="checkbox" name="remember" value="1" {{ old('remember') ? 'checked' : '' }}>
+                            <span class="hm-login__box" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                            </span>
+                            <span>Remember me</span>
+                        </label>
+
+                        <a href="{{ route('backend.auth.password.request') }}" class="hm-login__forgot">Forgot Password?</a>
+                    </div>
 
                     <button type="submit" class="hm-login__btn">Login</button>
                 </form>

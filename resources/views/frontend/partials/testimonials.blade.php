@@ -52,14 +52,14 @@
                     <div class="hm-tst__badge hm-anim hm-anim--up hm-anim--d2">
                         <span class="hm-tst__badge-avatars">
                             @foreach (array_slice($pool, 0, 4) as $t)
-                                <img src="{{ $t['img'] }}" alt="" aria-hidden="true">
+                                <img src="{{ $t['img'] }}" alt="" aria-hidden="true" loading="lazy" decoding="async">
                             @endforeach
                         </span>
                         <span class="hm-tst__badge-text">2k+ Learner</span>
                         <span class="hm-tst__badge-sep" aria-hidden="true"></span>
                         <span class="hm-tst__badge-rating"><i class="fa-solid fa-star" aria-hidden="true"></i> 4.8/5</span>
                         <span class="hm-tst__badge-sep" aria-hidden="true"></span>
-                        <span class="hm-tst__badge-rating"><img class="hm-tst__badge-google" src="{{ asset('assets/images/Hero-section/google.png') }}" alt="Google"> 4.8/5</span>
+                        <span class="hm-tst__badge-rating"><img class="hm-tst__badge-google" src="{{ asset('assets/images/Hero-section/google.png') }}" alt="Google" loading="lazy" decoding="async"> 4.8/5</span>
                     </div>
                 </div>
 
@@ -84,7 +84,7 @@
                     <div class="hm-tst__card-wrap" id="hmTstCardWrap">
                         <div class="hm-tst__card is-swap" id="hmTstCard">
                             <div class="hm-tst__card-top">
-                                <img class="hm-tst__card-avatar" id="hmTstAvatar" src="{{ $pool[0]['img'] }}" alt="{{ $pool[0]['name'] }}">
+                                <img class="hm-tst__card-avatar" id="hmTstAvatar" src="{{ $pool[0]['img'] }}" alt="{{ $pool[0]['name'] }}" loading="lazy" decoding="async">
                                 <div>
                                     <div class="hm-tst__card-name" id="hmTstName">{{ $pool[0]['name'] }}</div>
                                     <div class="hm-tst__card-role" id="hmTstRole">{{ $pool[0]['role'] }}</div>

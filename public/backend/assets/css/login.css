@@ -170,18 +170,107 @@ body {
 .hm-login__input.is-invalid { border-color: #D9534F; }
 .hm-login__error { margin: 6px 4px 0; font-size: 12px; color: #D9534F; }
 
-/* ---- Forgot ---- */
-.hm-login__forgot {
-    display: block;
+/* ---- Remember me + Forgot ----
+   One line: the checkbox on the left, the link on the right. */
+.hm-login__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
     margin: -2px 4px 22px;
-    text-align: right;
+}
+
+.hm-login__forgot {
     font-size: 13.5px;
     font-weight: 500;
     color: var(--hm-brown);
     text-decoration: none;
+    white-space: nowrap;
 }
 
 .hm-login__forgot:hover { text-decoration: underline; }
+
+/* The native checkbox is hidden and a styled box drawn beside it, so the whole
+   label stays clickable and keyboard focus still lands on a real control. */
+.hm-login__remember {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #6F6F6F;
+    cursor: pointer;
+    user-select: none;
+}
+
+.hm-login__remember input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.hm-login__box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 19px;
+    height: 19px;
+    color: #FFFFFF;
+    background: #FFFFFF;
+    border: 1.8px solid #E4D3C4;
+    border-radius: 6px;
+    transition: background .2s ease, border-color .2s ease;
+}
+
+.hm-login__box svg {
+    width: 12px;
+    height: 12px;
+    opacity: 0;
+    transition: opacity .15s ease;
+}
+
+.hm-login__remember input:checked ~ .hm-login__box {
+    background: var(--hm-brown);
+    border-color: var(--hm-brown);
+}
+
+.hm-login__remember input:checked ~ .hm-login__box svg { opacity: 1; }
+
+.hm-login__remember input:focus-visible ~ .hm-login__box {
+    outline: 3px solid rgba(139, 69, 31, .28);
+    outline-offset: 2px;
+}
+
+/* Confirmation counterpart to .hm-login__alert. */
+.hm-login__note {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 18px;
+    padding: 11px 14px;
+    font-size: 13.5px;
+    font-weight: 500;
+    text-align: left;
+    color: #2E6B45;
+    background: #EAF7EF;
+    border: 1px solid #CDE9D8;
+    border-radius: 12px;
+}
+
+/* "Back to sign in", under the submit button on the reset screens. */
+.hm-login__back {
+    display: block;
+    margin: 18px 0 0;
+    text-align: center;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #6F6F6F;
+    text-decoration: none;
+}
+
+.hm-login__back:hover { color: var(--hm-brown); text-decoration: underline; }
 
 /* ---- Submit ---- */
 .hm-login__btn {

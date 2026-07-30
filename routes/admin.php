@@ -14,6 +14,7 @@ use App\Http\Controllers\Backend\FaqController;
 use App\Http\Controllers\Backend\HeroController;
 use App\Http\Controllers\Backend\NotificationController;
 use App\Http\Controllers\Backend\PartnerController;
+use App\Http\Controllers\Backend\PasswordResetController;
 use App\Http\Controllers\Backend\ReelController;
 use App\Http\Controllers\Backend\SeoPageController;
 use App\Http\Controllers\Backend\SettingController;
@@ -43,6 +44,15 @@ Route::prefix('admin')->name('backend.')->group(function () {
         Route::get('/login', 'login')->name('login');
         Route::post('/login', 'authenticate')->name('authenticate');
         Route::post('/logout', 'logout')->name('logout');
+    });
+
+    // Forgot / reset password. Throttled on top of the broker's own per-address
+    // throttle, so the form itself cannot be hammered either.
+    Route::controller(PasswordResetController::class)->name('auth.password.')->group(function () {
+        Route::get('/forgot-password', 'request')->name('request');
+        Route::post('/forgot-password', 'email')->middleware('throttle:6,1')->name('email');
+        Route::get('/reset-password/{token}', 'reset')->name('reset');
+        Route::post('/reset-password', 'update')->middleware('throttle:6,1')->name('update');
     });
 
     // Authenticated admin area — guarded by the session flag (admin.auth), then

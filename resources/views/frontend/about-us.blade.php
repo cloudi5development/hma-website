@@ -205,11 +205,11 @@
             </div>
 
             <div class="hm-story__deco" aria-hidden="true">
-                <img class="hm-story__deco-dots"    src="{{ asset('assets/images/about-page/component-1.png') }}" alt="">
-                <img class="hm-story__deco-spiral"  src="{{ asset('assets/images/about-page/component-3.png') }}" alt="">
-                <img class="hm-story__deco-strokes" src="{{ asset('assets/images/about-page/component-2.png') }}" alt="">
-                <img class="hm-story__deco-star-a"  src="{{ asset('assets/images/about-page/element-star.png') }}" alt="">
-                <img class="hm-story__deco-star-b"  src="{{ asset('assets/images/about-page/star.png') }}" alt="">
+                <img class="hm-story__deco-dots"    src="{{ asset('assets/images/about-page/component-1.png') }}" alt="" loading="lazy" decoding="async">
+                <img class="hm-story__deco-spiral"  src="{{ asset('assets/images/about-page/component-3.png') }}" alt="" loading="lazy" decoding="async">
+                <img class="hm-story__deco-strokes" src="{{ asset('assets/images/about-page/component-2.png') }}" alt="" loading="lazy" decoding="async">
+                <img class="hm-story__deco-star-a"  src="{{ asset('assets/images/about-page/element-star.png') }}" alt="" loading="lazy" decoding="async">
+                <img class="hm-story__deco-star-b"  src="{{ asset('assets/images/about-page/star.png') }}" alt="" loading="lazy" decoding="async">
             </div>
 
             <div class="container">
@@ -228,8 +228,8 @@
                     </span>
 
                     {{-- Blob artwork sits behind the whole photo stack --}}
-                    <img class="hm-story__blob" src="{{ asset('assets/images/about-page/story-blob.png') }}"
-                         alt="" aria-hidden="true">
+                    <img class="hm-story__blob" src="{{ asset('assets/images/about-page/story-blob.webp') }}"
+                         alt="" aria-hidden="true" loading="lazy" decoding="async">
 
                     @foreach ($stories as $i => $story)
                         <article class="hm-story__chapter" data-story="{{ $i }}">
@@ -279,11 +279,11 @@
 
         {{-- Decorations — positions follow the reference --}}
         <div class="hm-purpose__deco" aria-hidden="true">
-            <img class="hm-purpose__ring hm-purpose__ring--a" src="{{ asset('assets/images/about-page/component-3.png') }}" alt="">
-            <img class="hm-purpose__ring hm-purpose__ring--b" src="{{ asset('assets/images/about-page/component-3.png') }}" alt="">
-            <img class="hm-purpose__ring hm-purpose__ring--c" src="{{ asset('assets/images/about-page/component-3.png') }}" alt="">
-            <img class="hm-purpose__star hm-purpose__star--a" src="{{ asset('assets/images/about-page/star.png') }}" alt="">
-            <img class="hm-purpose__star hm-purpose__star--b" src="{{ asset('assets/images/about-page/element-star.png') }}" alt="">
+            <img class="hm-purpose__ring hm-purpose__ring--a" src="{{ asset('assets/images/about-page/component-3.png') }}" alt="" loading="lazy" decoding="async">
+            <img class="hm-purpose__ring hm-purpose__ring--b" src="{{ asset('assets/images/about-page/component-3.png') }}" alt="" loading="lazy" decoding="async">
+            <img class="hm-purpose__ring hm-purpose__ring--c" src="{{ asset('assets/images/about-page/component-3.png') }}" alt="" loading="lazy" decoding="async">
+            <img class="hm-purpose__star hm-purpose__star--a" src="{{ asset('assets/images/about-page/star.png') }}" alt="" loading="lazy" decoding="async">
+            <img class="hm-purpose__star hm-purpose__star--b" src="{{ asset('assets/images/about-page/element-star.png') }}" alt="" loading="lazy" decoding="async">
             <span class="hm-purpose__dots"></span>
         </div>
 
@@ -308,7 +308,7 @@
                 <div class="col-lg-6">
                     <figure class="hm-purpose__figure hm-abt-anim hm-abt-anim--d1">
                         <img src="{{ asset('assets/images/about-page/our-purpose.webp') }}"
-                             alt="A HireMinds Academy mentor guiding learners through a session in the training centre">
+                             alt="A HireMinds Academy mentor guiding learners through a session in the training centre" loading="lazy" decoding="async">
                     </figure>
                 </div>
 
@@ -364,8 +364,8 @@
 
         {{-- Decorations --}}
         <div class="hm-feat__deco" aria-hidden="true">
-            <img class="hm-feat__ring" src="{{ asset('assets/images/about-page/component-3.png') }}" alt="">
-            <img class="hm-feat__star" src="{{ asset('assets/images/about-page/star.png') }}" alt="">
+            <img class="hm-feat__ring" src="{{ asset('assets/images/about-page/component-3.png') }}" alt="" loading="lazy" decoding="async">
+            <img class="hm-feat__star" src="{{ asset('assets/images/about-page/star.png') }}" alt="" loading="lazy" decoding="async">
             <span class="hm-feat__dots"></span>
         </div>
 
@@ -428,8 +428,8 @@
 
         {{-- Decorations --}}
         <div class="hm-appr__deco" aria-hidden="true">
-            <img class="hm-appr__ring-deco" src="{{ asset('assets/images/about-page/component-3.png') }}" alt="">
-            <img class="hm-appr__star" src="{{ asset('assets/images/about-page/star.png') }}" alt="">
+            <img class="hm-appr__ring-deco" src="{{ asset('assets/images/about-page/component-3.png') }}" alt="" loading="lazy" decoding="async">
+            <img class="hm-appr__star" src="{{ asset('assets/images/about-page/star.png') }}" alt="" loading="lazy" decoding="async">
             <span class="hm-appr__dots"></span>
         </div>
 
