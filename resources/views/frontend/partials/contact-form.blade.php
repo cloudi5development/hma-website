@@ -118,9 +118,29 @@
                                 <div class="invalid-feedback">Please choose an option.</div>
                             </div>
 
+                            @php
+                                // Set only when the page passed one in — an event's
+                                // "Register Now" links to /contact-us?event=<slug>.
+                                // The home page never passes it, so this whole block
+                                // is inert there and the form renders unchanged.
+                                $enquiryEvent = $enquiryEvent ?? null;
+
+                                $prefill = $enquiryEvent
+                                    ? 'I would like to register for ' . $enquiryEvent->title
+                                        . ($enquiryEvent->formatted_date ? ' on ' . $enquiryEvent->formatted_date : '') . '.'
+                                    : '';
+                            @endphp
+
+                            @if ($enquiryEvent)
+                                {{-- `interest` is already validated and stored by
+                                     ContactEnquiryController and shown in the panel as
+                                     "Area of interest", so the event needs no new field. --}}
+                                <input type="hidden" name="interest" value="{{ $enquiryEvent->title }}">
+                            @endif
+
                             <div class="hm-field">
                                 <label class="hm-field__label" for="cfMessage">Message</label>
-                                <textarea class="form-control hm-input hm-textarea" id="cfMessage" name="message" placeholder="Tell us how we can help you..."></textarea>
+                                <textarea class="form-control hm-input hm-textarea" id="cfMessage" name="message" placeholder="Tell us how we can help you...">{{ $prefill }}</textarea>
                             </div>
 
                             <button type="submit" class="hm-contact__submit">

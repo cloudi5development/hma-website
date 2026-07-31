@@ -4,6 +4,7 @@ namespace App\Http\Requests\Backend;
 
 use App\Models\Event;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class EventRequest extends FormRequest
@@ -18,6 +19,7 @@ class EventRequest extends FormRequest
     {
         // On create the image is required; on update it is optional (keep existing).
         $creating = $this->isMethod('post');
+        $id = $this->route('event')?->id;
 
         return [
             'speaker'    => ['required', 'string', 'max:120'],
@@ -34,6 +36,56 @@ class EventRequest extends FormRequest
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_active'  => ['nullable', 'boolean'],
             'show_home'  => ['nullable', 'boolean'],
+
+            /* ---- Details page (/events/{slug}) ---- */
+            'slug'                => ['nullable', 'string', 'max:200', 'alpha_dash', Rule::unique('events', 'slug')->ignore($id)],
+            'short_description'   => ['nullable', 'string', 'max:600'],
+            'description'         => ['nullable', 'string', 'max:20000'],
+            'organizer'           => ['nullable', 'string', 'max:150'],
+            'end_time'            => ['nullable', 'date_format:H:i'],
+            'venue'               => ['nullable', 'string', 'max:255'],
+            'city'                => ['nullable', 'string', 'max:120'],
+            'state'               => ['nullable', 'string', 'max:120'],
+            'country'             => ['nullable', 'string', 'max:120'],
+            'offer_price'         => ['nullable', 'string', 'max:40'],
+            'discount_percentage' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'total_seats'         => ['nullable', 'integer', 'min:0', 'max:1000000'],
+            'available_seats'     => ['nullable', 'integer', 'min:0', 'max:1000000'],
+            'duration'            => ['nullable', 'string', 'max:80'],
+            'language'            => ['nullable', 'string', 'max:80'],
+            'level'               => ['nullable', 'string', 'max:80'],
+            'is_featured'         => ['nullable', 'boolean'],
+            'banner_image'        => ['nullable', 'image', 'mimes:webp,png,jpg,jpeg', 'max:3072'],
+            'thumbnail'           => ['nullable', 'image', 'mimes:webp,png,jpg,jpeg', 'max:2048'],
+
+            /* ---- SEO (falls back to Settings → SEO Defaults when blank) ---- */
+            'seo_title'       => ['nullable', 'string', 'max:180'],
+            'seo_description' => ['nullable', 'string', 'max:320'],
+            'seo_keywords'    => ['nullable', 'string', 'max:255'],
+            'og_image'        => ['nullable', 'image', 'mimes:webp,png,jpg,jpeg', 'max:2048'],
+            'schema_json'     => ['nullable', 'string', 'max:20000', 'json'],
+
+            /* ---- Repeaters. Rows with no title/name/question are dropped in the
+                    controller, so every field here stays nullable. ---- */
+            'highlights'               => ['nullable', 'array', 'max:12'],
+            'highlights.*.icon'        => ['nullable', 'string', Rule::in(array_keys(Event::HIGHLIGHT_ICONS))],
+            'highlights.*.title'       => ['nullable', 'string', 'max:150'],
+            'highlights.*.description' => ['nullable', 'string', 'max:400'],
+            'highlights.*.is_active'   => ['nullable', 'boolean'],
+
+            'speakers'                  => ['nullable', 'array', 'max:12'],
+            'speakers.*.name'           => ['nullable', 'string', 'max:150'],
+            'speakers.*.designation'    => ['nullable', 'string', 'max:150'],
+            'speakers.*.company'        => ['nullable', 'string', 'max:150'],
+            'speakers.*.linkedin'       => ['nullable', 'string', 'max:255'],
+            'speakers.*.photo'          => ['nullable', 'image', 'mimes:webp,png,jpg,jpeg', 'max:2048'],
+            'speakers.*.existing_photo' => ['nullable', 'string', 'max:255'],
+            'speakers.*.is_active'      => ['nullable', 'boolean'],
+
+            'event_faqs'             => ['nullable', 'array', 'max:12'],
+            'event_faqs.*.question'  => ['nullable', 'string', 'max:255'],
+            'event_faqs.*.answer'    => ['nullable', 'string', 'max:2000'],
+            'event_faqs.*.is_active' => ['nullable', 'boolean'],
         ];
     }
 
@@ -49,15 +101,48 @@ class EventRequest extends FormRequest
             'event_date' => $this->input('event_date') ?: null,
             // <input type="time"> can post "10:00:00" in some browsers; the rule
             // expects H:i, so trim the seconds before validating.
-            'event_time' => $this->normalisedTime(),
+            'event_time' => $this->normalisedTime('event_time'),
+            'end_time'   => $this->normalisedTime('end_time'),
             'location'   => trim((string) $this->input('location')) ?: null,
+
+            'is_featured' => $this->boolean('is_featured'),
+            // The admin may leave the slug blank; the model then derives it from
+            // the title. "" would fail alpha_dash, so send NULL instead.
+            'slug'        => Str::slug((string) $this->input('slug')) ?: null,
+            'schema_json' => trim((string) $this->input('schema_json')) ?: null,
+
+            'highlights' => $this->cleanedRows('highlights', 'title'),
+            'speakers'   => $this->cleanedRows('speakers', 'name'),
+            'event_faqs' => $this->cleanedRows('event_faqs', 'question'),
         ]);
     }
 
-    /** "10:00:00" / "10:00" -> "10:00"; anything blank or unparseable -> null. */
-    private function normalisedTime(): ?string
+    /**
+     * Repeater rows arrive with a blank template row whenever the admin clicks
+     * "Add" and then saves without typing, so drop any row whose key field is
+     * empty before validation — otherwise max:12 counts rows that will never be
+     * stored. Keys are re-indexed so the display order matches the form order.
+     */
+    private function cleanedRows(string $key, string $required): array
     {
-        $time = trim((string) $this->input('event_time'));
+        $rows = $this->input($key);
+
+        if (! is_array($rows)) {
+            return [];
+        }
+
+        $kept = array_filter($rows, fn ($row) => is_array($row) && filled($row[$required] ?? null));
+
+        // Files live in a parallel bag, so re-indexing here would break the
+        // speakers.*.photo pairing. Keep the original keys and let the
+        // controller walk them in order.
+        return $kept;
+    }
+
+    /** "10:00:00" / "10:00" -> "10:00"; anything blank or unparseable -> null. */
+    private function normalisedTime(string $field): ?string
+    {
+        $time = trim((string) $this->input($field));
 
         if ($time === '') {
             return null;
@@ -76,6 +161,10 @@ class EventRequest extends FormRequest
             'image.max'             => 'The photo may not be larger than 2 MB.',
             'event_date.date'       => 'Enter a valid event date.',
             'event_time.date_format' => 'Enter the time as HH:MM (for example 10:00).',
+            'end_time.date_format'  => 'Enter the end time as HH:MM (for example 18:00).',
+            'slug.unique'           => 'Another event already uses that URL slug.',
+            'schema_json.json'      => 'The schema markup must be valid JSON.',
+            'banner_image.max'      => 'The banner may not be larger than 3 MB.',
         ];
     }
 }

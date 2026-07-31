@@ -106,11 +106,20 @@
                     <a href="https://www.cloudi5.com/" target="_blank" rel="noopener" class="hm-footer__dev">Cloudi5 Technologies</a>
                 </span>
             </p>
-            <nav class="hm-footer__legal" aria-label="Legal">
-                <a href="#">Privacy Policy</a>
-                <span class="hm-footer__legal-sep" aria-hidden="true">|</span>
-                <a href="#">Terms &amp; Conditions</a>
-            </nav>
+            {{-- Content Management → the two written pages, from the footer's
+                 view composer. A page switched off in the panel drops its link
+                 rather than pointing at a 404, and the separator goes with it
+                 when only one is left. --}}
+            @if ($legalPages->isNotEmpty())
+                <nav class="hm-footer__legal" aria-label="Legal">
+                    @foreach ($legalPages as $legal)
+                        @if (! $loop->first)
+                            <span class="hm-footer__legal-sep" aria-hidden="true">|</span>
+                        @endif
+                        <a href="{{ $legal->url }}">{{ $legal->title }}</a>
+                    @endforeach
+                </nav>
+            @endif
         </div>
     </div>
 </footer>

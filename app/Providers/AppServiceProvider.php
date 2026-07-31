@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\AdminNotification;
 use App\Models\Blog;
 use App\Models\Category;
+use App\Models\ContentPage;
 use App\Models\Counter;
 use App\Models\Course;
 use App\Models\Department;
@@ -57,10 +58,13 @@ class AppServiceProvider extends ServiceProvider
             ['token' => $token, 'email' => $user->getEmailForPasswordReset()]
         ));
 
-        // Admin topbar bell — recent notifications + unread count on every page.
+        // Admin topbar bell. The panel has an Unread and a Read tab, so each list
+        // is fetched separately rather than filtered in the view — opening a
+        // notification marks it read, which moves it from one tab to the other.
         View::composer('backend.template.layouts.header', function ($view) {
-            $view->with('adminNotifications', AdminNotification::latest()->take(8)->get());
-            $view->with('adminNotifUnread', AdminNotification::where('is_read', false)->count());
+            $view->with('adminNotifUnreadList', AdminNotification::unread()->latest()->take(10)->get());
+            $view->with('adminNotifReadList', AdminNotification::read()->latest()->take(10)->get());
+            $view->with('adminNotifUnread', AdminNotification::unread()->count());
         });
     }
 
@@ -98,6 +102,17 @@ class AppServiceProvider extends ServiceProvider
         View::composer('frontend.layouts.footer', function ($view) {
             $view->with('socialLinks', Setting::socialLinks());
             $view->with('footerCourses', Course::active()->take(5)->get(['name', 'slug']));
+
+            // The legal links, from Content Management. Ordered in PHP rather
+            // than with an ORDER BY FIELD(): that is MySQL-only, and the footer
+            // renders on every page including under the sqlite test driver.
+            $order = ['privacy-policy', 'terms-conditions'];
+
+            $view->with('legalPages', ContentPage::active()
+                ->whereIn('key', array_keys(ContentPage::PAGES))
+                ->get()
+                ->sortBy(fn ($page) => array_search($page->key, $order, true))
+                ->values());
         });
 
         // Home page — hero singleton + the "Top Categories" grid + the four
@@ -117,10 +132,10 @@ class AppServiceProvider extends ServiceProvider
                 ->get());
 
             // Upcoming Events — the cover-flow carousel (3 shown, extras rotate in).
-            $view->with('events', Event::active()->forPage('index')->get());
+            $view->with('events', Event::active()->visibleOn('index')->get());
 
             // Student Success Stories — the "Real Career Stories" card grid.
-            $view->with('stories', SuccessStory::active()->forPage('index')->get());
+            $view->with('stories', SuccessStory::active()->visibleOn('index')->get());
 
             // Latest Blog — the four posts flagged to show on the home page.
             $view->with('homeBlogs', Blog::active()->forHome()->take(4)->get());
@@ -137,17 +152,17 @@ class AppServiceProvider extends ServiceProvider
         // Trusted Partners — filtered to the page the partial is rendered on
         // (home / about / testimonials), so one logo library serves all three.
         View::composer('frontend.partials.partners', function ($view) {
-            $view->with('partners', Partner::active()->forPage($this->currentPage())->get());
+            $view->with('partners', Partner::active()->visibleOn($this->currentPage())->get());
         });
 
         // Statistics counters — home (About section) / about / testimonials.
         View::composer('frontend.partials.counters', function ($view) {
-            $view->with('counters', Counter::active()->forPage($this->currentPage())->get());
+            $view->with('counters', Counter::active()->visibleOn($this->currentPage())->get());
         });
 
         // Learner testimonials — home / about / testimonials.
         View::composer('frontend.partials.testimonials', function ($view) {
-            $view->with('testimonials', Testimonial::active()->forPage($this->currentPage())->get());
+            $view->with('testimonials', Testimonial::active()->visibleOn($this->currentPage())->get());
         });
 
         // Our Journey / Career Success reels — the same reel library feeds the
@@ -164,7 +179,7 @@ class AppServiceProvider extends ServiceProvider
             if (array_key_exists('faqs', $view->getData())) {
                 return;
             }
-            $view->with('faqs', Faq::active()->forPage($this->currentPage())->get());
+            $view->with('faqs', Faq::active()->visibleOn($this->currentPage())->get());
         });
     }
 

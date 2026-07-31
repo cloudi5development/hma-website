@@ -28,9 +28,11 @@
     --lavender: var(--accent-soft);
 
     /* --- surfaces --- */
-    --bg: #FCF6F2;             /* warm cream page */
+    --bg: #FFFFFF;             /* page */
     --card: #FFFFFF;
-    --border: #F1E5DD;         /* warm hairline */
+    /* Card and page are both white, so the hairline is what separates them —
+       a touch deeper than it needed to be over the old cream page. */
+    --border: #ECE0D7;
     --ink: #2A1D14;            /* warm near-black */
     --muted: #8A7466;
 
@@ -480,10 +482,12 @@ body * {
     gap: 14px;
     height: var(--topbar-h);
     padding: 0 30px;
-    background: rgba(253, 249, 246, .82);
-    -webkit-backdrop-filter: blur(16px) saturate(140%);
-    backdrop-filter: blur(16px) saturate(140%);
-   
+    /* Solid white. The blur that used to sit here only mattered while the bar was
+       translucent; nothing shows through now, so it is dropped rather than left
+       compositing a layer for no reason. The hairline keeps the bar defined
+       against the cream page as content scrolls under it. */
+    background: #FFFFFF;
+    border-bottom: 1px solid var(--border);
 }
 
 .app-topbar__menu {
@@ -730,7 +734,9 @@ body * {
     display: flex;
     flex-direction: column;
 
-    padding: 25px 24px 20px;
+    /* Tight vertical padding: these hold a label, a number and one line of
+       sub-text, so the card is sized to that rather than to a fixed block. */
+    padding: 17px 20px 15px;
     border: 1px solid rgba(255, 255, 255, .7);
     border-radius: 21px;
     overflow: hidden;
@@ -794,9 +800,11 @@ body * {
 }
 
 .kpi-card__label {
-    max-width: 132px;
-    font-size: 15px;
-    line-height: 1.16;
+    /* Wider cap so "Contact Enquiries" stays on one line at this size — a second
+       line was most of the extra height. */
+    max-width: 160px;
+    font-size: 14px;
+    line-height: 1.2;
     font-weight: 600;
     color: #17191D;
 }
@@ -805,9 +813,9 @@ body * {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
     flex-shrink: 0;
     color: #17191D;
     background: rgba(255, 255, 255, .34);
@@ -817,26 +825,28 @@ body * {
 }
 
 .kpi-card__icon svg {
-    width: 19px;
-    height: 19px;
+    width: 17px;
+    height: 17px;
     stroke-width: 1.8;
 }
 
 .kpi-card__num {
     position: relative;
     z-index: 1;
-    margin-top: 24PX;
-    font-size: 40px;
+    /* margin-top pushed the number a long way below the label; auto instead so it
+       sits directly under it and the card ends where the content does. */
+    margin-top: 12px;
+    font-size: 32px;
     font-weight: 600;
     letter-spacing: -.045em;
-    line-height: .95;
+    line-height: 1;
     color: #15171B;
 }
 
 .kpi-card__trend {
     position: relative;
     z-index: 1;
-    margin-top: 6px;
+    margin-top: 4px;
     font-size: 11.5px;
     line-height: 1.2;
     font-weight: 500;
@@ -3217,6 +3227,59 @@ select.form-control-hm {
     text-decoration: underline;
 }
 
+/* ---- Unread / Read tabs ---- */
+.app-notif__tabs {
+    display: flex;
+    gap: 4px;
+    padding: 8px 10px 0;
+    border-bottom: 1px solid #f0eeeb;
+}
+
+.app-notif__tab {
+    flex: 1 1 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #8A7466;
+    cursor: pointer;
+    transition: color .2s ease, border-color .2s ease;
+}
+
+.app-notif__tab:hover { color: var(--ink); }
+
+.app-notif__tab.is-active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+/* Count of what is still waiting, on the Unread tab. */
+.app-notif__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.app-notif__tab.is-active .app-notif__count {
+    background: var(--accent);
+    color: #fff;
+}
+
 .app-notif__list {
     list-style: none;
     margin: 0;
@@ -3224,6 +3287,8 @@ select.form-control-hm {
     max-height: 370px;
     overflow-y: auto;
 }
+
+.app-notif__list[hidden] { display: none; }
 
 .app-notif__item a {
     display: block;
@@ -3743,5 +3808,101 @@ select.pill::before {
 
     .dash-hero__title {
         font-size: 24px;
+    }
+}
+/* ==========================================================================
+   Repeater rows (Events → Highlights / Speakers / FAQs)
+
+   Each row is a bordered block with its own header strip, so a form holding a
+   dozen of them still reads as a list rather than one long run of inputs. The
+   row's position in the DOM is its display order — the ▲ / ▼ buttons move the
+   node and the form posts fields in document order, so there is no order field
+   to keep in sync.
+   ========================================================================== */
+.rep-row {
+    padding: 16px 18px 18px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: #FFFDFC;
+}
+
+.rep-row__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border);
+}
+
+.rep-row__index {
+    font-family: "Poppins", "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: .02em;
+}
+
+.rep-row__tools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* .btn-icon is white on white, which disappears against the row. */
+.rep-row__tools .btn-icon {
+    width: 34px;
+    height: 34px;
+    border-color: var(--border);
+}
+
+.rep-row__tools .btn-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* The ends of the list have nothing to swap with. */
+.rep-row__tools .btn-icon[disabled] {
+    opacity: .35;
+    cursor: default;
+    pointer-events: none;
+}
+
+.rep-row__tools .btn-danger-soft {
+    padding: 7px 14px;
+    font-size: 13px;
+}
+
+/* A compact switch for the per-row Show toggle — the full-size one would set
+   the header strip's height on its own. */
+.switch--sm .switch__track {
+    width: 36px;
+    height: 21px;
+}
+
+.switch--sm .switch__track::after {
+    width: 15px;
+    height: 15px;
+}
+
+.switch--sm input:checked + .switch__track::after {
+    transform: translateX(15px);
+}
+
+.switch--sm .switch__label {
+    font-size: 12px;
+}
+
+@media (max-width: 575.98px) {
+    .rep-row {
+        padding: 14px;
+    }
+
+    .rep-row__head {
+        align-items: flex-start;
     }
 }

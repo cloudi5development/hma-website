@@ -461,7 +461,7 @@
             'time'       => $e->formatted_time,
             'type'       => $e->type,
             'price'      => $e->price,
-            'link'       => $e->link ?: '#',
+            'link'       => route('frontend.event-details', $e->slug),
             'person_url' => $e->image_url,
             'tone'       => $e->tone,
         ])->all();
@@ -528,8 +528,14 @@
                                         <span class="hm-ev-card__type">{{ $ev['type'] }}</span>
                                         <span class="hm-ev-card__price">{{ $ev['price'] }}</span>
                                     </div>
+                                    {{-- Inline SVG rather than fa-arrow-up-right: that icon
+                                         is Font Awesome Pro, so on the free set the button
+                                         had been rendering with no arrow at all. --}}
                                     <a class="hm-ev-card__btn" href="{{ $ev['link'] }}">
-                                        Event Details <i class="fa-solid fa-arrow-up-right" aria-hidden="true"></i>
+                                        Event Details
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M7 17 17 7M8.5 7H17v8.5"/>
+                                        </svg>
                                     </a>
                                 </div>
                             </div>
@@ -541,6 +547,14 @@
                 <button class="hm-ev-nav hm-ev-nav--next" id="hmEvNext" type="button" aria-label="Next event">
                     <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                 </button>
+            </div>
+
+            {{-- The carousel shows only the events flagged for the home page;
+                 this opens the full programme. --}}
+            <div class="hm-events__more" data-ev-io>
+                <a class="hm-events__all hm-ev-anim" href="{{ route('frontend.events') }}">
+                    See all <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </a>
             </div>
         </div>
     </section>

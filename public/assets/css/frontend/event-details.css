@@ -1,0 +1,1242 @@
+/* ==========================================================================
+   EVENT DETAILS (/events/{slug})
+   Banner, then a two-column layout: content left, sticky sidebar right. The
+   banner, breadcrumb and card conventions match the events listing so the two
+   pages read as one section of the site.
+   ========================================================================== */
+
+/* The utility icons — the date/time/venue/seats glyphs and the "What You Will
+   Learn" circles — are green in the design, not gold. Gold stays on the calls
+   to action (Register / See all / Event Details) so the buttons keep the only
+   loud colour on the page. Same green as the organiser badge and the discount
+   pill already use, kept here so all four places move together. */
+:root {
+    --hm-ed-green: #2E7D4F;
+    --hm-ed-green-soft: #E8F5EC;
+    --hm-ed-green-line: #D3E9DC;
+}
+
+/* The shared layout centres #main-content with flex and pads it 3rem; this page
+   needs the full canvas, like every other full-width page. */
+#main-content {
+    position: relative;
+    display: block;
+    min-height: auto;
+    padding: 0;
+    text-align: left;
+}
+
+.hm-ed {
+    position: relative;
+    /* The navbar floats at top:22px and is 72px tall, so it owns the first 94px. */
+    padding: calc(94px + 34px) 0 80px;
+}
+
+/* The FAQ band that follows brings its own top padding, so .hm-ed's would
+   double up into a gap. Trimmed the same way course-details.css does it — via a
+   class the template sets rather than :has(), so the spacing is the same in
+   every browser instead of only where :has() is supported. */
+.hm-ed--with-faq {
+    padding-bottom: 42px;
+}
+
+.hm-ed+.hm-faq {
+    padding: 52px 0 20px;
+}
+
+/* ================================ BANNER ================================ */
+.hm-ed__banner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 176px;
+    padding: 28px 44px;
+    border-radius: 22px;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.hm-ed__banner-img {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hm-ed__banner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(90deg, rgba(10, 8, 14, .84) 0%, rgba(10, 8, 14, .58) 52%, rgba(10, 8, 14, .36) 100%);
+}
+
+.hm-ed__banner-title {
+    margin: 0 0 10px;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: clamp(24px, 3.6vw, 36px);
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #fff;
+}
+
+.hm-ed__crumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13.5px;
+    color: rgba(255, 255, 255, .78);
+}
+
+.hm-ed__crumbs a {
+    color: rgba(255, 255, 255, .78);
+    text-decoration: none;
+}
+
+.hm-ed__crumbs a:hover {
+    color: #fff;
+}
+
+.hm-ed__crumb-sep {
+    color: rgba(255, 255, 255, .5);
+}
+
+/* ================================ LAYOUT ================================ */
+.hm-ed__layout {
+    --bs-gutter-x: 26px;
+    --bs-gutter-y: 26px;
+    margin-top: 26px;
+}
+
+/* Fade-up on arrival; the observer only toggles .is-in. */
+.hm-ed-anim {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity .55s cubic-bezier(.22, .61, .36, 1), transform .55s cubic-bezier(.22, .61, .36, 1);
+}
+
+.hm-ed-anim.is-in {
+    opacity: 1;
+    transform: none;
+}
+
+/* ============================== HERO CARD ==============================
+   The banner and the summary beneath it are one panel. The wrapper carries the
+   outline, the shadow and the rounding, and clips its children — so the hero
+   keeps its own overflow:hidden for the photo mask without either child having
+   to know which corners belong to it. */
+.hm-ed-main {
+    display: block;
+    margin-bottom: 22px;
+    border: 1px solid #F1E6DE;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(42, 29, 20, .05);
+}
+
+/* The photo is a full-bleed panel down the right, so the card is sized by its
+   own aspect rather than by the text: text-driven height made it collapse to a
+   letterbox on wide screens and the photo lost its head. */
+.hm-ed-hero__media {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 300px;
+    /* Rounding lives on .hm-ed-main; this only needs to clip the photo. */
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.hm-ed-hero__media--purple {
+    background: radial-gradient(120% 90% at 76% 74%, #7d2f95 0%, rgba(125, 47, 149, 0) 58%), linear-gradient(158deg, #251636 0%, #3b2154 100%);
+}
+
+.hm-ed-hero__media--teal {
+    background: radial-gradient(120% 90% at 72% 70%, #1c7f8a 0%, rgba(28, 127, 138, 0) 58%), linear-gradient(158deg, #0c2529 0%, #123b42 100%);
+}
+
+.hm-ed-hero__media--green {
+    background: radial-gradient(120% 90% at 72% 70%, #2f7d40 0%, rgba(47, 125, 64, 0) 58%), linear-gradient(158deg, #0f2218 0%, #163420 100%);
+}
+
+.hm-ed-hero__body {
+    position: relative;
+    z-index: 1;
+    /* Stops at the photo's edge so a long title never runs under the face. */
+    flex: 0 0 56%;
+    max-width: 56%;
+    padding: 30px 26px 30px 34px;
+}
+
+/* Green rather than washed-out white, as in the design — a lighter shade than
+   --hm-ed-green, which is mixed for light backgrounds and goes muddy on the
+   dark hero. */
+.hm-ed-hero__speaker {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6FCF97;
+}
+
+.hm-ed-hero__title {
+    margin: 0;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: clamp(24px, 2.6vw, 33px);
+    font-weight: 700;
+    line-height: 1.22;
+    color: #fff;
+}
+
+.hm-ed-hero__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 20px;
+    padding: 9px 18px;
+    border-radius: 999px;
+    background: var(--hm-gold, #E9A320);
+    color: #23180F;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform .22s ease, box-shadow .22s ease;
+}
+
+.hm-ed-hero__cta svg {
+    width: 12px;
+    height: 12px;
+}
+
+.hm-ed-hero__cta:hover {
+    color: #23180F;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(233, 163, 32, .34);
+}
+
+/* Cropped from the top so a portrait keeps its head in frame; the left edge is
+   feathered into the gradient rather than cut, which is what the design shows. */
+.hm-ed-hero__person {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    width: 46%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    filter: grayscale(1) contrast(1.04) brightness(.99);
+    -webkit-mask-image: linear-gradient(to left, #000 86%, transparent 100%);
+    mask-image: linear-gradient(to left, #000 86%, transparent 100%);
+    pointer-events: none;
+}
+
+/* ============================ TITLE + FACTS ============================
+   Sits inside .hm-ed-main directly under the hero, so it carries no outline,
+   rounding or shadow of its own — those belong to the panel around both. */
+.hm-ed-intro {
+    padding: 24px 26px 26px;
+    background: #fff;
+}
+
+.hm-ed-intro__title {
+    margin: 0 0 10px;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: clamp(21px, 2.1vw, 26px);
+    font-weight: 700;
+    line-height: 1.25;
+    color: #23180F;
+}
+
+.hm-ed-intro__desc {
+    margin: 0 0 16px;
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: #6B5B50;
+}
+
+.hm-ed-intro__org {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 18px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--hm-ed-green);
+}
+
+.hm-ed-intro__org-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--hm-ed-green-soft);
+    color: var(--hm-ed-green);
+}
+
+.hm-ed-intro__org-mark svg {
+    width: 15px;
+    height: 15px;
+}
+
+.hm-ed-intro__verified {
+    width: 15px;
+    height: 15px;
+    color: #2C8CD6;
+}
+
+/* Four across on one line, as in the design. The address gets the extra room
+   because it is the only entry that wraps. */
+.hm-ed-facts {
+    list-style: none;
+    display: grid;
+    grid-template-columns: minmax(0, .92fr) minmax(0, .82fr) minmax(0, 1.45fr) minmax(0, .9fr);
+    gap: 14px 16px;
+    margin: 0 0 20px;
+    padding: 18px 0 0;
+    border-top: 1px solid #F3EAE3;
+}
+
+.hm-ed-facts__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: #6B5B50;
+}
+
+.hm-ed-facts__item svg {
+    flex: 0 0 auto;
+    width: 17px;
+    height: 17px;
+    margin-top: 1px;
+    color: black;
+}
+
+.hm-ed-facts__item b {
+    display: block;
+    font-weight: 500;
+    color: #23180F;
+}
+
+.hm-ed-facts__item small {
+    display: block;
+    font-size: 12px;
+    color: #9A8779;
+}
+
+/* "Only N Left" reads as urgency in both places it appears. */
+.hm-ed-facts__left {
+    color: #D0473A !important;
+    font-weight: 600;
+}
+
+/* ---- Price row ---- */
+.hm-ed-price {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 16px 0 0;
+    border-top: 1px solid #F3EAE3;
+}
+
+.hm-ed-price__label {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #9A8779;
+}
+
+.hm-ed-price__figures {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.hm-ed-price__was {
+    font-size: 14px;
+    color: #A2907F;
+    text-decoration: line-through;
+}
+
+.hm-ed-price__now {
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #23180F;
+}
+
+.hm-ed-price__off {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--hm-ed-green-soft);
+    color: var(--hm-ed-green);
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+.hm-ed-price .hm-ed-btn {
+    min-width: 210px;
+}
+
+.hm-ed-chips {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 18px 0 0;
+    padding: 0;
+}
+
+.hm-ed-chips li {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 15px;
+    border-radius: 999px;
+    border: 1px solid #F1E6DE;
+    background: #FDF9F6;
+    font-size: 12px;
+    color: #6B5B50;
+}
+
+
+.hm-ed-chips svg {
+    width: 14px;
+    height: 14px;
+    color: var(--hm-ed-green);
+}
+
+
+/* ================================ BUTTONS ================================
+   Register triggers render as <button> (they open the modal) while See all and
+   Event Details stay <a>. Without the reset below the <button> ones pick up the
+   browser's native border and font, which is what put a dark ring around them
+   and left them a size apart from the links beside them. */
+.hm-ed-btn,
+.hm-ed-hero__cta {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    font-family: inherit;
+    letter-spacing: inherit;
+}
+
+/* Keyboard users still need to see focus — only the native ring is dropped. */
+.hm-ed-btn:focus-visible,
+.hm-ed-hero__cta:focus-visible {
+    outline: 2px solid #23180F;
+    outline-offset: 2px;
+}
+
+.hm-ed-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 26px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform .22s ease, box-shadow .22s ease, background .22s ease;
+}
+
+.hm-ed-btn--primary {
+    background: var(--hm-gold, #E9A320);
+    color: #23180F;
+    box-shadow: 0 10px 22px rgba(233, 163, 32, .28);
+}
+
+.hm-ed-btn--primary:hover {
+    color: #23180F;
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(233, 163, 32, .38);
+}
+
+.hm-ed-btn--block {
+    width: 100%;
+}
+
+/* Pill-shaped with a trailing arrow, matching the design's Upcoming Events
+   cards — the block "See all" underneath keeps the squarer button radius. */
+.hm-ed-btn--small {
+    gap: 6px;
+    padding: 7px 15px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    background: var(--hm-gold, #E9A320);
+    color: #23180F;
+    box-shadow: none;
+}
+
+.hm-ed-btn--small svg {
+    width: 11px;
+    height: 11px;
+}
+
+.hm-ed-btn--small:hover {
+    color: #23180F;
+    transform: translateY(-1px);
+}
+
+/* ================================ SECTIONS ================================ */
+.hm-ed-sec {
+    margin-top: 30px;
+}
+
+.hm-ed-sec__title {
+    margin: 0 0 16px;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: clamp(19px, 1.9vw, 23px);
+    font-weight: 700;
+    color: #23180F;
+}
+
+.hm-ed-sec__body {
+    font-size: 14.5px;
+    line-height: 1.8;
+    color: #6B5B50;
+}
+
+/* ---- What You Will Learn ---- */
+.hm-ed-learn {
+    --bs-gutter-x: 14px;
+    --bs-gutter-y: 14px;
+}
+
+.hm-ed-learn__card {
+    height: 100%;
+    padding: 18px 15px;
+    text-align: center;
+    background: #fff;
+    border: 1px solid #F1E6DE;
+    border-radius: 14px;
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+
+.hm-ed-learn__card:hover {
+    transform: translateY(-4px);
+    border-color: #EBD7C6;
+    box-shadow: 0 14px 28px rgba(42, 29, 20, .09);
+}
+
+/* A pale tile per card with a matching darker ink for the glyph. The template
+   cycles the tone by position, so two cards side by side never share one.
+   --tile paints the circle, --ink the glyph the mask below cuts out. */
+.hm-ed-learn__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 14px;
+    border-radius: 50%;
+    background: var(--tile, var(--hm-ed-green-soft));
+}
+
+.hm-ed-learn__icon--green {
+    --tile: #E3F3E8;
+    --ink: #2E7D4F;
+}
+
+.hm-ed-learn__icon--amber {
+    --tile: #FAF0D8;
+    --ink: #97701A;
+}
+
+.hm-ed-learn__icon--teal {
+    --tile: #E0F1EF;
+    --ink: #1F7A70;
+}
+
+.hm-ed-learn__icon--pink {
+    --tile: #FBE6E4;
+    --ink: #B04A3D;
+}
+
+.hm-ed-learn__icon--blue {
+    --tile: #E5ECF9;
+    --ink: #3A5896;
+}
+
+.hm-ed-learn__icon--lilac {
+    --tile: #EFE8F7;
+    --ink: #6A4A93;
+}
+
+/* The icons-details PNGs are transparent outline drawings, so masking with one
+   turns this box into the glyph itself and `background` becomes its colour —
+   that is what lets the supplied artwork render green rather than near-black.
+   --hm-ed-icon is set per card by the template. */
+.hm-ed-learn__glyph {
+    display: block;
+    width: 24px;
+    height: 24px;
+    background: var(--ink, var(--hm-ed-green));
+    -webkit-mask: var(--hm-ed-icon) center / contain no-repeat;
+    mask: var(--hm-ed-icon) center / contain no-repeat;
+}
+
+/* Without mask support the box would be a solid green circle, so fall back to
+   drawing the PNG itself — untinted, but the right icon. */
+@supports not ((-webkit-mask-image: url("")) or (mask-image: url(""))) {
+    .hm-ed-learn__glyph {
+        background: var(--hm-ed-icon) center / contain no-repeat;
+    }
+}
+
+.hm-ed-learn__title {
+    margin: 0 0 6px;
+    font-size: 13.5px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: #23180F;
+}
+
+.hm-ed-learn__desc {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.55;
+    color: #8A7466;
+}
+
+/* ---- Speakers ---- */
+.hm-ed-speakers {
+    --bs-gutter-x: 14px;
+    --bs-gutter-y: 14px;
+}
+
+.hm-ed-speaker {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    height: 100%;
+    /* Right padding leaves the bottom-right corner clear for the LinkedIn badge. */
+    padding: 14px 46px 14px 14px;
+    background: #fff;
+    border: 1px solid #F1E6DE;
+    border-radius: 14px;
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.hm-ed-speaker:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 26px rgba(42, 29, 20, .09);
+}
+
+.hm-ed-speaker__photo {
+    flex: 0 0 auto;
+    width: 58px;
+    height: 58px;
+    border-radius: 12px;
+    object-fit: cover;
+    object-position: top center;
+}
+
+.hm-ed-speaker__photo--blank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #FDF1E6;
+    color: #C2721A;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.hm-ed-speaker__who {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.hm-ed-speaker__name {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #23180F;
+}
+
+.hm-ed-speaker__role,
+.hm-ed-speaker__co {
+    margin: 2px 0 0;
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: #8A7466;
+}
+
+/* Pinned to the corner rather than centred in the row, so it lines up across
+   cards whether a speaker has one line of detail or three. */
+.hm-ed-speaker__in {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #0A66C2;
+    color: #fff;
+    font-size: 12px;
+    text-decoration: none;
+    transition: transform .2s ease;
+}
+
+.hm-ed-speaker__in:hover {
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+/* ================================ SIDEBAR ================================ */
+.hm-ed-side {
+    position: sticky;
+    /* Clears the floating navbar when it scrolls under. */
+    top: 112px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.hm-ed-card,
+.hm-ed-up {
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #F1E6DE;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(42, 29, 20, .05);
+}
+
+.hm-ed-card__title,
+.hm-ed-up__title {
+    margin: 0 0 16px;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: #23180F;
+}
+
+.hm-ed-card__list {
+    list-style: none;
+    margin: 0 0 18px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+
+.hm-ed-card__list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #4F423A;
+}
+
+/* Same four facts as the intro card, so the same green — leaving these gold
+   made the two lists read as different kinds of information. */
+.hm-ed-card__list svg {
+    flex: 0 0 auto;
+    width: 17px;
+    height: 17px;
+    margin-top: 1px;
+    color: var(--hm-ed-green);
+}
+
+.hm-ed-card__left {
+    display: block;
+    margin-top: 2px;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #D0473A;
+}
+
+/* ---- Upcoming events ----
+   Sized to hold three lines of title plus the button without the photo being
+   squeezed to a sliver — the design's cards are roughly as tall as they are
+   half-wide. */
+.hm-ed-up__item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 124px;
+    margin-bottom: 12px;
+    padding: 16px 18px;
+    border-radius: 14px;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.hm-ed-up__item--purple {
+    background: linear-gradient(150deg, #251636 0%, #3b2154 100%);
+}
+
+.hm-ed-up__item--teal {
+    background: linear-gradient(150deg, #0c2529 0%, #123b42 100%);
+}
+
+.hm-ed-up__item--green {
+    background: linear-gradient(150deg, #0f2218 0%, #163420 100%);
+}
+
+.hm-ed-up__body {
+    position: relative;
+    z-index: 1;
+    max-width: 62%;
+}
+
+.hm-ed-up__name {
+    margin: 0 0 11px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.38;
+    color: #fff;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.hm-ed-up__thumb {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    width: 42%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    filter: grayscale(1);
+    -webkit-mask-image: linear-gradient(to left, #000 82%, transparent 100%);
+    mask-image: linear-gradient(to left, #000 82%, transparent 100%);
+    pointer-events: none;
+}
+
+/* ============================== RESPONSIVE ============================== */
+@media (max-width: 1199.98px) {
+
+    /* Four facts no longer fit on one line once the column narrows. */
+    .hm-ed-facts {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 991.98px) {
+    .hm-ed {
+        padding: calc(94px + 24px) 0 64px;
+    }
+
+    /* Sidebar drops below the content — stop it sticking so it scrolls with it. */
+    .hm-ed-side {
+        position: static;
+        margin-top: 4px;
+    }
+
+    /* Full width again, so four across is back on. */
+    .hm-ed-facts {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767.98px) {
+    .hm-ed-facts {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .hm-ed-hero__media {
+        min-height: 260px;
+    }
+
+    .hm-ed-hero__body {
+        flex-basis: 62%;
+        max-width: 62%;
+        padding: 24px 18px 24px 24px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .hm-ed {
+        padding: calc(94px + 18px) 0 52px;
+    }
+
+    .hm-ed__banner {
+        min-height: 140px;
+        padding: 20px;
+        border-radius: 16px;
+    }
+
+    .hm-ed-intro {
+        padding: 18px 16px 20px;
+    }
+
+    .hm-ed-hero__media {
+        min-height: 224px;
+    }
+
+    .hm-ed-hero__body {
+        flex-basis: 68%;
+        max-width: 68%;
+        padding: 20px 14px 20px 18px;
+    }
+
+    .hm-ed-hero__person {
+        width: 40%;
+    }
+
+    .hm-ed-facts {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .hm-ed-price {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .hm-ed-price .hm-ed-btn {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* ---------------------------- Reduced motion ---------------------------- */
+@media (prefers-reduced-motion: reduce) {
+
+    .hm-ed-anim,
+    .hm-ed-learn__card,
+    .hm-ed-speaker,
+    .hm-ed-btn {
+        transition: none !important;
+    }
+}
+
+/* ==========================================================================
+   REGISTRATION MODAL
+   Opened by every Register button on this page. Kept in this stylesheet rather
+   than a new file: it only ever appears on the details page, and the page
+   already loads exactly one sheet of its own.
+   ========================================================================== */
+.hm-reg .modal-dialog {
+    max-width: 520px;
+}
+
+/* Capped to the viewport so a tall form never runs off the bottom, with the
+   overflow handled by .hm-reg__scroll below rather than by Bootstrap's
+   modal-dialog-scrollable — that class needs a .modal-body, which this dialog
+   does not have, and silently clipped the form instead of scrolling it. */
+.hm-reg__content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 3.5rem);
+    padding: 30px 0 0;
+    border: 0;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 30px 70px rgba(20, 12, 6, .28);
+}
+
+/* dvh accounts for a mobile browser's collapsing toolbar; the vh above stays as
+   the fallback for anything that does not know the unit. */
+@supports (max-height: 100dvh) {
+    .hm-reg__content {
+        max-height: calc(100dvh - 3.5rem);
+    }
+}
+
+/* The title and the close button stay put; only this scrolls. The horizontal
+   padding lives here so the scrollbar tracks the panel edge. */
+.hm-reg__scroll {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 30px 32px;
+}
+
+.hm-reg__close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: #F6F0EA;
+    color: #6B5B50;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease;
+}
+
+.hm-reg__close:hover {
+    background: #EFE4DA;
+    color: #23180F;
+}
+
+.hm-reg__title {
+    flex: 0 0 auto;
+    margin: 0 0 20px;
+    /* Its own padding — .hm-reg__content's horizontal padding moved to the
+       scroll area so the scrollbar sits against the panel edge. */
+    padding: 0 30px;
+    text-align: center;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: 21px;
+    font-weight: 700;
+    color: #8C2E13;
+}
+
+/* ---- The event being registered for ---- */
+.hm-reg__event {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 22px;
+    padding: 14px;
+    border: 2px solid #2C8CD6;
+    border-radius: 12px;
+    background: #FFFBEF;
+}
+
+.hm-reg__event-img {
+    flex: 0 0 auto;
+    width: 74px;
+    height: 74px;
+    border-radius: 8px;
+    object-fit: cover;
+    object-position: top center;
+    filter: grayscale(1);
+}
+
+.hm-reg__event-body {
+    min-width: 0;
+}
+
+.hm-reg__event-title {
+    margin: 0 0 8px;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #23180F;
+}
+
+.hm-reg__event-meta {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin: 0;
+    padding: 0;
+    font-size: 12.5px;
+    color: #6B5B50;
+}
+
+.hm-reg__event-meta li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.hm-reg__event-meta svg {
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    margin-top: 1px;
+    color: var(--hm-gold, #E9A320);
+}
+
+/* ---- Form ---- */
+.hm-reg__form .row {
+    --bs-gutter-x: 14px;
+}
+
+.hm-reg__field {
+    margin-bottom: 14px;
+}
+
+.hm-reg__label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #23180F;
+}
+
+.hm-reg__input {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid #E6DBD2;
+    border-radius: 9px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 13.5px;
+    color: #23180F;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.hm-reg__input::placeholder {
+    color: #B4A395;
+}
+
+.hm-reg__input:focus {
+    outline: 0;
+    border-color: var(--hm-gold, #E9A320);
+    box-shadow: 0 0 0 3px rgba(233, 163, 32, .16);
+}
+
+/* Native arrow removed so the caret matches the rest of the site's selects. */
+.hm-reg__select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 38px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B5B50' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    background-size: 15px 15px;
+    cursor: pointer;
+}
+
+.hm-reg__phone {
+    display: flex;
+    align-items: stretch;
+}
+
+.hm-reg__phone-code {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 12px;
+    border: 1px solid #E6DBD2;
+    border-right: 0;
+    border-radius: 9px 0 0 9px;
+    background: #FBF7F3;
+    font-size: 13.5px;
+    color: #6B5B50;
+}
+
+.hm-reg__phone .hm-reg__input {
+    border-radius: 0 9px 9px 0;
+}
+
+/* ---- Terms ---- */
+.hm-reg__field--terms {
+    margin: 4px 0 18px;
+}
+
+.hm-reg__terms {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    font-size: 13px;
+    color: #4F423A;
+    cursor: pointer;
+}
+
+.hm-reg__terms input {
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+    accent-color: var(--hm-gold, #E9A320);
+    cursor: pointer;
+}
+
+.hm-reg__terms a {
+    color: #8C2E13;
+    font-weight: 600;
+}
+
+/* ---- Errors ---- */
+.hm-reg__error {
+    display: none;
+    margin: 5px 0 0;
+    font-size: 12px;
+    color: #D0473A;
+}
+
+.hm-reg__field.is-invalid .hm-reg__error {
+    display: block;
+}
+
+.hm-reg__field.is-invalid .hm-reg__input {
+    border-color: #E9A99F;
+}
+
+/* ---- Submit ---- */
+.hm-reg__submit {
+    width: 100%;
+    height: 50px;
+    border: 0;
+    border-radius: 999px;
+    background: #8C2E13;
+    color: #fff;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .22s ease, transform .22s ease, box-shadow .22s ease;
+}
+
+.hm-reg__submit:hover:not(:disabled) {
+    background: #A5391B;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 26px rgba(140, 46, 19, .3);
+}
+
+.hm-reg__submit:disabled {
+    opacity: .65;
+    cursor: default;
+}
+
+.hm-reg__note {
+    margin: 12px 0 0;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--hm-ed-green);
+}
+
+@media (max-width: 575.98px) {
+    .hm-reg__content {
+        padding: 24px 0 0;
+    }
+
+    .hm-reg__title {
+        padding: 0 18px;
+    }
+
+    .hm-reg__scroll {
+        padding: 0 18px 26px;
+    }
+
+    .hm-reg__event {
+        flex-direction: column;
+    }
+
+    .hm-reg__event-img {
+        width: 100%;
+        height: 120px;
+    }
+}

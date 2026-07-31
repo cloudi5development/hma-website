@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Blog;
 use App\Models\Course;
 use App\Models\Department;
+use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -45,9 +46,18 @@ class HomeController extends Controller
 
         return view('frontend.blog-details', compact('blog', 'latestBlogs'));
     }
-    public function contactUs()
+    public function contactUs(Request $request)
     {
-        return view('frontend.contact-us');
+        // "Register Now" on an event details page links here as ?event=<slug>,
+        // so the enquiry form opens already naming the event. An unknown or
+        // unpublished slug simply resolves to null and the form is untouched.
+        $slug = trim((string) $request->query('event'));
+
+        $enquiryEvent = $slug === ''
+            ? null
+            : Event::active()->where('slug', $slug)->first();
+
+        return view('frontend.contact-us', compact('enquiryEvent'));
     }
     public function testimonials()
     {

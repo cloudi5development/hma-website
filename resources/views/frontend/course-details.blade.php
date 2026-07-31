@@ -30,8 +30,21 @@
     ];
 @endphp
 
-@section('title', $model->meta_title ?: $course['title'] . ' — Hire Minds Academy')
-@section('meta_description', $model->meta_description ?: $course['description'])
+{{-- Block sections, not the one-line @section('title', $value) form. That form
+     stores e($value) and the layout escapes again when it yields, so an "&" in
+     a course name reaches the browser as "&amp;"; and it only skips ob_start()
+     when the value is not null, so a course with no meta description and no
+     description left an output buffer open on every request. A block stores the
+     raw text and the layout escapes it exactly once; the guard keeps a blank
+     field falling through to Settings → SEO Defaults instead of overriding them
+     with an empty string. --}}
+@php $metaDescription = $model->meta_description ?: $course['description']; @endphp
+
+@section('title'){!! $model->meta_title ?: $course['title'] . ' — Hire Minds Academy' !!}@endsection
+
+@if (filled($metaDescription))
+    @section('meta_description'){!! $metaDescription !!}@endsection
+@endif
 
 @push('styles')
     {{-- Poppins — the heading typeface used across the site's hero/banner blocks --}}

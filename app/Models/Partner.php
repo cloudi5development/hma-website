@@ -39,8 +39,12 @@ class Partner extends Model
     /**
      * Only rows flagged to appear on the given page. $page is a frontend route
      * key: index | about-us | testimonials. Unknown pages fall back to home.
+     *
+     * Named visibleOn() and not forPage(): a scopeForPage() shadows Eloquent's own
+     * forPage($page, $perPage), which paginate() calls internally — see the note
+     * in Concerns\HasPageVisibility.
      */
-    public function scopeForPage(Builder $q, string $page): Builder
+    public function scopeVisibleOn(Builder $q, string $page): Builder
     {
         $column = match ($page) {
             'about-us'     => 'show_about',

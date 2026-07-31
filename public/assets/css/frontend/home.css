@@ -2663,7 +2663,12 @@
     transform: translateY(-22px);
     transition: opacity .7s var(--hm-ease), transform .7s var(--hm-ease);
 }
-.hm-events__head.is-in .hm-ev-anim { opacity: 1; transform: none; }
+/* Any [data-ev-io] container reveals its own .hm-ev-anim children once the
+   observer marks it .is-in. This used to name .hm-events__head alone, so an
+   animated element added to a different container in this section stayed at
+   opacity 0 for good — which is exactly what happened to the "See all" button. */
+.hm-events__head.is-in .hm-ev-anim,
+.hm-events__more.is-in .hm-ev-anim { opacity: 1; transform: none; }
 .hm-events__head.is-in .hm-ev-anim:nth-child(2) { transition-delay: .1s; }
 .hm-events__head.is-in .hm-ev-anim:nth-child(3) { transition-delay: .2s; }
 
@@ -2737,9 +2742,9 @@
     /* How much of the card the copy may use before it would reach the speaker
        photo. One variable, retuned per breakpoint, instead of a max-width on each
        text element. */
-    --hm-ev-text: 58%;
+    --hm-ev-text: 54%;
 }
-.hm-ev-card__speaker { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+.hm-ev-card__speaker { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
 .hm-ev-card--purple .hm-ev-card__speaker { color: #e29bff; }
 .hm-ev-card--teal   .hm-ev-card__speaker { color: #4fd8e8; }
 .hm-ev-card--green  .hm-ev-card__speaker { color: #7ee08a; }
@@ -2747,7 +2752,7 @@
 .hm-ev-card__title {
     margin: 0;
     font-family: 'Poppins', 'Geist', sans-serif;
-    font-size: clamp(26px, 2.1vw, 31px);
+    font-size: clamp(30px, 2.5vw, 36px);
     font-weight: 700;
     line-height: 1.16;
     color: #fff;
@@ -2777,16 +2782,16 @@
 .hm-ev-card__when-row {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    font-size: 13.5px;
+    gap: 11px;
+    font-size: 15px;
     line-height: 1.45;
-    color: rgba(255, 255, 255, .78);
+    color: rgba(255, 255, 255, .82);
 }
 
 .hm-ev-card__when-icon {
     flex: 0 0 auto;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     margin-top: 1px;      /* optical align with the first line of text */
     color: rgba(255, 255, 255, .55);
 }
@@ -2802,18 +2807,20 @@
 
 .hm-ev-card__foot { margin-top: auto; }
 .hm-ev-card__meta { margin-bottom: 20px; max-width: var(--hm-ev-text); }
-.hm-ev-card__type { display: block; font-size: 13.5px; color: rgba(255, 255, 255, .6); margin-bottom: 4px; }
-.hm-ev-card__price { display: block; font-size: 22px; font-weight: 700; color: #fff; }
+.hm-ev-card__type { display: block; font-size: 15px; color: rgba(255, 255, 255, .62); margin-bottom: 5px; }
+.hm-ev-card__price { display: block; font-size: 27px; font-weight: 700; color: #fff; }
+
+.hm-ev-card__btn svg { width: 14px; height: 14px; flex: 0 0 auto; }
 
 .hm-ev-card__btn {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 22px;
+    padding: 13px 26px;
     border-radius: 30px;
     background: rgba(0, 0, 0, .40);
     color: #fff;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     text-decoration: none;
     -webkit-backdrop-filter: blur(4px);
@@ -2834,8 +2841,8 @@
     position: absolute;
     right: 0;
     bottom: 0;
-    width: 42%;
-    height: 76%;
+    width: 46%;
+    height: 92%;
     object-fit: contain;
     object-position: bottom right;
     z-index: 1;
@@ -2845,6 +2852,38 @@
     -webkit-mask-image: linear-gradient(to left, #000 84%, transparent 100%);
     mask-image: linear-gradient(to left, #000 84%, transparent 100%);
     pointer-events: none;
+}
+
+/* ---- "See all" under the carousel ---- */
+.hm-events__more {
+    display: flex;
+    justify-content: center;
+    margin-top: 26px;
+}
+
+.hm-events__all {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 30px;
+    border-radius: 999px;
+    background: var(--hm-gold, #E9A320);
+    color: #23180F;
+    font-size: 14.5px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 12px 26px rgba(233, 163, 32, .32);
+    transition: transform .25s var(--hm-ease, cubic-bezier(.22, .61, .36, 1)),
+                box-shadow .25s ease;
+}
+
+.hm-events__all i { font-size: 11px; }
+
+.hm-events__all:hover,
+.hm-events__all:focus-visible {
+    color: #23180F;
+    transform: translateY(-2px);
+    box-shadow: 0 16px 32px rgba(233, 163, 32, .42);
 }
 
 /* ---- Navigation buttons ---- */
@@ -2880,11 +2919,11 @@
     .hm-ev-card { width: 348px; height: 406px; }
     .hm-ev-card.is-left  { transform: translate(calc(-50% - 190px), -50%) scale(.86); }
     .hm-ev-card.is-right { transform: translate(calc(-50% + 190px), -50%) scale(.86); }
-    .hm-ev-card__title { font-size: 25px; }
+    .hm-ev-card__title { font-size: 29px; }
 
     /* Narrower card: the copy takes a bigger share and the photo gives width back. */
-    .hm-ev-card__body { padding: 28px 26px; --hm-ev-text: 60%; }
-    .hm-ev-card__person { width: 40%; height: 72%; }
+    .hm-ev-card__body { padding: 28px 26px; --hm-ev-text: 56%; }
+    .hm-ev-card__person { width: 44%; height: 88%; }
 
     /* The card loses 51px of height here, so the schedule tightens with it. */
     .hm-ev-card__when { margin-top: 14px; gap: 8px; }
@@ -2911,13 +2950,13 @@
     }
 
     /* Phones are the tightest split, so the photo is smallest here. */
-    .hm-ev-card__body { padding: 26px 22px; --hm-ev-text: 64%; }
-    .hm-ev-card__person { width: 38%; height: 66%; }
+    .hm-ev-card__body { padding: 26px 22px; --hm-ev-text: 62%; }
+    .hm-ev-card__person { width: 42%; height: 78%; }
 
     .hm-ev-card__when { margin-top: 12px; gap: 7px; }
-    .hm-ev-card__when-row { font-size: 12.5px; }
+    .hm-ev-card__when-row { font-size: 13px; }
     .hm-ev-card__when-icon { width: 15px; height: 15px; }
-    .hm-ev-card__price { font-size: 19px; }
+    .hm-ev-card__price { font-size: 21px; }
     .hm-ev-card__meta { margin-bottom: 14px; }
 
     .hm-ev-nav { top: auto; bottom: 8px; transform: none; }

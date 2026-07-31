@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Controllers\Frontend\ContactEnquiryController;
+use App\Http\Controllers\Frontend\ContentPageController;
 use App\Http\Controllers\Frontend\CourseEnquiryController;
+use App\Http\Controllers\Frontend\EventController;
+use App\Http\Controllers\Frontend\EventRegistrationController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\SitemapController;
 use Illuminate\Support\Facades\Route;
@@ -54,11 +57,28 @@ Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('frontend.s
 Route::redirect('sitemap', '/sitemap.xml', 301);
 Route::get('robots.txt', [SitemapController::class, 'robots'])->name('frontend.robots');
 
+// Events — the listing reached from the home carousel's "See all", and one
+// event per slug behind every "Event Details" button.
+Route::controller(EventController::class)->name('frontend.')->group(function () {
+    Route::get('/events', 'index')->name('events');
+    Route::get('/events/{slug}', 'show')->name('event-details');
+});
+
 // Shared contact form (home + contact pages) — stores the enquiry + emails the sender.
 Route::post('/contact-enquiry', [ContactEnquiryController::class, 'store'])->name('frontend.contact-enquiry.store');
 
 // Course-details enquiry modal — stores the enquiry + emails the student.
 Route::post('/course-enquiry', [CourseEnquiryController::class, 'store'])->name('frontend.course-enquiry.store');
+
+// Event-details "Register for the Event" modal — stores the registration + emails the registrant.
+Route::post('/event-registration', [EventRegistrationController::class, 'store'])->name('frontend.event-registration.store');
+
+// Content Management pages. Declared one by one rather than as /{key} so the
+// paths stay reserved and a typo cannot swallow another route.
+Route::get('/terms-conditions', [ContentPageController::class, 'show'])
+    ->defaults('key', 'terms-conditions')->name('frontend.terms-conditions');
+Route::get('/privacy-policy', [ContentPageController::class, 'show'])
+    ->defaults('key', 'privacy-policy')->name('frontend.privacy-policy');
 
 /*
 |--------------------------------------------------------------------------

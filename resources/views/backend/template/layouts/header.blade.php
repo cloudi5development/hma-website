@@ -43,6 +43,11 @@
             @endif
         </button>
 
+        @php
+            $notifUnread = $adminNotifUnreadList ?? collect();
+            $notifRead   = $adminNotifReadList ?? collect();
+        @endphp
+
         <div class="app-notif__panel" id="appNotifPanel" role="menu" hidden>
             <div class="app-notif__head">
                 <span>Notifications</span>
@@ -53,9 +58,26 @@
                     </form>
                 @endif
             </div>
-            <ul class="app-notif__list">
-                @forelse (($adminNotifications ?? []) as $n)
-                    <li class="app-notif__item {{ $n->is_read ? '' : 'is-unread' }}">
+
+            {{-- Unread / Read. Opening a notification marks it read, so it moves
+                 from the first tab to the second on the next page load. --}}
+            <div class="app-notif__tabs" role="tablist" aria-label="Notifications">
+                <button type="button" class="app-notif__tab is-active" role="tab"
+                        aria-selected="true" aria-controls="appNotifUnread" data-notif-tab="unread">
+                    Unread
+                    @if ($notifUnread->count())
+                        <span class="app-notif__count">{{ $notifUnread->count() }}</span>
+                    @endif
+                </button>
+                <button type="button" class="app-notif__tab" role="tab"
+                        aria-selected="false" aria-controls="appNotifRead" data-notif-tab="read">
+                    Read
+                </button>
+            </div>
+
+            <ul class="app-notif__list" id="appNotifUnread" role="tabpanel" data-notif-panel="unread">
+                @forelse ($notifUnread as $n)
+                    <li class="app-notif__item is-unread">
                         <a href="{{ route('backend.notifications.open', $n) }}">
                             <span class="app-notif__title">{{ $n->title }}</span>
                             @if ($n->body) <span class="app-notif__body">{{ $n->body }}</span> @endif
@@ -64,6 +86,24 @@
                     </li>
                 @empty
                     <li class="app-notif__empty">You're all caught up.</li>
+                @endforelse
+            </ul>
+
+            <ul class="app-notif__list" id="appNotifRead" role="tabpanel" data-notif-panel="read" hidden>
+                @forelse ($notifRead as $n)
+                    <li class="app-notif__item">
+                        <a href="{{ route('backend.notifications.open', $n) }}">
+                            <span class="app-notif__title">{{ $n->title }}</span>
+                            @if ($n->body) <span class="app-notif__body">{{ $n->body }}</span> @endif
+                            <span class="app-notif__time">
+                                {{-- Read notifications are more usefully stamped with when
+                                     they were opened than when the enquiry arrived. --}}
+                                Read {{ ($n->read_at ?? $n->created_at)->diffForHumans() }}
+                            </span>
+                        </a>
+                    </li>
+                @empty
+                    <li class="app-notif__empty">Nothing read yet.</li>
                 @endforelse
             </ul>
         </div>
@@ -148,6 +188,30 @@
         });
         document.addEventListener('click', function (e) { if (!root.contains(e.target)) close(); });
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+
+        /* ---- Unread / Read tabs ----
+           Both lists are already rendered; the tab just swaps which one is shown,
+           so switching costs no request. The bell opens on Unread every time —
+           that is the tab with something to act on. */
+        var tabs = panel.querySelectorAll('[data-notif-tab]');
+        var lists = panel.querySelectorAll('[data-notif-panel]');
+
+        tabs.forEach(function (tab) {
+            tab.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var wanted = tab.dataset.notifTab;
+
+                tabs.forEach(function (t) {
+                    var on = t === tab;
+                    t.classList.toggle('is-active', on);
+                    t.setAttribute('aria-selected', on ? 'true' : 'false');
+                });
+
+                lists.forEach(function (list) {
+                    list.hidden = list.dataset.notifPanel !== wanted;
+                });
+            });
+        });
     })();
 
     // Profile / account menu — same open-close behaviour as the bell.

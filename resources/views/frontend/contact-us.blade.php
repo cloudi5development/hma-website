@@ -63,8 +63,11 @@
 
     {{-- ======================= CONTACT INFO + FORM =======================
          The shared component — identical markup to the home page, including its
-         validation JS. contact.css trims its home-page lead-in to fit here. --}}
-    @include('frontend.partials.contact-form')
+         validation JS. contact.css trims its home-page lead-in to fit here.
+
+         $enquiryEvent is set only when the visitor arrived from an event's
+         "Register Now" (?event=<slug>); the form then opens pre-filled. --}}
+    @include('frontend.partials.contact-form', ['enquiryEvent' => $enquiryEvent])
 
     {{-- ================================ MAP ================================ --}}
     @if ($branches)

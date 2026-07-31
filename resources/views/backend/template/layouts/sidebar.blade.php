@@ -23,6 +23,9 @@
         'enquiries' => '<path d="M5.5 5h13l1.5 8v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4l1.5-8Z"/><path d="M4 13h4l1.4 3h5.2L20 13"/>',
         'course-enquiry' => '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 10h7M8.5 14h5"/>',
         'contact-enquiry'=> '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.6 7 8.4 6 8.4-6"/>',
+        'event-registration' => '<path d="M4 8.5A2 2 0 0 0 6 6.5V5.5h12v1a2 2 0 0 0 0 4v1a2 2 0 0 0 0 4v1H6v-1a2 2 0 0 0-2-2Z"/><path d="M10 9v6" stroke-dasharray="1.6 2.2"/>',
+        'content-pages' => '<path d="M6 3h9l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14.5 3v4.5H19M8.5 12h7M8.5 15.5h7M8.5 19h4"/>',
+        'legal'     => '<path d="M12 3v18M7 7l-4 6a4 4 0 0 0 8 0L7 7ZM17 7l-4 6a4 4 0 0 0 8 0l-4-6Z"/><path d="M5 21h14M7 7l10-2"/>',
         'blog'      => '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
         'settings'  => '<circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
         'general'   => '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1.5 14h5M9.5 8h5M17.5 16h5"/>',
@@ -142,14 +145,15 @@
         @endif
 
         {{-- ---- LEADS ---- --}}
-        @if ($canAny('course-enquiries', 'contact-enquiries'))
+        @if ($canAny('course-enquiries', 'contact-enquiries', 'event-registrations'))
         <p class="app-sidebar__heading">Leads</p>
 
         {{-- Enquiries (group) --}}
         @php
-            $enquiriesOpen = request()->routeIs('backend.contact-enquiries.*', 'backend.course-enquiries.*');
+            $enquiriesOpen = request()->routeIs('backend.contact-enquiries.*', 'backend.course-enquiries.*', 'backend.event-registrations.*');
             $newEnquiries  = \App\Models\ContactEnquiry::where('status', 'New')->count()
-                           + \App\Models\CourseEnquiry::where('status', 'New')->count();
+                           + \App\Models\CourseEnquiry::where('status', 'New')->count()
+                           + \App\Models\EventRegistration::where('status', 'New')->count();
         @endphp
         <div class="app-nav__item {{ $enquiriesOpen ? 'is-open' : '' }}" data-group>
             <a class="app-nav__link" role="button" tabindex="0">
@@ -161,11 +165,51 @@
             <ul class="app-nav__sub">
                 @if ($can('course-enquiries'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.course-enquiries.*') ? 'is-active' : '' }}" href="{{ route('backend.course-enquiries.index') }}">{!! $ic('course-enquiry') !!}<span>Course Enquiry</span></a></li>@endif
                 @if ($can('contact-enquiries'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.contact-enquiries.*') ? 'is-active' : '' }}" href="{{ route('backend.contact-enquiries.index') }}">{!! $ic('contact-enquiry') !!}<span>Contact Enquiry</span></a></li>@endif
+                @if ($can('event-registrations'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.event-registrations.*') ? 'is-active' : '' }}" href="{{ route('backend.event-registrations.index') }}">{!! $ic('event-registration') !!}<span>Event Registration</span></a></li>@endif
             </ul>
             <div class="app-nav__flyout">
                 <div class="app-nav__flyout-title">Enquiries</div>
                 @if ($can('course-enquiries'))<a href="{{ route('backend.course-enquiries.index') }}">Course Enquiry</a>@endif
                 @if ($can('contact-enquiries'))<a href="{{ route('backend.contact-enquiries.index') }}">Contact Enquiry</a>@endif
+                @if ($can('event-registrations'))<a href="{{ route('backend.event-registrations.index') }}">Event Registration</a>@endif
+            </div>
+        </div>
+        @endif
+
+        {{-- ---- CONTENT MANAGEMENT ---- --}}
+        @if ($can('content-pages'))
+        <p class="app-sidebar__heading">Content Management</p>
+
+        @php
+            $contentOpen = request()->routeIs('backend.content-pages.*');
+            $currentKey  = request()->route('key');
+            // Titles come from the rows, so renaming a page in the panel renames
+            // its menu entry too. Ordered in PHP against PAGES rather than with a
+            // raw ORDER BY CASE — that would tie the menu to one database driver
+            // for no gain over two rows.
+            $pageOrder    = array_keys(\App\Models\ContentPage::PAGES);
+            $contentPages = \App\Models\ContentPage::whereIn('key', $pageOrder)
+                ->get(['key', 'title'])
+                ->sortBy(fn ($cp) => array_search($cp->key, $pageOrder, true))
+                ->values();
+        @endphp
+        <div class="app-nav__item {{ $contentOpen ? 'is-open' : '' }}" data-group>
+            <a class="app-nav__link" role="button" tabindex="0">
+                {!! $ic('content-pages') !!}
+                <span class="app-nav__label">Pages</span>
+                <span class="app-nav__caret">{!! $ic('chevron') !!}</span>
+            </a>
+            <ul class="app-nav__sub">
+                @foreach ($contentPages as $cp)
+                    <li><a class="app-nav__sublink {{ $contentOpen && $currentKey === $cp->key ? 'is-active' : '' }}"
+                           href="{{ route('backend.content-pages.edit', $cp->key) }}">{!! $ic('legal') !!}<span>{{ $cp->title }}</span></a></li>
+                @endforeach
+            </ul>
+            <div class="app-nav__flyout">
+                <div class="app-nav__flyout-title">Pages</div>
+                @foreach ($contentPages as $cp)
+                    <a href="{{ route('backend.content-pages.edit', $cp->key) }}">{{ $cp->title }}</a>
+                @endforeach
             </div>
         </div>
         @endif

@@ -34,8 +34,15 @@ class AdminModules
             'blogs'           => 'Blog',
         ],
         'Leads' => [
-            'course-enquiries'  => 'Course Enquiry',
-            'contact-enquiries' => 'Contact Enquiry',
+            'course-enquiries'    => 'Course Enquiry',
+            'contact-enquiries'   => 'Contact Enquiry',
+            'event-registrations' => 'Event Registration',
+        ],
+        // The written pages (Terms, Privacy). One key covers both, the way
+        // 'settings' covers every Settings tab — they are edited together and
+        // there is no reason to grant one without the other.
+        'Content Management' => [
+            'content-pages' => 'Terms & Privacy Pages',
         ],
         'System' => [
             'settings'  => 'Settings',

@@ -1,0 +1,265 @@
+/* ==========================================================================
+   CONTENT PAGES (/terms-conditions, /privacy-policy)
+
+   A branded header band, then a contents rail beside the document. These pages
+   are long and read rather than browsed, so the layout is built around finding
+   a clause and following it: a sticky list of sections on the left, a single
+   measured column of text on the right.
+   ========================================================================== */
+
+:root {
+    --hm-cp-ink: #23180F;
+    --hm-cp-body: #4F423A;
+    --hm-cp-muted: #8A7466;
+    --hm-cp-line: #F1E6DE;
+    --hm-cp-brand: #A5391B;
+    --hm-cp-brand-deep: #7A2A11;
+}
+
+/* The shared layout centres #main-content with flex and pads it 3rem; this page
+   needs the full canvas, like every other full-width page. */
+#main-content {
+    position: relative;
+    display: block;
+    min-height: auto;
+    padding: 0;
+    text-align: left;
+}
+
+.hm-cp {
+    position: relative;
+    /* The navbar floats at top:22px and is 72px tall, so it owns the first 94px. */
+    padding: calc(94px + 34px) 0 84px;
+    background:
+        radial-gradient(60% 40% at 50% 0%, rgba(165, 57, 27, .05) 0%, rgba(165, 57, 27, 0) 70%),
+        #FDFBF9;
+}
+
+/* ================================ BANNER ================================
+   Brand colour rather than a photograph — a stock image behind a privacy policy
+   reads as decoration nobody asked for. */
+.hm-cp__banner {
+    position: relative;
+    padding: 44px 48px 46px;
+    border-radius: 22px;
+    overflow: hidden;
+    isolation: isolate;
+    background: linear-gradient(128deg, var(--hm-cp-brand-deep) 0%, var(--hm-cp-brand) 58%, #C24A22 100%);
+}
+
+/* A soft off-centre highlight so the band is not a flat slab of colour. */
+.hm-cp__banner-glow {
+    position: absolute;
+    top: -55%;
+    right: -10%;
+    z-index: -1;
+    width: 60%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(233, 163, 32, .30) 0%, rgba(233, 163, 32, 0) 68%);
+    pointer-events: none;
+}
+
+.hm-cp__banner-content { position: relative; z-index: 1; }
+
+.hm-cp__banner-title {
+    margin: 12px 0 0;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 800;
+    line-height: 1.15;
+    color: #fff;
+}
+
+.hm-cp__crumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    color: rgba(255, 255, 255, .76);
+}
+
+.hm-cp__crumbs a { color: rgba(255, 255, 255, .76); text-decoration: none; }
+.hm-cp__crumbs a:hover { color: #fff; }
+.hm-cp__crumb-sep { color: rgba(255, 255, 255, .48); }
+
+.hm-cp__stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 18px 0 0;
+    padding: 7px 15px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .14);
+    border: 1px solid rgba(255, 255, 255, .2);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.hm-cp__stamp svg { width: 14px; height: 14px; }
+
+/* ================================= PAPER =================================
+   Full container width, flush with the banner above it — a narrower card left a
+   gap down both sides that read as a mistake against the full-width band.
+   The breathing room is inside the card instead, as padding. */
+.hm-cp__paper {
+    margin: 28px 0 0;
+    padding: 42px 56px 46px;
+    background: #fff;
+    border: 1px solid var(--hm-cp-line);
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(42, 29, 20, .05);
+}
+
+/* ---- Admin-authored HTML ----
+   Styled by element rather than by class: the editor writes plain tags with no
+   classes on them, so whatever gets typed has to land looking right as-is.
+   No max-width here either — the text fills the card, which is the point of the
+   card filling the container. */
+.hm-cp__body {
+    font-size: 15.5px;
+    line-height: 1.85;
+    color: var(--hm-cp-body);
+}
+
+.hm-cp__body > :first-child { margin-top: 0; }
+.hm-cp__body > :last-child { margin-bottom: 0; }
+
+/* Sections get a hairline above them, which does the work of separating a long
+   document without needing the author to add anything. */
+.hm-cp__body h2 {
+    margin: 40px 0 14px;
+    padding-top: 26px;
+    border-top: 1px solid var(--hm-cp-line);
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--hm-cp-ink);
+    /* Anchor targets must clear the floating navbar. */
+    scroll-margin-top: 112px;
+}
+
+.hm-cp__body > h2:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+
+.hm-cp__body h3,
+.hm-cp__body h4 {
+    margin: 28px 0 10px;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--hm-cp-ink);
+    scroll-margin-top: 112px;
+}
+
+.hm-cp__body h3 { font-size: 17.5px; }
+.hm-cp__body h4 { font-size: 16px; }
+
+.hm-cp__body p { margin: 0 0 16px; }
+
+.hm-cp__body ul,
+.hm-cp__body ol { margin: 0 0 18px; padding-left: 4px; list-style: none; }
+
+.hm-cp__body li {
+    position: relative;
+    margin-bottom: 10px;
+    padding-left: 26px;
+}
+
+/* A gold dot instead of the browser bullet, matching the site's list style. */
+.hm-cp__body ul > li::before {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: .72em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--hm-gold, #E9A320);
+}
+
+.hm-cp__body ol { counter-reset: hm-cp-item; }
+.hm-cp__body ol > li { counter-increment: hm-cp-item; }
+
+.hm-cp__body ol > li::before {
+    content: counter(hm-cp-item) ".";
+    position: absolute;
+    left: 2px;
+    top: 0;
+    font-weight: 700;
+    color: var(--hm-cp-brand);
+}
+
+.hm-cp__body a {
+    color: var(--hm-cp-brand);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+    text-decoration-color: rgba(165, 57, 27, .35);
+    transition: text-decoration-color .2s ease;
+}
+
+.hm-cp__body a:hover { text-decoration-color: currentColor; }
+
+.hm-cp__body strong { color: var(--hm-cp-ink); font-weight: 700; }
+
+.hm-cp__body blockquote {
+    margin: 0 0 18px;
+    padding: 14px 20px;
+    border-left: 3px solid var(--hm-gold, #E9A320);
+    background: #FDF9F6;
+    border-radius: 0 10px 10px 0;
+    color: var(--hm-cp-ink);
+}
+
+/* A pasted-in table must not push the page sideways. */
+.hm-cp__body table {
+    width: 100%;
+    margin: 0 0 18px;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.hm-cp__body th,
+.hm-cp__body td {
+    padding: 10px 13px;
+    border: 1px solid var(--hm-cp-line);
+    text-align: left;
+}
+
+.hm-cp__body th { background: #FDF9F6; color: var(--hm-cp-ink); font-weight: 700; }
+
+.hm-cp__body img { max-width: 100%; height: auto; border-radius: 10px; }
+
+.hm-cp__body hr {
+    margin: 30px 0;
+    border: 0;
+    border-top: 1px solid var(--hm-cp-line);
+}
+
+/* ============================== RESPONSIVE ============================== */
+@media (max-width: 991.98px) {
+    .hm-cp { padding: calc(94px + 24px) 0 64px; }
+    .hm-cp__banner { padding: 34px 30px 36px; }
+    .hm-cp__paper { padding: 30px 28px 32px; }
+}
+
+@media (max-width: 575.98px) {
+    .hm-cp { padding: calc(94px + 18px) 0 52px; }
+    .hm-cp__banner { padding: 26px 20px 28px; border-radius: 16px; }
+    .hm-cp__paper { padding: 24px 20px 26px; border-radius: 14px; }
+    .hm-cp__body { font-size: 15px; }
+    .hm-cp__body h2 { font-size: 19.5px; margin-top: 32px; padding-top: 22px; }
+    .hm-cp__body h3 { font-size: 16.5px; }
+}
+
+/* ---------------------------- Reduced motion ---------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    .hm-cp__body a { transition: none !important; }
+}

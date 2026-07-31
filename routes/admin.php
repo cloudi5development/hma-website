@@ -4,9 +4,11 @@ use App\Http\Controllers\Backend\AuthController;
 use App\Http\Controllers\Backend\BlogController;
 use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\ContactEnquiryController;
+use App\Http\Controllers\Backend\ContentPageController;
 use App\Http\Controllers\Backend\CounterController;
 use App\Http\Controllers\Backend\CourseController;
 use App\Http\Controllers\Backend\CourseEnquiryController;
+use App\Http\Controllers\Backend\EventRegistrationController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\DepartmentController;
 use App\Http\Controllers\Backend\EventController;
@@ -97,6 +99,14 @@ Route::prefix('admin')->name('backend.')->group(function () {
         // System → per-page SEO
         Route::resource("seo-pages", SeoPageController::class)->except(["show"])->parameters(["seo-pages" => "seo_page"]);
 
+        // Content Management → the written pages (Terms & Conditions, Privacy
+        // Policy). Edit + update only: the rows are seeded by the migration and
+        // the public routes are fixed, so there is nothing to create or delete.
+        Route::prefix('content')->name('content-pages.')->group(function () {
+            Route::get('{key}', [ContentPageController::class, 'edit'])->name('edit');
+            Route::put('{key}', [ContentPageController::class, 'update'])->name('update');
+        });
+
         // System → Settings (General / Contact / Social / Email / SEO)
         Route::prefix('settings')->name('settings.')->group(function () {
             Route::get('general', [SettingController::class, 'general'])->name('general');
@@ -125,6 +135,12 @@ Route::prefix('admin')->name('backend.')->group(function () {
         Route::get('course-enquiries/export-excel', [CourseEnquiryController::class, 'exportExcel'])->name('course-enquiries.export-excel');
         Route::patch('course-enquiries/{courseEnquiry}/status', [CourseEnquiryController::class, 'updateStatus'])->name('course-enquiries.status');
         Route::resource('course-enquiries', CourseEnquiryController::class)->only(['index', 'show', 'destroy']);
+
+        // Leads → Event Registration (list + view + status + delete + export; per-event via ?event=)
+        Route::get('event-registrations/export', [EventRegistrationController::class, 'export'])->name('event-registrations.export');
+        Route::get('event-registrations/export-excel', [EventRegistrationController::class, 'exportExcel'])->name('event-registrations.export-excel');
+        Route::patch('event-registrations/{eventRegistration}/status', [EventRegistrationController::class, 'updateStatus'])->name('event-registrations.status');
+        Route::resource('event-registrations', EventRegistrationController::class)->only(['index', 'show', 'destroy']);
     });
 
     // /admin → dashboard when logged in, otherwise the login screen.

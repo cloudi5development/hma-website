@@ -7,9 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Blog extends Model
 {
-    // NOTE: intentionally NOT using HasPageVisibility. Its scopeForPage() shadows
-    // Eloquent's built-in forPage() that paginate() calls internally, which would
-    // silently break pagination on this (the only paginated) model.
+    // NOTE: intentionally NOT using HasPageVisibility — it carries page-visibility
+    // helpers this model does not need (it has forHome()/forLatest() instead). The
+    // clash that used to make the trait unsafe here is gone: its page filter was
+    // renamed to visibleOn() so it no longer shadows Eloquent's forPage().
 
     protected $fillable = [
         'title', 'slug', 'excerpt', 'content', 'image', 'author',
