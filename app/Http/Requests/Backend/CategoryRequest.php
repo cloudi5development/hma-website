@@ -22,6 +22,8 @@ class CategoryRequest extends FormRequest
             'name'          => ['required', 'string', 'max:120'],
             'description'   => ['nullable', 'string', 'max:600'],
             'icon'          => [$creating ? 'required' : 'nullable', 'image', 'mimes:webp,png,jpg,jpeg,svg', 'max:2048'],
+            // Not on the form any more — the model hands the colour out on create.
+            // Left in place so a seeder or a test may still set one deliberately.
             'tone'          => ['nullable', Rule::in(Category::TONES)],
             'is_active'     => ['nullable', 'boolean'],
             'show_home'     => ['nullable', 'boolean'],

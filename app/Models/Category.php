@@ -33,6 +33,21 @@ class Category extends Model
                 $category->slug = $category->uniqueSlug(Str::slug($category->name));
             }
         });
+
+    }
+
+    /**
+     * The card colour for the nth card in a rendered row of categories.
+     *
+     * Taken from the card's position rather than stored per category, because
+     * the home grid is the only place a category is drawn in colour — and the
+     * grid shows a filtered subset (show_home), so a value dealt out per row
+     * would land out of sequence the moment one was toggled off. By position the
+     * visible cards are always a clean run through the palette.
+     */
+    public static function toneForIndex(int $index): string
+    {
+        return static::TONES[$index % count(static::TONES)];
     }
 
     /**

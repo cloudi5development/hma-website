@@ -142,10 +142,6 @@
 .hm-reel:focus-visible .hm-reel__video { transform: scale(1.08); }
 
 /* Once the clip is rolling the play badge is redundant — fade it out. */
-.hm-reel.is-playing .hm-reel__play { opacity: 0; }
-.hm-reel.is-playing:hover .hm-reel__play,
-.hm-reel.is-playing:focus-visible .hm-reel__play { opacity: 1; }
-
 .hm-reel__overlay {
     position: absolute;
     inset: 0;
@@ -156,30 +152,6 @@
 .hm-reel:hover .hm-reel__overlay,
 .hm-reel:focus-visible .hm-reel__overlay { opacity: 1; }
 
-.hm-reel__play {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(.7);
-    width: 62px;
-    height: 62px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fff;
-    color: #843D21;
-    border-radius: 50%;
-    font-size: 20px;
-    padding-left: 3px;
-    opacity: 0;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, .25);
-    transition: opacity .35s ease, transform .35s ease;
-}
-.hm-reel:hover .hm-reel__play,
-.hm-reel:focus-visible .hm-reel__play {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-}
 .hm-reel__badge {
     position: absolute;
     top: 12px;
@@ -323,4 +295,183 @@
         font-size: clamp(1.15rem, 4.6vw, 1.6rem);
         line-height: 1.25;
     }
+}
+
+/* ==========================================================================
+   REEL PLAYER CONTROLS
+
+   Player chrome in the same shape a video site uses: a big centre button, and a
+   bar along the foot with play/pause, a seekable progress track, elapsed time,
+   sound and full screen.
+
+   Only one clip runs at a time — the card nearest the middle of the deck, which
+   carries .is-centre. Everything else is paused and silent, so the section is
+   one video playing rather than five competing.
+   ========================================================================== */
+
+/* The card is no longer a click-through to Instagram (the badge is), so it
+   should not read as one big button. */
+.hm-reel { cursor: default; }
+
+/* Chrome sits above the darkening overlay. */
+.hm-reel__big,
+.hm-reel__controls,
+.hm-reel__badge { z-index: 3; }
+
+/* Keep the overlay up whenever the controls are meaningful, so the bar always
+   has something to sit against rather than floating over a bright frame. */
+.hm-reel.is-centre .hm-reel__overlay { opacity: 1; }
+
+/* ------------------------------ Centre button ------------------------------ */
+.hm-reel__big {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(.85);
+    width: 60px;
+    height: 60px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 3px;          /* optically centres the play triangle */
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .94);
+    color: #843D21;
+    font-size: 19px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .28s ease, transform .28s ease, background .2s ease;
+}
+
+.hm-reel:hover .hm-reel__big,
+.hm-reel:focus-within .hm-reel__big {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* A paused card says so without needing a hover — that is the cue that this is
+   not the one playing. */
+.hm-reel:not(.is-playing) .hm-reel__big {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.hm-reel__big:hover { background: #fff; transform: translate(-50%, -50%) scale(1.08); }
+.hm-reel__big:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+/* Playing and untouched: get out of the way of the clip. */
+.hm-reel.is-playing:not(:hover):not(:focus-within) .hm-reel__big { opacity: 0; }
+
+/* ------------------------------ Control bar ------------------------------ */
+.hm-reel__controls {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px 12px;
+    background: linear-gradient(to top, rgba(0, 0, 0, .78), rgba(0, 0, 0, 0));
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity .28s ease, transform .28s ease;
+}
+
+/* Shown on hover, and kept up on the card that is actually playing so the sound
+   toggle is reachable without hunting for it. */
+.hm-reel:hover .hm-reel__controls,
+.hm-reel:focus-within .hm-reel__controls,
+.hm-reel.is-centre .hm-reel__controls {
+    opacity: 1;
+    transform: none;
+}
+
+.hm-reel__ctrl {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #fff;
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: background .2s ease, transform .2s ease;
+}
+
+.hm-reel__ctrl:hover { background: rgba(255, 255, 255, .22); transform: scale(1.1); }
+.hm-reel__ctrl:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* Sound on is worth spotting from across the deck. */
+.hm-reel:not(.is-muted) [data-reel-mute] { background: var(--hm-gold, #E9A320); color: #23180F; }
+
+/* ------------------------------ Progress ------------------------------ */
+.hm-reel__scrub {
+    flex: 1 1 auto;
+    position: relative;
+    height: 4px;
+    min-width: 20px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .32);
+    cursor: pointer;
+}
+
+/* A 4px track is too thin to hit reliably; this widens the target without
+   changing how it looks. */
+.hm-reel__scrub::before {
+    content: "";
+    position: absolute;
+    inset: -8px 0;
+}
+
+.hm-reel__scrub-fill {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--hm-gold, #E9A320);
+}
+
+.hm-reel__scrub:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+
+.hm-reel__time {
+    flex: 0 0 auto;
+    min-width: 34px;
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;   /* stops the bar twitching as digits change */
+    color: rgba(255, 255, 255, .92);
+}
+
+/* ------------------------------ The centre card ------------------------------ */
+.hm-reel.is-centre {
+    box-shadow: 0 26px 60px rgba(42, 29, 20, .3);
+}
+
+/* The float animation would drift the playing card away from the middle it was
+   picked for, and shifts it under the cursor while the bar is being used. */
+.hm-reels__slide:has(.hm-reel.is-centre) .hm-reel-float { animation: none; }
+
+/* The hover zoom fights the control bar — it slides the video under a fixed
+   overlay. Only the idle cards keep it. */
+.hm-reel.is-centre:hover .hm-reel__video { transform: none; }
+
+@media (max-width: 767.98px) {
+    .hm-reel__controls { gap: 6px; padding: 8px 9px 10px; }
+    .hm-reel__ctrl { width: 26px; height: 26px; font-size: 12px; }
+    .hm-reel__time { min-width: 30px; font-size: 11px; }
+    /* Touch has no hover, so the bar stays up on the card that is playing. */
+    .hm-reel.is-centre .hm-reel__controls { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hm-reel-float { animation: none !important; }
+    .hm-reel__big,
+    .hm-reel__controls,
+    .hm-reel__ctrl { transition: none !important; }
 }

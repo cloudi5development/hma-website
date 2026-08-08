@@ -543,26 +543,16 @@
                 <div class="row g-3">
                     <div class="col-12 col-md-6">
                         <div class="form-row" style="margin-bottom:0">
-                            <label class="form-label" for="tone">Card Colour</label>
-                            <select id="tone" name="tone" class="form-control-hm @error('tone') is-invalid @enderror" style="max-width:220px">
-                                @foreach (\App\Models\Event::TONES as $tone)
-                                    <option value="{{ $tone }}" {{ old('tone', $event->tone ?? 'purple') === $tone ? 'selected' : '' }}>
-                                        {{ ucfirst($tone) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('tone') <p class="form-error">{{ $message }}</p> @enderror
-                            <p class="form-hint">The dark gradient behind the speaker.</p>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="sort_order">Display Order</label>
                             <input type="number" id="sort_order" name="sort_order" min="0"
                                    class="form-control-hm @error('sort_order') is-invalid @enderror"
                                    value="{{ old('sort_order', $event->sort_order ?? 0) }}" style="max-width:140px">
                             @error('sort_order') <p class="form-error">{{ $message }}</p> @enderror
-                            <p class="form-hint">Lower numbers show first.</p>
+                            <p class="form-hint">
+                                Lower numbers show first. The card's colour is assigned
+                                automatically — each new event takes the next shade, so the
+                                carousel and the listing stay varied.
+                            </p>
                         </div>
                     </div>
                 </div>

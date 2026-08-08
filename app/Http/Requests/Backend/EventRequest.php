@@ -31,7 +31,10 @@ class EventRequest extends FormRequest
             'type'       => ['required', 'string', 'max:60'],
             'price'      => ['nullable', 'string', 'max:40'],
             'link'       => ['nullable', 'string', 'max:255'],
-            'tone'       => ['required', Rule::in(Event::TONES)],
+            // Not on the form any more — the model hands the colour out on create.
+            // Kept nullable rather than dropped so a seeder or a test may still
+            // set one deliberately; "required" here would reject every save.
+            'tone'       => ['nullable', Rule::in(Event::TONES)],
             'image'      => [$creating ? 'required' : 'nullable', 'image', 'mimes:webp,png,jpg,jpeg', 'max:2048'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_active'  => ['nullable', 'boolean'],

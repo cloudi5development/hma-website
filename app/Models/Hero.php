@@ -35,13 +35,32 @@ class Hero extends Model
             'btn1_url'    => '#courses',
             'btn2_text'   => 'Apply',
             'btn2_url'    => null,   // null → links to the Contact page at render time
-            'image'       => 'assets/images/Hero-section/hero-right-img.webp',
+            'image'       => self::DEFAULT_PERSON,
         ];
     }
 
-    /** Public URL for the right-column image (seeded asset path or admin upload). */
-    public function getImageUrlAttribute(): string
+    /**
+     * The yellow shape behind the hero photo. Part of the theme rather than the
+     * database: it is the section's artwork, it never changes with the copy, and
+     * it has to keep drawing when there is no photo on top of it.
+     */
+    public const BACKDROP = 'assets/images/Hero-section/hero-right-bg.webp';
+
+    /** The cut-out the panel ships with, until an admin uploads their own. */
+    public const DEFAULT_PERSON = 'assets/images/Hero-section/hero-right-person.webp';
+
+    /**
+     * Public URL for the person layered over the backdrop — null when no photo
+     * is set, which is a supported state: the backdrop then stands alone.
+     */
+    public function getImageUrlAttribute(): ?string
     {
-        return asset($this->image);
+        return filled($this->image) ? asset($this->image) : null;
+    }
+
+    /** Public URL for the static yellow backdrop. Always present. */
+    public function getBackdropUrlAttribute(): string
+    {
+        return asset(self::BACKDROP);
     }
 }

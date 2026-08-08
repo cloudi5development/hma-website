@@ -99,7 +99,9 @@
                     </div>
                 </div>
 
-                {{-- Row 3 — visibility + card tone --}}
+                {{-- Row 3 — visibility. The card's pastel colour is not here: it is
+                     handed out automatically in palette order when the category is
+                     created, so the home grid varies without anyone choosing. --}}
                 <div class="form-row mt-4" style="margin-bottom:0">
                     <label class="form-label">Visibility</label>
                     <div class="d-flex flex-wrap align-items-center gap-2">
@@ -119,17 +121,11 @@
                             </span>
                             <span class="check-chip__label">Feature in mega-menu</span>
                         </label>
-
-                        <select id="tone" name="tone" class="form-control-hm @error('tone') is-invalid @enderror"
-                                style="width:220px;height:42px" aria-label="Card tone">
-                            <option value="">Card Tone — Auto</option>
-                            @foreach (\App\Models\Category::TONES as $tone)
-                                <option value="{{ $tone }}" {{ old('tone', $category->tone) === $tone ? 'selected' : '' }}>{{ ucfirst($tone) }}</option>
-                            @endforeach
-                        </select>
                     </div>
-                    @error('tone') <p class="form-error">{{ $message }}</p> @enderror
-                    <p class="form-hint">Card tone is the pastel colour behind this category on the home grid.</p>
+                    <p class="form-hint">
+                        The card's pastel colour is assigned automatically — each new category takes
+                        the next shade in the palette, so the home grid stays varied.
+                    </p>
                 </div>
 
                 {{-- Row 4 — icon --}}

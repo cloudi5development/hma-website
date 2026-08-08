@@ -4,12 +4,20 @@
 @section('meta_description', 'Hire Minds Academy turns ambition into a career. Master in-demand tech skills through hands-on projects, real practice and mentorship — from your first line of code to your first job offer.')
 
 @push('styles')
-    {{-- Preload the LCP image. Without this the browser cannot discover it until
-         it has parsed and applied the CSS above it, so the single largest paint
-         on the page starts late. This makes it a parse-time fetch. --}}
+    {{-- Preload the hero's two layers. Without this the browser cannot discover
+         them until it has parsed and applied the CSS above, so the single largest
+         paint on the page starts late. This makes them parse-time fetches.
+
+         The backdrop is always there; the photo over it is optional, and a
+         preload for an image the page never requests is a wasted round trip and
+         a console warning, so it is only emitted when there is one. --}}
     <link rel="preload" as="image" fetchpriority="high"
-          href="{{ $hero->image_url }}"
+          href="{{ $hero->backdrop_url }}"
           type="image/webp">
+
+    @if ($hero->image_url)
+        <link rel="preload" as="image" fetchpriority="high" href="{{ $hero->image_url }}">
+    @endif
 
     {{-- Bootstrap 5 + Font Awesome are loaded site-wide via layouts/common-css --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" crossorigin="anonymous">
@@ -75,18 +83,28 @@
                 <div class="col-lg-6 hm-hero__right">
                     <div class="hm-hero__visual" id="hmVisual">
 
-                        {{-- The LCP element. data-hm-hero-img is what the loader
-                             waits on — it dismisses once THIS has decoded rather
-                             than on window.load, which would block on every image
-                             further down the page. decoding="sync" so it paints
-                             with the rest of the hero instead of a frame later. --}}
-                        {{-- Right-column image is admin-editable (Sections → Hero);
-                             the floating cards + scroll badge below stay static. --}}
-                        <img class="hm-hero__student hm-reveal hm-reveal--fade" data-delay="200"
-                             data-hm-hero-img
-                             src="{{ $hero->image_url }}"
-                             alt="Smiling Hire Minds Academy student holding a notebook"
+                        {{-- Two layers. The yellow shape is the section's artwork
+                             and ships with the theme; the person on top of it is
+                             the admin upload (Sections → Hero) and is optional —
+                             with no photo set the shape simply stands alone.
+
+                             The LCP element, and what the loader waits on, is the
+                             shape rather than the photo: it is the bigger paint
+                             and it is the one that is always there, so the loader
+                             cannot be left waiting on an element that was never
+                             rendered. decoding="sync" so it paints with the rest
+                             of the hero instead of a frame later. --}}
+                        <img class="hm-hero__blob" data-hm-hero-img
+                             src="{{ $hero->backdrop_url }}"
+                             alt="" role="presentation"
                              width="560" height="548" decoding="sync" fetchpriority="high">
+
+                        @if ($hero->image_url)
+                            <img class="hm-hero__student hm-reveal hm-reveal--fade" data-delay="200"
+                                 src="{{ $hero->image_url }}"
+                                 alt="Smiling Hire Minds Academy student holding a notebook"
+                                 width="486" height="560" decoding="sync" fetchpriority="high">
+                        @endif
 
                         {{-- Google rating card --}}
                         <div class="hm-card hm-card--google hm-float-a hm-reveal hm-reveal--fade" data-delay="300">
@@ -220,11 +238,15 @@
         // Fed by AppServiceProvider's view composer. Mapped to the exact array
         // shape the markup expects; the course count is now derived live and the
         // pastel tone / iconsax glyph keep the original design intact.
-        $categories = collect($homeCategories ?? [])->map(fn ($c) => [
+        // The pastel tone comes from the card's position, not from the row: it
+        // walks the palette so the grid is always a clean run of colours, however
+        // many categories are toggled onto the home page. Nothing to pick in the
+        // panel, and no two neighbours can collide.
+        $categories = collect($homeCategories ?? [])->values()->map(fn ($c, $i) => [
             'name'  => $c->name,
             'count' => $c->course_count_label,
             'icon'  => $c->icon_url,
-            'tone'  => $c->tone_value,
+            'tone'  => \App\Models\Category::toneForIndex($i),
             'url'   => route('frontend.courses', ['category' => $c->slug]),
         ])->all();
     @endphp

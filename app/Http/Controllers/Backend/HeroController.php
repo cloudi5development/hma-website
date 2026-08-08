@@ -34,11 +34,17 @@ class HeroController extends Controller
         $hero = Hero::current();
         $data = $request->validated();
 
+        // A new upload replaces the old file; ticking "remove" clears it, which
+        // leaves the hero's yellow backdrop standing on its own. Doing neither
+        // keeps the current photo.
         if ($request->hasFile('image')) {
             $this->deleteImage($hero->image);
             $data['image'] = $this->storeImage($request);
+        } elseif ($request->boolean('remove_image')) {
+            $this->deleteImage($hero->image);
+            $data['image'] = null;
         } else {
-            unset($data['image']);   // keep the existing one
+            unset($data['image']);
         }
 
         // current() may hand back an unsaved fallback instance if the seeder has

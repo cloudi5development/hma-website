@@ -124,6 +124,31 @@
     </div>
 </footer>
 
+{{-- Floating contact shortcuts, stacked above the scroll-to-top button.
+     Both come from Settings → Social Media (the same $socialLinks the footer
+     icons use), so a platform left blank there simply does not float. Unlike
+     the arrow these are always visible — they are a way to get in touch, not a
+     reaction to how far the page has been scrolled. --}}
+@php
+    $floatKeys = ['social_instagram', 'social_whatsapp'];   // rendered top to bottom
+    $floating  = collect($socialLinks ?? [])
+        ->whereIn('key', $floatKeys)
+        ->sortBy(fn ($link) => array_search($link['key'], $floatKeys, true))
+        ->values();
+@endphp
+
+@if ($floating->isNotEmpty())
+    <div class="hm-floats" role="complementary" aria-label="Contact Hire Minds Academy">
+        @foreach ($floating as $link)
+            <a class="hm-floats__btn hm-floats__btn--{{ str_replace('social_', '', $link['key']) }}"
+               href="{{ $link['url'] }}" target="_blank" rel="noopener"
+               aria-label="{{ $link['key'] === 'social_whatsapp' ? 'Chat with us on WhatsApp' : 'Follow us on ' . $link['label'] }}">
+                <i class="{{ $link['icon'] }}" aria-hidden="true"></i>
+            </a>
+        @endforeach
+    </div>
+@endif
+
 {{-- Floating scroll-to-top button --}}
 <button type="button" class="hm-scrolltop" id="hmScrollTop" aria-label="Scroll to top">
     <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>

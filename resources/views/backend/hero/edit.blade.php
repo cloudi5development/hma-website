@@ -94,26 +94,39 @@
 
                     </div>
 
-                    {{-- Right column image --}}
+                    {{-- Right column photo. The yellow shape behind it is part of
+                         the theme and is not editable — this is only the cut-out
+                         that sits on top of it. --}}
                     <div class="col-12 col-lg-5">
-                        <h3 class="form-section__title mb-3">Right Column Image</h3>
+                        <h3 class="form-section__title mb-3">Right Column Photo</h3>
 
-                        @if ($hero->image)
-                            <div class="hm-media mb-3"><img id="heroPreview" src="{{ $hero->image_url }}" alt="Hero image"></div>
-                        @else
-                            <div class="hm-media hm-media--empty mb-3" id="heroPreviewWrap">
-                                <img id="heroPreview" src="{{ asset('backend/template/images/actions/product-img.svg') }}" alt="">
-                                No image uploaded
-                            </div>
-                        @endif
+                        {{-- Previewed on the real backdrop, so what the panel shows
+                             is what the home page will draw. --}}
+                        <div class="hero-shot mb-3">
+                            <img class="hero-shot__bg" src="{{ asset(\App\Models\Hero::BACKDROP) }}" alt="" aria-hidden="true">
+                            <img class="hero-shot__person" id="heroPreview"
+                                 src="{{ $hero->image_url }}"
+                                 alt="Hero photo" style="{{ $hero->image_url ? '' : 'display:none' }}">
+                        </div>
 
-                        <div class="form-row" style="margin-bottom:0">
-                            <label class="form-label" for="image">Upload New Image</label>
+                        <div class="form-row">
+                            <label class="form-label" for="image">Upload New Photo</label>
                             <input type="file" id="image" name="image" accept="image/*"
                                    class="form-control-hm @error('image') is-invalid @enderror" style="height:auto;padding:9px 12px">
-                            <p class="form-hint">WebP / PNG / JPG · max 3 MB · around 560 × 548 px. Leave empty to keep the current image.</p>
+                            <p class="form-hint">
+                                WebP / PNG / JPG · max 3 MB. A <strong>cut-out with a transparent
+                                background</strong> works best — it sits on the yellow shape rather
+                                than in a box. Leave empty to keep the current photo.
+                            </p>
                             @error('image') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
+
+                        @if ($hero->image)
+                            <label class="d-inline-flex align-items-center gap-2 form-hint" style="cursor:pointer">
+                                <input type="checkbox" name="remove_image" value="1">
+                                Remove the photo — leave just the yellow shape
+                            </label>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -132,14 +145,27 @@
 
 @push('scripts')
     <script>
-        // Live hero image preview
-        var input = document.getElementById('image'), img = document.getElementById('heroPreview');
-        if (input) input.addEventListener('change', function () {
-            if (this.files && this.files[0]) {
-                var wrap = document.getElementById('heroPreviewWrap');
-                if (wrap) wrap.classList.remove('hm-media--empty');
-                img.src = URL.createObjectURL(this.files[0]);
-            }
-        });
+        (function () {
+            'use strict';
+
+            var input  = document.getElementById('image'),
+                img    = document.getElementById('heroPreview'),
+                remove = document.querySelector('[name="remove_image"]');
+
+            // Live preview, drawn straight onto the backdrop.
+            if (input) input.addEventListener('change', function () {
+                if (this.files && this.files[0]) {
+                    img.src = URL.createObjectURL(this.files[0]);
+                    img.style.display = '';
+                    if (remove) remove.checked = false;   // a new photo overrides a pending removal
+                }
+            });
+
+            // Ticking "remove" shows what the hero will actually look like.
+            if (remove) remove.addEventListener('change', function () {
+                img.style.display = this.checked ? 'none' : '';
+                if (this.checked && input) input.value = '';
+            });
+        })();
     </script>
 @endpush

@@ -3906,3 +3906,46 @@ select.pill::before {
         align-items: flex-start;
     }
 }
+
+/* ==========================================================================
+   Hero photo preview (Sections → Hero)
+
+   The home page draws the hero as two layers — a static yellow shape with an
+   optional cut-out on top — so the panel previews it the same way. Previewing
+   the upload on its own would have shown a floating figure that looks nothing
+   like what gets published.
+   ========================================================================== */
+.hero-shot {
+    position: relative;
+    width: 100%;
+    max-width: 320px;
+    aspect-ratio: 1 / 1;
+    border-radius: 14px;
+    background: #FFFDFC;
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.hero-shot__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* The same geometry the frontend uses (see .hm-hero__student in home.css), so
+   the preview and the live hero agree on where the figure sits. Sized by height
+   against the shape's real bottom edge — the backdrop PNG carries transparent
+   padding, so anchoring to the box bottom would drop the figure below the
+   yellow here exactly as it did on the home page. */
+.hero-shot__person {
+    position: absolute;
+    left: 47%;
+    bottom: 11%;
+    transform: translateX(-50%);
+    height: 78%;
+    width: auto;
+    max-width: 80%;
+    object-fit: contain;
+}

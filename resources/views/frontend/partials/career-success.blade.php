@@ -74,18 +74,60 @@
                     @foreach (array_merge($reels, $reels) as $reel)
                         <div class="swiper-slide hm-reels__slide">
                             <div class="hm-reel-float">
-                                <div class="hm-reel {{ $reel['url'] ? '' : 'hm-reel--static' }}"
-                                     @if ($reel['url']) data-instagram="{{ $reel['url'] }}" role="button" tabindex="0" @endif
-                                     aria-label="{{ $reel['title'] }}">
-                                    {{-- Plays muted + looped right in the card, but the file is
-                                         NOT fetched until the card is actually on screen: the
-                                         src lives in data-src and preload is off, so opening the
-                                         page no longer pulls every reel down at once. The
-                                         observer below swaps it in and starts playback. --}}
+                                <div class="hm-reel" aria-label="{{ $reel['title'] }}">
+                                    {{-- Muted + looped, but the file is NOT fetched until the card
+                                         is on screen: the src lives in data-src and preload is off,
+                                         so opening the page no longer pulls every reel down at once.
+
+                                         disablepictureinpicture + controlslist keep the browser's
+                                         own overlay chrome out of the way — the bar below is the
+                                         only control surface. --}}
                                     <video class="hm-reel__video" data-src="{{ $reel['video'] }}"
-                                           muted loop playsinline preload="none"></video>
-                                    <span class="hm-reel__badge" aria-hidden="true"><i class="fa-brands fa-instagram"></i> Instagram Reel</span>
+                                           muted loop playsinline preload="none"
+                                           disablepictureinpicture
+                                           controlslist="nodownload noplaybackrate noremoteplayback"></video>
+
                                     <span class="hm-reel__overlay" aria-hidden="true"></span>
+
+                                    {{-- Big centre button, like a video player's. Doubles as the
+                                         "this one is paused" cue on the off-centre cards. --}}
+                                    <button type="button" class="hm-reel__big" data-reel-toggle
+                                            aria-label="Play {{ $reel['title'] }}">
+                                        <i class="fa-solid fa-play" aria-hidden="true"></i>
+                                    </button>
+
+                                    @if ($reel['url'])
+                                        {{-- Its own button now. It used to be the whole card, which
+                                             would fight the play/pause tap. --}}
+                                        <a class="hm-reel__badge" href="{{ $reel['url'] }}"
+                                           target="_blank" rel="noopener"
+                                           aria-label="Watch {{ $reel['title'] }} on Instagram">
+                                            <i class="fa-brands fa-instagram" aria-hidden="true"></i> Instagram Reel
+                                        </a>
+                                    @endif
+
+                                    {{-- Control bar --}}
+                                    <div class="hm-reel__controls">
+                                        <button type="button" class="hm-reel__ctrl" data-reel-toggle aria-label="Play">
+                                            <i class="fa-solid fa-play" aria-hidden="true"></i>
+                                        </button>
+
+                                        <div class="hm-reel__scrub" data-reel-seek
+                                             role="slider" tabindex="0"
+                                             aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                                            <span class="hm-reel__scrub-fill"></span>
+                                        </div>
+
+                                        <span class="hm-reel__time" data-reel-time>0:00</span>
+
+                                        <button type="button" class="hm-reel__ctrl" data-reel-mute aria-label="Unmute">
+                                            <i class="fa-solid fa-volume-xmark" aria-hidden="true"></i>
+                                        </button>
+
+                                        <button type="button" class="hm-reel__ctrl" data-reel-full aria-label="Full screen">
+                                            <i class="fa-solid fa-expand" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -108,21 +150,23 @@
     @endif
 
 @push('scripts')
-    {{-- Reel slider — Swiper + in-page reel player. Ships with the partial so
-         the component works wherever it is included. --}}
+    {{-- Reel slider — Swiper + the in-card player. Ships with the partial so the
+         component carries its own behaviour wherever it is included. --}}
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" crossorigin="anonymous" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var swiperEl = document.querySelector('.hm-reels__swiper');
             if (!swiperEl || typeof Swiper === 'undefined') return;
 
-            new Swiper(swiperEl, {
+            var swiper = new Swiper(swiperEl, {
                 slidesPerView: 1.2,
                 spaceBetween: 20,
                 loop: true,
-                speed: 1000,
+                speed: 700,
                 grabCursor: true,
-                autoplay: { delay: 4000, disableOnInteraction: false, pauseOnMouseEnter: true },
+                // No autoplay. One clip plays at a time and it is the one in the
+                // middle — a deck that advanced itself every few seconds would
+                // restart that clip before anybody could watch it.
                 navigation: { prevEl: '#hmReelsPrev', nextEl: '#hmReelsNext' },
                 breakpoints: {
                     768:  { slidesPerView: 3, spaceBetween: 20 },
@@ -130,74 +174,232 @@
                 }
             });
 
-            /* ---- Load + play only the reels on screen ----------------------------
-                   Every card used to carry autoplay with the src inline, so opening
-                   the page streamed all of them (the deck is rendered twice, so that
-                   was ~10 videos of a few MB each) whether or not the section was
-                   ever reached. Now the src is attached on first approach and
-                   playback follows visibility: off-screen reels pause, which also
-                   stops phones decoding video nobody is looking at.
+            /* ================================================================
+               One clip at a time: whichever card is nearest the middle of the
+               deck plays, everything else pauses. Worked out from geometry
+               rather than from Swiper's activeIndex, because with loop + five
+               slides per view "active" is the leftmost visible one, not the
+               middle — and the count changes per breakpoint.
+               ================================================================ */
 
-                   Two observers because the thresholds differ: fetch a little early
-                   so the card is not blank when it arrives, but only play what is
-                   really in view. ------------------------------------------------ */
-            var videos = Array.prototype.slice.call(swiperEl.querySelectorAll('.hm-reel__video[data-src]'));
+            var reels = Array.prototype.slice.call(swiperEl.querySelectorAll('.hm-reel'));
+            var sectionVisible = false;   // is the section on screen at all?
+            var soundOn = false;          // sticks as the centre moves between cards
+            var centre = null;
+
+            function videoOf(reel) { return reel.querySelector('.hm-reel__video'); }
 
             function attach(video) {
-                if (!video.src) video.src = video.dataset.src;
+                if (video && !video.src && video.dataset.src) video.src = video.dataset.src;
             }
 
-            function play(video) {
-                attach(video);
-                // play() returns a rejected promise when the browser refuses; muted
-                // playback is allowed everywhere, so just swallow it rather than throw.
-                var started = video.play();
-                if (started && started.catch) started.catch(function () {});
-            }
-
-            if ('IntersectionObserver' in window) {
-                // Fetch a little before the card arrives, so it is not blank on entry.
-                var hydrate = new IntersectionObserver(function (entries) {
-                    entries.forEach(function (entry) {
-                        if (entry.isIntersecting) {
-                            attach(entry.target);
-                            hydrate.unobserve(entry.target);
-                        }
-                    });
-                }, { rootMargin: '300px 0px' });
-
-                // Play only what is really in view; pause the rest.
-                var player = new IntersectionObserver(function (entries) {
-                    entries.forEach(function (entry) {
-                        if (entry.isIntersecting) {
-                            play(entry.target);
-                        } else if (!entry.target.paused) {
-                            entry.target.pause();
-                        }
-                    });
-                }, { threshold: 0.25 });
-
-                videos.forEach(function (video) {
-                    hydrate.observe(video);
-                    player.observe(video);
+            function setPlayIcon(reel, playing) {
+                reel.classList.toggle('is-playing', playing);
+                reel.querySelectorAll('[data-reel-toggle] i').forEach(function (icon) {
+                    icon.className = playing ? 'fa-solid fa-pause' : 'fa-solid fa-play';
                 });
-            } else {
-                // No observer support: fall back to the old behaviour so the section
-                // is never a row of blank cards.
-                videos.forEach(play);
+                reel.querySelectorAll('[data-reel-toggle]').forEach(function (btn) {
+                    btn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+                });
             }
 
-            /* ---- Optional click-through — cards with an Instagram link open the
-                   full reel in a new tab. Cards without a link just keep playing. ---- */
+            function setMuteIcon(reel, muted) {
+                var btn = reel.querySelector('[data-reel-mute]');
+                if (!btn) return;
+                btn.querySelector('i').className = muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+                btn.setAttribute('aria-label', muted ? 'Unmute' : 'Mute');
+                reel.classList.toggle('is-muted', muted);
+            }
+
+            function pause(reel) {
+                var v = videoOf(reel);
+                if (!v) return;
+                if (!v.paused) v.pause();
+                // Off-centre cards are always silent, whatever the sound setting is.
+                v.muted = true;
+                setPlayIcon(reel, false);
+                setMuteIcon(reel, true);
+            }
+
+            function play(reel) {
+                var v = videoOf(reel);
+                if (!v) return;
+                attach(v);
+                v.muted = !soundOn;
+                setMuteIcon(reel, v.muted);
+
+                var started = v.play();
+
+                if (started && started.catch) {
+                    started.catch(function () {
+                        // Unmuted playback is refused until the visitor has
+                        // interacted with the page. Fall back to silent rather
+                        // than leaving a stalled card.
+                        v.muted = true;
+                        soundOn = false;
+                        setMuteIcon(reel, true);
+                        var retry = v.play();
+                        if (retry && retry.catch) retry.catch(function () { setPlayIcon(reel, false); });
+                    });
+                }
+
+                setPlayIcon(reel, true);
+            }
+
+            /** The card whose centre is nearest the deck's centre. */
+            function centreReel() {
+                var box = swiperEl.getBoundingClientRect();
+                var mid = box.left + box.width / 2;
+                var best = null;
+                var bestDistance = Infinity;
+
+                reels.forEach(function (reel) {
+                    var r = reel.getBoundingClientRect();
+                    if (!r.width) return;   // a cloned slide parked off-layout
+                    var d = Math.abs((r.left + r.width / 2) - mid);
+                    if (d < bestDistance) { bestDistance = d; best = reel; }
+                });
+
+                return best;
+            }
+
+            function refresh() {
+                var next = centreReel();
+
+                if (next !== centre) {
+                    if (centre) { centre.classList.remove('is-centre'); pause(centre); }
+                    centre = next;
+                    if (centre) centre.classList.add('is-centre');
+                }
+
+                reels.forEach(function (reel) { if (reel !== centre) pause(reel); });
+
+                if (!centre) return;
+
+                // Only roll while the section is actually on screen — a clip
+                // playing three screens away is decoding for nobody.
+                if (sectionVisible) {
+                    attach(videoOf(centre));
+                    if (!centre.dataset.userPaused) play(centre);
+                } else {
+                    pause(centre);
+                }
+            }
+
+            swiper.on('slideChangeTransitionEnd', refresh);
+            swiper.on('transitionEnd', refresh);
+            swiper.on('resize', refresh);
+
+            /* ---- Is the section on screen at all? ---- */
+            var section = swiperEl.closest('.hm-reels');
+
+            if ('IntersectionObserver' in window && section) {
+                new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        sectionVisible = entry.isIntersecting;
+                        refresh();
+                    });
+                }, { threshold: 0.25 }).observe(section);
+            } else {
+                sectionVisible = true;
+            }
+
+            /* ---- Controls ---- */
             swiperEl.addEventListener('click', function (e) {
-                var reel = e.target.closest('.hm-reel[data-instagram]');
-                if (reel && reel.dataset.instagram) window.open(reel.dataset.instagram, '_blank', 'noopener');
+                var reel = e.target.closest('.hm-reel');
+                if (!reel) return;
+
+                // The Instagram badge is a real link — leave it alone.
+                if (e.target.closest('.hm-reel__badge')) return;
+
+                var video = videoOf(reel);
+                if (!video) return;
+
+                if (e.target.closest('[data-reel-toggle]')) {
+                    if (video.paused) {
+                        delete reel.dataset.userPaused;
+                        // Tapping a card that is not the centre one brings it
+                        // there, so the deck follows what was clicked.
+                        if (reel !== centre) {
+                            var slide = reel.closest('.swiper-slide');
+                            var index = slide && slide.getAttribute('data-swiper-slide-index');
+                            if (index !== null && swiper.slideToLoop) swiper.slideToLoop(Number(index));
+                        }
+                        play(reel);
+                    } else {
+                        reel.dataset.userPaused = '1';
+                        video.pause();
+                        setPlayIcon(reel, false);
+                    }
+                    return;
+                }
+
+                if (e.target.closest('[data-reel-mute]')) {
+                    soundOn = video.muted;          // about to flip
+                    video.muted = !video.muted;
+                    setMuteIcon(reel, video.muted);
+
+                    // Sound belongs to one card at a time.
+                    if (!video.muted) {
+                        reels.forEach(function (other) {
+                            if (other === reel) return;
+                            var v = videoOf(other);
+                            if (v) v.muted = true;
+                            setMuteIcon(other, true);
+                        });
+                    }
+                    return;
+                }
+
+                if (e.target.closest('[data-reel-full]')) {
+                    var request = video.requestFullscreen || video.webkitRequestFullscreen
+                        || video.webkitEnterFullscreen;   // iOS Safari exposes only this one
+                    if (request) request.call(video);
+                }
             });
-            swiperEl.addEventListener('keydown', function (e) {
-                if (e.key !== 'Enter' && e.key !== ' ') return;
-                var reel = e.target.closest('.hm-reel[data-instagram]');
-                if (reel && reel.dataset.instagram) { e.preventDefault(); window.open(reel.dataset.instagram, '_blank', 'noopener'); }
+
+            /* ---- Progress + seeking ---- */
+            function label(seconds) {
+                if (!isFinite(seconds)) return '0:00';
+                var m = Math.floor(seconds / 60), s = Math.floor(seconds % 60);
+                return m + ':' + (s < 10 ? '0' : '') + s;
+            }
+
+            reels.forEach(function (reel) {
+                var video = videoOf(reel);
+                var scrub = reel.querySelector('[data-reel-seek]');
+                var fill  = reel.querySelector('.hm-reel__scrub-fill');
+                var time  = reel.querySelector('[data-reel-time]');
+                if (!video) return;
+
+                video.addEventListener('timeupdate', function () {
+                    if (!video.duration) return;
+                    var pct = (video.currentTime / video.duration) * 100;
+                    if (fill) fill.style.width = pct + '%';
+                    if (time) time.textContent = label(video.currentTime);
+                    if (scrub) scrub.setAttribute('aria-valuenow', Math.round(pct));
+                });
+
+                video.addEventListener('ended', function () { setPlayIcon(reel, false); });
+
+                if (!scrub) return;
+
+                function seekTo(clientX) {
+                    if (!video.duration) return;
+                    var r = scrub.getBoundingClientRect();
+                    var pct = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+                    video.currentTime = pct * video.duration;
+                }
+
+                scrub.addEventListener('click', function (e) { e.stopPropagation(); seekTo(e.clientX); });
+                scrub.addEventListener('keydown', function (e) {
+                    if (!video.duration) return;
+                    if (e.key === 'ArrowRight') { e.preventDefault(); video.currentTime = Math.min(video.duration, video.currentTime + 5); }
+                    if (e.key === 'ArrowLeft')  { e.preventDefault(); video.currentTime = Math.max(0, video.currentTime - 5); }
+                });
             });
+
+            refresh();
         });
     </script>
 @endpush

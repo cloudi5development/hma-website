@@ -26,6 +26,11 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Content-Security-Policy on every HTML response, so a third-party ad or
+        // tracker cannot load from an origin the site does not use. Configured
+        // in config/csp.php; CSP_ENABLED=false turns it off.
+        $middleware->append(\App\Http\Middleware\ContentSecurityPolicy::class);
+
         $middleware->alias([
             // Force a JSON response on any route/group that must always
             // answer in JSON, even when the client forgets the Accept header.

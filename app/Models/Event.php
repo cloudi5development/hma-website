@@ -79,6 +79,25 @@ class Event extends Model
                 $event->slug = static::uniqueSlug($event->title, $event->id);
             }
         });
+
+        // The card colour is handed out here rather than chosen in the panel, so
+        // the carousel and the listing stay varied on their own. Only on create:
+        // the tone is stored, not derived per list, which is what keeps an event
+        // the same colour on the carousel, the listing and its own details page.
+        static::creating(function (Event $event) {
+            if (blank($event->tone)) {
+                $event->tone = static::nextTone();
+            }
+        });
+    }
+
+    /**
+     * The next colour in the palette. Keyed off how many events already exist,
+     * so consecutive additions walk the palette rather than repeating.
+     */
+    public static function nextTone(): string
+    {
+        return static::TONES[static::count() % count(static::TONES)];
     }
 
     /** A slug not already taken by another event. */

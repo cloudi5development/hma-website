@@ -290,16 +290,56 @@
     pointer-events: none;
 }
 
-.hm-hero__student {
+/* The hero visual is two layers: the yellow shape below, the person above.
+   The shape is the theme's own artwork and always renders; the person is an
+   optional admin upload, so nothing here may depend on it existing. */
+.hm-hero__blob {
     position: relative;
-    z-index: 2;
+    z-index: 1;
     display: block;
-    width: 93%;
+    width: 100%;
     height: auto;
     object-fit: contain;
-    filter: drop-shadow(0 30px 50px rgba(42, 29, 20, .18));
-    /* animation: hm-float-slow 7s ease-in-out infinite; */
-    /* will-change: transform; */
+}
+
+/* Taken out of the flow so the shape alone sets the block's height — otherwise
+   removing the photo would collapse the hero.
+
+   The numbers below are measured off the artwork, not guessed. hero-right-bg
+   only paints yellow across x 7.3%–95.2% and y 4.1%–92.0% of its own box; the
+   rest is transparent padding. Anchoring the figure to the BOX bottom therefore
+   dropped her ~56px below the visible yellow and out through the foot of the
+   section. bottom: 11% lands her on the shape's real bottom edge; left: 47%
+   offsets her against the shape's left-heavy mass, which is what keeps the
+   notebook from crossing its right edge.
+
+   Sized by height, not width: an admin can upload a cut-out of any proportion,
+   and height + object-fit: contain keeps every one of them filling the same
+   vertical band inside the shape instead of scaling by an accident of crop.
+   max-width stops a very wide one from spilling past the shape's sides. */
+.hm-hero__student {
+    position: absolute;
+    z-index: 2;
+    left: 47%;
+    bottom: 11%;
+    transform: translateX(-50%);
+    display: block;
+    height: 78%;
+    width: auto;
+    max-width: 80%;
+    object-fit: contain;
+    object-position: bottom center;
+    filter: drop-shadow(0 26px 44px rgba(42, 29, 20, .20));
+}
+
+/* .hm-reveal, .hm-reveal--fade and .hm-reveal.is-visible each set `transform`,
+   which would wipe out the translateX(-50%) doing the centring above and throw
+   the photo off to the right. Re-apply it in every state the reveal can be in —
+   --fade is opacity-only, so one value covers all three. */
+.hm-hero__student.hm-reveal,
+.hm-hero__student.hm-reveal--fade,
+.hm-hero__student.hm-reveal.is-visible {
+    transform: translateX(-50%);
 }
 
 /* Floating cards */
