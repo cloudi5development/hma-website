@@ -28,6 +28,9 @@ class CourseEnquiryController extends Controller
             'city'        => ['nullable', 'string', 'max:120'],
             'career_goal' => ['nullable', 'string', 'max:120'],
             'message'     => ['nullable', 'string', 'max:2000'],
+            // Only the Apply buttons on a schedule row send this; it is a label
+            // the page rendered, so it is length-capped and stored as typed.
+            'batch'       => ['nullable', 'string', 'max:120'],
         ]);
 
         $course = Course::findOrFail($data['course_id']);
@@ -35,6 +38,7 @@ class CourseEnquiryController extends Controller
         $enquiry = CourseEnquiry::create([
             'course_id'   => $course->id,
             'course_name' => $course->name,      // snapshot, survives a later course rename/delete
+            'batch'       => $data['batch'] ?? null,
             'name'        => $data['name'],
             'email'       => $data['email'],
             'phone'       => $data['phone'],

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Backend\AboutSectionController;
 use App\Http\Controllers\Backend\AuthController;
 use App\Http\Controllers\Backend\BlogController;
 use App\Http\Controllers\Backend\CategoryController;
@@ -78,6 +79,13 @@ Route::prefix('admin')->name('backend.')->group(function () {
         Route::get('hero', [HeroController::class, 'index'])->name('hero.index');
         Route::get('hero/edit', [HeroController::class, 'edit'])->name('hero.edit');
         Route::put('hero', [HeroController::class, 'update'])->name('hero.update');
+
+        // Sections → About Us (the four blocks on the About page: Our Story,
+        // Our Purpose, Our Features, Our Approach). Seeded and keyed, so this is
+        // an overview plus edit/update — nothing is created or deleted.
+        Route::get('about-sections', [AboutSectionController::class, 'index'])->name('about-sections.index');
+        Route::get('about-sections/{key}/edit', [AboutSectionController::class, 'edit'])->name('about-sections.edit');
+        Route::put('about-sections/{key}', [AboutSectionController::class, 'update'])->name('about-sections.update');
 
         // Sections → Trusted Partners / Counters / Events / Testimonials / FAQ
         Route::resource('partners', PartnerController::class)->except(['show']);

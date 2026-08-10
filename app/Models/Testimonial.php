@@ -9,6 +9,9 @@ class Testimonial extends Model
 {
     use HasPageVisibility;
 
+    /** Where the reviewer comes from — the only two values the admin may pick. */
+    public const COMPANY_TYPES = ['College', 'Company'];
+
     protected $fillable = [
         'name', 'role', 'company', 'review', 'rating', 'photo', 'sort_order',
         'is_active', 'show_home', 'show_about', 'show_testimonials',

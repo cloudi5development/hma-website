@@ -22,6 +22,11 @@
                     <table class="hm-table">
                         <tbody>
                             <tr><td style="width:180px;color:#6b6357;">Course</td><td>{{ $enquiry->course_name }} @if (! $enquiry->course) <span class="hm-table__sub">(course removed)</span> @endif</td></tr>
+                            {{-- Only set when the enquiry came from an Apply button
+                                 on a schedule row, so the row is left out otherwise. --}}
+                            @if ($enquiry->batch)
+                                <tr><td style="color:#6b6357;">Batch</td><td>{{ $enquiry->batch }}</td></tr>
+                            @endif
                             <tr><td style="color:#6b6357;">Email</td><td><a href="mailto:{{ $enquiry->email }}">{{ $enquiry->email }}</a></td></tr>
                             <tr><td style="color:#6b6357;">Mobile</td><td><a href="tel:{{ $enquiry->phone }}">{{ $enquiry->phone }}</a></td></tr>
                             <tr><td style="color:#6b6357;">City</td><td>{{ $enquiry->city ?: '—' }}</td></tr>

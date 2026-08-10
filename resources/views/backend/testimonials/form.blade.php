@@ -65,9 +65,18 @@
                     <div class="col-12 col-md-6">
                         <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="company">Company <span class="form-hint" style="display:inline">(optional)</span></label>
-                            <input type="text" id="company" name="company"
-                                   class="form-control-hm @error('company') is-invalid @enderror"
-                                   value="{{ old('company', $testimonial->company) }}" placeholder="e.g. Infosys">
+                            @php $company = old('company', $testimonial->company); @endphp
+                            <select id="company" name="company" class="form-control-hm @error('company') is-invalid @enderror">
+                                <option value="">— Select —</option>
+                                {{-- Anything stored before this became a dropdown stays selectable,
+                                     so opening an old record and saving does not silently blank it. --}}
+                                @if (filled($company) && ! in_array($company, \App\Models\Testimonial::COMPANY_TYPES, true))
+                                    <option value="{{ $company }}" selected>{{ $company }}</option>
+                                @endif
+                                @foreach (\App\Models\Testimonial::COMPANY_TYPES as $option)
+                                    <option value="{{ $option }}" {{ $company === $option ? 'selected' : '' }}>{{ $option }}</option>
+                                @endforeach
+                            </select>
                             @error('company') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
                     </div>

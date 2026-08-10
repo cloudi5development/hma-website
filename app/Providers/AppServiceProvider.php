@@ -2,12 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\AboutSection;
 use App\Models\AdminNotification;
 use App\Models\Blog;
 use App\Models\Category;
 use App\Models\ContentPage;
 use App\Models\Counter;
 use App\Models\Course;
+use App\Models\CourseSchedule;
 use App\Models\Department;
 use App\Models\Event;
 use App\Models\Faq;
@@ -131,6 +133,20 @@ class AppServiceProvider extends ServiceProvider
                 ->take(Course::MAX_POPULAR)
                 ->get());
 
+            // Upcoming Course Schedules — the batches created inside
+            // Admin → Courses → Create/Edit Course → Course Schedule. Queried
+            // from the schedule side so the five soonest batches win across all
+            // courses, with the course and its category eager-loaded (and only
+            // the columns the section prints) so the table costs three queries
+            // however many rows come back.
+            $view->with('courseSchedules', CourseSchedule::active()->upcoming()
+                ->whereHas('course', fn ($q) => $q->where('is_active', true)->where('schedule_enabled', true))
+                ->with(['course' => fn ($q) => $q->select('id', 'category_id', 'name', 'slug', 'image', 'duration')
+                    ->with(['category' => fn ($c) => $c->select('id', 'name', 'slug')])])
+                ->orderBy('start_date')->orderBy('id')
+                ->take(CourseSchedule::MAX_HOME)
+                ->get());
+
             // Upcoming Events — the cover-flow carousel (3 shown, extras rotate in).
             $view->with('events', Event::active()->visibleOn('index')->get());
 
@@ -139,6 +155,17 @@ class AppServiceProvider extends ServiceProvider
 
             // Latest Blog — the four posts flagged to show on the home page.
             $view->with('homeBlogs', Blog::active()->forHome()->take(4)->get());
+        });
+
+        // About Us page — Our Story / Our Purpose / Our Features / Our Approach.
+        // Keyed by section key so the markup can reach for the one it is drawing;
+        // a section switched off in the panel is simply absent from the map and
+        // the page leaves its block out.
+        View::composer('frontend.about-us', function ($view) {
+            $view->with('aboutSections', AboutSection::active()
+                ->with(['items' => fn ($q) => $q->where('is_active', true)])
+                ->get()
+                ->keyBy('key'));
         });
 
         // Navbar mega-menu (rendered on every page) — departments as columns,

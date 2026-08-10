@@ -19,6 +19,7 @@
         'stories'   => '<circle cx="12" cy="9" r="5"/><path d="M9 13.4 8 22l4-2.4L16 22l-1-8.6"/>',
         'journey'   => '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 18 5-5 4 4 3-3 4 4"/>',
         'testimonials'=> '<path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/><path d="M8 9h6M8 12.5h4"/>',
+        'about'     => '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6h.01"/>',
         'faq'       => '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 0 1 4.8.8c0 1.7-2.4 2.3-2.4 3.5M12 17h.01"/>',
         'enquiries' => '<path d="M5.5 5h13l1.5 8v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4l1.5-8Z"/><path d="M4 13h4l1.4 3h5.2L20 13"/>',
         'course-enquiry' => '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 10h7M8.5 14h5"/>',
@@ -50,7 +51,7 @@
     $canAny = fn (...$modules) => \App\Support\AdminAuth::canAny(...$modules);
     $isMain = \App\Support\AdminAuth::isSuperAdmin();
 
-    $sectionModules = ['hero', 'partners', 'counters', 'events', 'success-stories', 'reels', 'testimonials', 'faqs'];
+    $sectionModules = ['hero', 'partners', 'counters', 'events', 'success-stories', 'reels', 'testimonials', 'faqs', 'about-sections'];
 @endphp
 
 <aside class="app-sidebar" id="appSidebar">
@@ -106,7 +107,7 @@
 
         {{-- Sections (group) --}}
         @if ($canAny(...$sectionModules))
-        @php $sectionsOpen = request()->routeIs('backend.hero.*', 'backend.partners.*', 'backend.counters.*', 'backend.events.*', 'backend.success-stories.*', 'backend.reels.*', 'backend.testimonials.*', 'backend.faqs.*'); @endphp
+        @php $sectionsOpen = request()->routeIs('backend.hero.*', 'backend.partners.*', 'backend.counters.*', 'backend.events.*', 'backend.success-stories.*', 'backend.reels.*', 'backend.testimonials.*', 'backend.faqs.*', 'backend.about-sections.*'); @endphp
         <div class="app-nav__item {{ $sectionsOpen ? 'is-open' : '' }}" data-group>
             <a class="app-nav__link" role="button" tabindex="0">
                 {!! $ic('sections') !!}
@@ -122,6 +123,7 @@
                 @if ($can('reels'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.reels.*') ? 'is-active' : '' }}" href="{{ route('backend.reels.index') }}">{!! $ic('journey') !!}<span>Our Journey</span></a></li>@endif
                 @if ($can('testimonials'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.testimonials.*') ? 'is-active' : '' }}" href="{{ route('backend.testimonials.index') }}">{!! $ic('testimonials') !!}<span>Testimonials</span></a></li>@endif
                 @if ($can('faqs'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.faqs.*') ? 'is-active' : '' }}" href="{{ route('backend.faqs.index') }}">{!! $ic('faq') !!}<span>FAQ</span></a></li>@endif
+                @if ($can('about-sections'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.about-sections.*') ? 'is-active' : '' }}" href="{{ route('backend.about-sections.index') }}">{!! $ic('about') !!}<span>About Us</span></a></li>@endif
             </ul>
             <div class="app-nav__flyout">
                 <div class="app-nav__flyout-title">Sections</div>
@@ -133,6 +135,7 @@
                 @if ($can('reels'))<a href="{{ route('backend.reels.index') }}">Our Journey</a>@endif
                 @if ($can('testimonials'))<a href="{{ route('backend.testimonials.index') }}">Testimonials</a>@endif
                 @if ($can('faqs'))<a href="{{ route('backend.faqs.index') }}">FAQ</a>@endif
+                @if ($can('about-sections'))<a href="{{ route('backend.about-sections.index') }}">About Us</a>@endif
             </div>
         </div>
         @endif

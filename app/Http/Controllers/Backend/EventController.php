@@ -42,7 +42,7 @@ class EventController extends Controller
     public function create(): View
     {
         return view('backend.events.form', [
-            'event' => new Event(['is_active' => true, 'show_home' => true, 'tone' => 'purple', 'type' => 'Live Event']),
+            'event' => new Event(['is_active' => true, 'show_home' => true, 'tone' => 'purple', 'type' => Event::TYPES[0]]),
         ]);
     }
 

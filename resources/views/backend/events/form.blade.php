@@ -242,10 +242,19 @@
                     <div class="col-12 col-md-4">
                         <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="type">Type</label>
-                            <input type="text" id="type" name="type"
-                                   class="form-control-hm @error('type') is-invalid @enderror"
-                                   value="{{ old('type', $event->type ?? 'Live Event') }}" placeholder="e.g. Live Event">
+                            @php $type = old('type', $event->type ?: \App\Models\Event::TYPES[0]); @endphp
+                            <select id="type" name="type" class="form-control-hm @error('type') is-invalid @enderror">
+                                {{-- Types typed in before this became a dropdown (e.g. "Live Event")
+                                     stay selectable, so editing an old event keeps its badge. --}}
+                                @if (filled($type) && ! in_array($type, \App\Models\Event::TYPES, true))
+                                    <option value="{{ $type }}" selected>{{ $type }}</option>
+                                @endif
+                                @foreach (\App\Models\Event::TYPES as $option)
+                                    <option value="{{ $option }}" {{ $type === $option ? 'selected' : '' }}>{{ $option }}</option>
+                                @endforeach
+                            </select>
                             @error('type') <p class="form-error">{{ $message }}</p> @enderror
+                            <p class="form-hint">Printed as the badge on the event card.</p>
                         </div>
                     </div>
                     <div class="col-12 col-md-4">

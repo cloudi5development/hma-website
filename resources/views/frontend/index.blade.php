@@ -31,6 +31,12 @@
     <link rel="stylesheet" href="{{ asset('assets/css/frontend/contact-form.css') }}?v={{ filemtime(public_path('assets/css/frontend/contact-form.css')) }}">
     <link rel="stylesheet" href="{{ asset('assets/css/frontend/career-success.css') }}?v={{ filemtime(public_path('assets/css/frontend/career-success.css')) }}">
     <link rel="stylesheet" href="{{ asset('assets/css/frontend/courses.css') }}?v={{ filemtime(public_path('assets/css/frontend/courses.css')) }}">
+    {{-- Upcoming Course Schedules — after courses.css, whose .hm-course__badge
+         and .hm-course__btn it reuses, and before home.css, which declares the
+         tokens and the [data-io] reveal it is built on. enquiry-modal.css is the
+         Apply buttons' modal, shared with course-details and /schedules. --}}
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/schedules.css') }}?v={{ filemtime(public_path('assets/css/frontend/schedules.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/enquiry-modal.css') }}?v={{ filemtime(public_path('assets/css/frontend/enquiry-modal.css')) }}">
     <link rel="stylesheet" href="{{ asset('assets/css/frontend/home.css') }}?v={{ filemtime(public_path('assets/css/frontend/home.css')) }}">
 @endpush
 
@@ -306,6 +312,57 @@
             </div>
         </div>
     </section>
+    @endif
+
+    {{-- ====================== UPCOMING COURSE SCHEDULES ====================== --}}
+    @php
+        // Fed by the view composer: the five soonest active batches whose course
+        // is active and has its schedule switched on (Admin → Courses →
+        // Create/Edit Course → Course Schedule). Nothing here is hardcoded, and
+        // the whole section is left out when there is no upcoming batch.
+        $schedules = collect($courseSchedules ?? []);
+    @endphp
+    @if ($schedules->count())
+    <section class="hm-sched" id="schedules" data-io aria-labelledby="hmSchedTitle">
+
+        {{-- Same slow-rotating premium background as the sections around it --}}
+        <div class="hm-sched__bg" aria-hidden="true">
+            <img src="{{ asset('assets/images/Hero-section/hero-bg.webp') }}" alt="" role="presentation" loading="lazy">
+        </div>
+
+        <div class="container hm-sched__container">
+
+            {{-- Header — same eyebrow / title / description block as Top Categories --}}
+            <div class="hm-sched__head">
+                <span class="hm-sched__label hm-anim hm-anim--up">
+                    <span class="hm-cats__label-icon" aria-hidden="true"></span>
+                    <span class="hm-sched__label-text">Upcoming Schedules</span>
+                </span>
+                <h2 class="hm-sched__title hm-anim hm-anim--up hm-anim--d1" id="hmSchedTitle">Upcoming Course Schedules</h2>
+                <p class="hm-sched__desc hm-anim hm-anim--up hm-anim--d2">
+                    Explore upcoming batches and choose the right course schedule for your
+                    learning journey.
+                </p>
+            </div>
+
+            {{-- Shared with the /schedules page — markup in
+                 partials/schedule-table.blade.php, CSS in schedules.css. --}}
+            <div class="hm-anim hm-anim--up hm-anim--d2">
+                @include('frontend.partials.schedule-table', ['schedules' => $schedules, 'animate' => true])
+            </div>
+
+            {{-- The full listing — every upcoming batch, same table. --}}
+            <div class="hm-sched__foot hm-anim hm-anim--up hm-anim--d3">
+                <a class="hm-btn hm-btn--primary" href="{{ route('frontend.schedules') }}">
+                    <span class="hm-btn__label">View All Schedules <i class="fa-solid fa-chevron-right"></i></span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    {{-- The Apply buttons above open this — the same enquiry modal the
+         course-details page uses, with the batch named on the form. --}}
+    @include('frontend.partials.course-enquiry-modal')
     @endif
 
     {{-- ============================ POPULAR COURSES ============================ --}}

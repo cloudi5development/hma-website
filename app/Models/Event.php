@@ -16,6 +16,9 @@ class Event extends Model
     /** The three card colour sets the CSS ships (hm-ev-card--{tone}). */
     public const TONES = ['purple', 'teal', 'green'];
 
+    /** The formats an event may run in — the badge printed on the card. */
+    public const TYPES = ['Live', 'Online', 'Workshop', 'Webinar', 'Classroom'];
+
     /**
      * Icons offered for a "What You Will Learn" highlight — the label the admin
      * picks from. One entry per drawing in HIGHLIGHT_ICON_FILES, so the dropdown

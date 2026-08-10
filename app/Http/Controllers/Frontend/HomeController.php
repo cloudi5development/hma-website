@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Blog;
 use App\Models\Course;
+use App\Models\CourseSchedule;
 use App\Models\Department;
 use App\Models\Event;
 use Illuminate\Http\Request;
@@ -80,12 +81,44 @@ class HomeController extends Controller
     }
 
     /**
+     * Every upcoming batch, soonest first — the full version of the home page's
+     * "Upcoming Course Schedules" section, which shows the first few and links
+     * here. Same rules as the home query: the course active with its schedule
+     * switched on, the batch active, started in the future and not yet ended.
+     *
+     * Queried from the schedule side so batches from different courses interleave
+     * by date, with the course and category eager-loaded to keep it at three
+     * queries however many batches come back.
+     */
+    public function schedules()
+    {
+        $schedules = CourseSchedule::active()->upcoming()
+            ->whereHas('course', fn ($q) => $q->where('is_active', true)->where('schedule_enabled', true))
+            ->with(['course' => fn ($q) => $q->select('id', 'category_id', 'name', 'slug', 'image', 'duration')
+                ->with(['category' => fn ($c) => $c->select('id', 'name', 'slug')])])
+            ->orderBy('start_date')->orderBy('id')
+            ->get();
+
+        return view('frontend.schedules', compact('schedules'));
+    }
+
+    /**
      * Course details, resolved by slug. 404 when the course is missing/inactive.
      * "Continue Learning" pulls the flagged courses (excluding this one).
      */
     public function courseDetails(string $slug)
     {
-        $course = Course::active()->with(['category.department', 'faqs'])
+        // The course's own upcoming batches (Admin → Courses → Course Schedule)
+        // ride along with the eager load, so the "Upcoming Batches" block on the
+        // page costs no extra query. Same rules as the home section: the schedule
+        // switched on for the course, the batch active, starting in the future
+        // and not yet ended.
+        $course = Course::active()
+            ->with([
+                'category.department',
+                'faqs',
+                'schedules' => fn ($q) => $q->active()->upcoming(),
+            ])
             ->where('slug', $slug)
             ->firstOrFail();
 

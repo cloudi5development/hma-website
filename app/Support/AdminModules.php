@@ -31,6 +31,7 @@ class AdminModules
             'reels'           => 'Our Journey',
             'testimonials'    => 'Testimonials',
             'faqs'            => 'FAQ',
+            'about-sections'  => 'About Us',
             'blogs'           => 'Blog',
         ],
         'Leads' => [

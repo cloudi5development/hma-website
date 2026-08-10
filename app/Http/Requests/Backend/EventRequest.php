@@ -19,7 +19,16 @@ class EventRequest extends FormRequest
     {
         // On create the image is required; on update it is optional (keep existing).
         $creating = $this->isMethod('post');
-        $id = $this->route('event')?->id;
+        $event = $this->route('event');
+        $id = $event?->id;
+
+        // The form offers the fixed TYPES list. An event saved before the field
+        // became a dropdown may hold its own wording ("Live Event"), and the
+        // form still shows it, so accept that one value back unchanged.
+        $types = array_values(array_unique(array_merge(
+            Event::TYPES,
+            array_filter([$event?->type]),
+        )));
 
         return [
             'speaker'    => ['required', 'string', 'max:120'],
@@ -28,7 +37,7 @@ class EventRequest extends FormRequest
             'event_date' => ['nullable', 'date'],
             'event_time' => ['nullable', 'date_format:H:i'],
             'location'   => ['nullable', 'string', 'max:255'],
-            'type'       => ['required', 'string', 'max:60'],
+            'type'       => ['required', Rule::in($types)],
             'price'      => ['nullable', 'string', 'max:40'],
             'link'       => ['nullable', 'string', 'max:255'],
             // Not on the form any more — the model hands the colour out on create.
@@ -98,7 +107,7 @@ class EventRequest extends FormRequest
             'is_active'  => $this->boolean('is_active'),
             'show_home'  => $this->boolean('show_home'),
             'sort_order' => $this->input('sort_order', 0),
-            'type'       => $this->input('type') ?: 'Live Event',
+            'type'       => $this->input('type') ?: Event::TYPES[0],
             // Empty date/time inputs post "" — store them as NULL so the card
             // treats them as "not scheduled" rather than an invalid value.
             'event_date' => $this->input('event_date') ?: null,
@@ -162,6 +171,7 @@ class EventRequest extends FormRequest
             'image.required'        => 'Please upload a photo of the speaker.',
             'image.image'           => 'The photo must be an image (WebP, PNG or JPG).',
             'image.max'             => 'The photo may not be larger than 2 MB.',
+            'type.in'               => 'Choose one of the listed event types.',
             'event_date.date'       => 'Enter a valid event date.',
             'event_time.date_format' => 'Enter the time as HH:MM (for example 10:00).',
             'end_time.date_format'  => 'Enter the end time as HH:MM (for example 18:00).',

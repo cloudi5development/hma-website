@@ -12,7 +12,7 @@ class CourseEnquiry extends Model
     public const STATUSES = ['New', 'Contacted', 'Closed'];
 
     protected $fillable = [
-        'course_id', 'course_name', 'name', 'email', 'phone', 'city',
+        'course_id', 'course_name', 'batch', 'name', 'email', 'phone', 'city',
         'career_goal', 'message', 'ip_address', 'status',
     ];
 

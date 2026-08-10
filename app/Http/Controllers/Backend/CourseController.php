@@ -55,13 +55,14 @@ class CourseController extends Controller
 
         $course = Course::create($data);
         $this->syncFaqs($course, $request->input('faqs', []));
+        $this->syncSchedules($course, $request->input('schedules', []));
 
         return redirect()->route('backend.courses.index')->with('success', 'Course added.');
     }
 
     public function edit(Course $course): View
     {
-        $course->load('faqs');
+        $course->load(['faqs', 'schedules']);
 
         return view('backend.courses.form', [
             'course'       => $course,
@@ -95,6 +96,7 @@ class CourseController extends Controller
 
         $course->update($data);
         $this->syncFaqs($course, $request->input('faqs', []));
+        $this->syncSchedules($course, $request->input('schedules', []));
 
         return redirect()->route('backend.courses.index')->with('success', 'Course updated.');
     }
@@ -136,7 +138,7 @@ class CourseController extends Controller
     private function clean(CourseRequest $request): array
     {
         return collect($request->validated())
-            ->except(['faqs', 'image', 'brochure', 'remove_brochure'])
+            ->except(['faqs', 'schedules', 'image', 'brochure', 'remove_brochure'])
             ->all();
     }
 
@@ -153,6 +155,36 @@ class CourseController extends Controller
                 continue;
             }
             $course->faqs()->create(['question' => $q, 'answer' => $a, 'sort_order' => $order++]);
+        }
+    }
+
+    /**
+     * Replace the course's upcoming batches with the submitted rows.
+     *
+     * The repeater edits the whole set in place, so this mirrors syncFaqs: wipe
+     * and re-create. A row needs a start date to be a batch at all — the request
+     * has already dropped the ones without — and an empty fee stays NULL so the
+     * home page prints "Contact for Fee" instead of ₹0.
+     */
+    private function syncSchedules(Course $course, array $rows): void
+    {
+        $course->schedules()->delete();
+
+        foreach ($rows as $row) {
+            if (blank($row['start_date'] ?? null)) {
+                continue;
+            }
+
+            $fee = $row['fee'] ?? null;
+
+            $course->schedules()->create([
+                'start_date' => $row['start_date'],
+                'end_date'   => ($row['end_date'] ?? null) ?: null,
+                'duration'   => trim($row['duration'] ?? '') ?: null,
+                'fee'        => $fee === null || $fee === '' ? null : $fee,
+                'show_fee'   => (bool) ($row['show_fee'] ?? false),
+                'is_active'  => (bool) ($row['is_active'] ?? false),
+            ]);
         }
     }
 

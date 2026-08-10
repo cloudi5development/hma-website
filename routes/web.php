@@ -33,6 +33,10 @@ Route::controller(HomeController::class)->name('frontend.')->group(function () {
     Route::get('/contact-us', 'contactUs')->name('contact-us');
      Route::get('/testimonials', 'testimonials')->name('testimonials');
       Route::get('/courses', 'courses')->name('courses');
+       // The full "Upcoming Course Schedules" listing — the home-page section
+       // shows the first few and links here for the rest. Reads the batches
+       // created in Admin → Courses → Create/Edit Course → Course Schedule.
+       Route::get('/schedules', 'schedules')->name('schedules');
        // Slug-based, so every course card links with route('frontend.course-details', $slug)
        Route::get('/course/{slug}', 'courseDetails')->name('course-details');
        // The "Brochure" button on the course page. Streamed through the app rather

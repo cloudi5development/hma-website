@@ -56,6 +56,12 @@
     <link rel="stylesheet" href="{{ asset('assets/css/frontend/courses.css') }}?v={{ filemtime(public_path('assets/css/frontend/courses.css')) }}">
     <link rel="stylesheet" href="{{ asset('assets/css/frontend/faq.css') }}?v={{ filemtime(public_path('assets/css/frontend/faq.css')) }}">
     <link rel="stylesheet" href="{{ asset('assets/css/frontend/contact-form.css') }}?v={{ filemtime(public_path('assets/css/frontend/contact-form.css')) }}">
+    {{-- The enquiry modal, shared with the schedules table on the home page and
+         /schedules. Its rules used to live at the bottom of course-details.css. --}}
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/enquiry-modal.css') }}?v={{ filemtime(public_path('assets/css/frontend/enquiry-modal.css')) }}">
+    {{-- "Upcoming Batches" is the same table as the home page's schedules
+         section, in its compact five-column form. --}}
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend/schedules.css') }}?v={{ filemtime(public_path('assets/css/frontend/schedules.css')) }}">
     {{-- ?v=<file mtime> busts the browser cache whenever course-details.css
          changes, so edits are never masked by a stale copy. --}}
     <link rel="stylesheet"
@@ -228,6 +234,117 @@
                 <p class="hm-cd-sec__desc hm-cd-sec__desc--about">{{ $course['about'] }}</p>
             </section>
 
+            {{-- ========================= UPCOMING BATCHES =========================
+                 The batches listed for this course in Admin → Courses →
+                 Create/Edit Course → Course Schedule, eager-loaded already
+                 filtered to the active, not-yet-started ones. The whole block is
+                 left out when the course has none, so a course that is not
+                 scheduled reads exactly as it did before. --}}
+            @php $batches = $model->schedule_enabled ? $model->schedules : collect(); @endphp
+            @if ($batches->count())
+                <section class="hm-cd-sec hm-cd-batches" aria-labelledby="hmCdBatches">
+                    <h2 class="hm-cd-sec__title" id="hmCdBatches">Upcoming Batches</h2>
+                    <p class="hm-cd-sec__desc">
+                        Pick the batch that fits your plans — dates, duration and fees for every
+                        upcoming intake of this course.
+                    </p>
+
+                    {{-- The same table the home page and /schedules use (classes
+                         and CSS from schedules.css), minus the Course and Category
+                         columns — on this page both are already the subject. It
+                         restyles into stacked cards under 992px the same way. --}}
+                    <div class="hm-sched__panel">
+                        <table class="hm-sched__table hm-sched__table--compact">
+                            <caption class="visually-hidden">Upcoming batches of {{ $course['title'] }}, soonest first</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Start Date</th>
+                                    <th scope="col">End Date</th>
+                                    <th scope="col">Duration</th>
+                                    <th scope="col">Fee</th>
+                                    <th scope="col"><span class="visually-hidden">Action</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($batches as $batch)
+                                    @php
+                                        // What the enquiry modal shows and records.
+                                        $batchLabel = $batch->end_date_label
+                                            ? $batch->start_date_label . ' – ' . $batch->end_date_label
+                                            : $batch->start_date_label;
+
+                                        // The batch's own duration, falling back to the
+                                        // course's when the batch left it blank.
+                                        $batchDuration = $batch->duration ?: $model->duration;
+                                    @endphp
+                                    <tr class="hm-sched__row">
+                                        <td data-label="Start Date">
+                                            <span class="hm-sched__stack">
+                                                <span class="hm-sched__stack-main">
+                                                    <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                                                    {{ $batch->start_date_label }}
+                                                </span>
+                                                <span class="hm-sched__stack-sub">{{ $batch->start_day_label }}</span>
+                                            </span>
+                                        </td>
+
+                                        <td data-label="End Date">
+                                            @if ($batch->end_date_label)
+                                                <span class="hm-sched__stack">
+                                                    <span class="hm-sched__stack-main">
+                                                        <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                                                        {{ $batch->end_date_label }}
+                                                    </span>
+                                                    <span class="hm-sched__stack-sub">{{ $batch->end_day_label }}</span>
+                                                </span>
+                                            @else
+                                                <span class="hm-sched__none">—</span>
+                                            @endif
+                                        </td>
+
+                                        <td data-label="Duration">
+                                            @if ($batchDuration)
+                                                <span class="hm-sched__stack">
+                                                    <span class="hm-sched__stack-main">
+                                                        <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                                                        {{ $batchDuration }}
+                                                    </span>
+                                                </span>
+                                            @else
+                                                <span class="hm-sched__none">—</span>
+                                            @endif
+                                        </td>
+
+                                        {{-- "Show Fee" off, or no fee entered, reads as
+                                             an invitation to ask — never ₹0 or a gap. --}}
+                                        <td data-label="Fee">
+                                            @if ($batch->fee_label)
+                                                <span class="hm-sched__fee">{{ $batch->fee_label }}</span>
+                                            @else
+                                                <span class="hm-sched__fee hm-sched__fee--ask">Contact for Fee</span>
+                                            @endif
+                                        </td>
+
+                                        <td class="hm-sched__action">
+                                            <span class="hm-sched__actions">
+                                                <button class="hm-course__btn hm-sched__btn" type="button"
+                                                        data-bs-toggle="modal" data-bs-target="#hmEnquireModal"
+                                                        data-enq-course="{{ $model->id }}"
+                                                        data-enq-batch="{{ $batchLabel }}"
+                                                        aria-label="Apply for the batch starting {{ $batch->start_date_label }}">
+                                                    <span>Apply</span>
+                                                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                                                </button>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            @endif
+
             {{-- ============================ HIGHLIGHTS ============================ --}}
             <section class="hm-cd-sec" aria-labelledby="hmCdHighlights">
                 <h2 class="hm-cd-sec__title" id="hmCdHighlights">Course Highlight</h2>
@@ -317,163 +434,11 @@
     @include('frontend.partials.contact-form')
 
     {{-- ============================ ENQUIRE MODAL ============================
-         Opened by the hero's "Enroll Now" button. Bootstrap 5 supplies the show
-         /hide, the backdrop, the focus trap, ESC and click-outside; every
-         surface is restyled in course-details.css. --}}
-    @php
-        // Every active course (id + name), so the "Course" select is complete and
-        // submits a real course_id; the current course is preselected below.
-        $enquiryCourses = \App\Models\Course::active()->orderBy('name')->get(['id', 'name']);
-        $selectedCourseId = $model->id;
-
-        $careerGoals = [
-            'Career Switch',
-            'Looking for Course Completion',
-            'Looking for Job',
-            'Looking for Career Upgrade',
-        ];
-
-        // Transparent cut-out of the support executive — sits on the cream panel.
-        $enquiryFigure = 'assets/images/courses/enquiry-modal.webp';
-    @endphp
-
-    <div class="modal fade hm-enq" id="hmEnquireModal" tabindex="-1"
-         aria-labelledby="hmEnquireTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-
-                <button class="hm-enq__close" type="button" data-bs-dismiss="modal" aria-label="Close">
-                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                </button>
-
-                <div class="row hm-enq__row">
-
-                    {{-- ---------------------------- LEFT ---------------------------- --}}
-                    <div class="col-12 col-lg-5 hm-enq__aside">
-                        <img class="hm-enq__logo" src="{{ \App\Models\Setting::image('site_logo', 'assets/images/branding/logo.png') }}"
-                             alt="Hire Minds Academy">
-
-                        <h2 class="hm-enq__title" id="hmEnquireTitle">Take the First Step Toward Your Dream Career</h2>
-
-                        <p class="hm-enq__desc">
-                            Share your details and our experts will help you choose the best
-                            program based on your career goals and interests.
-                        </p>
-
-                        {{-- Decorations --}}
-                        <img class="hm-enq__deco hm-enq__deco--dots" aria-hidden="true"
-                             src="{{ asset('assets/images/courses/dots.png') }}" alt="" loading="lazy">
-                        <img class="hm-enq__deco hm-enq__deco--lines" aria-hidden="true"
-                             src="{{ asset('assets/images/courses/pattern.png') }}" alt="" loading="lazy">
-                        <img class="hm-enq__deco hm-enq__deco--star-a" aria-hidden="true"
-                             src="{{ asset('assets/images/faq/star.png') }}" alt="" loading="lazy">
-                        <img class="hm-enq__deco hm-enq__deco--star-b" aria-hidden="true"
-                             src="{{ asset('assets/images/faq/star.png') }}" alt="" loading="lazy">
-
-                        <figure class="hm-enq__figure">
-                            <img src="{{ asset($enquiryFigure) }}" alt="" role="presentation" loading="lazy">
-                        </figure>
-                    </div>
-
-                    {{-- ---------------------------- RIGHT ---------------------------- --}}
-                    <div class="col-12 col-lg-7 hm-enq__main">
-                        {{-- novalidate: the browser's own bubbles are replaced by the
-                             inline messages below each field. action/@csrf are already
-                             in place, so wiring a real POST is a route change only. --}}
-                        <form class="hm-enq__form" id="hmEnquireForm" method="POST" action="{{ route('frontend.course-enquiry.store') }}" novalidate>
-                            @csrf
-
-                            <div class="row">
-                                <div class="col-12 col-md-6">
-                                    <div class="hm-enq__field" data-hm-field>
-                                        <label class="hm-enq__label" for="enqName">Full Name</label>
-                                        <input class="hm-enq__input" id="enqName" name="name" type="text"
-                                               placeholder="Alex Johnson" required>
-                                        <p class="hm-enq__error" data-hm-error>Please enter your full name.</p>
-                                    </div>
-                                </div>
-
-                                <div class="col-12 col-md-6">
-                                    <div class="hm-enq__field" data-hm-field>
-                                        <label class="hm-enq__label" for="enqEmail">Email</label>
-                                        <input class="hm-enq__input" id="enqEmail" name="email" type="email"
-                                               placeholder="example@gmail.com" required>
-                                        <p class="hm-enq__error" data-hm-error>Please enter a valid email address.</p>
-                                    </div>
-                                </div>
-
-                                <div class="col-12 col-md-6">
-                                    <div class="hm-enq__field" data-hm-field>
-                                        <label class="hm-enq__label" for="enqPhone">Phone Number</label>
-                                        <div class="hm-enq__phone">
-                                            <span class="hm-enq__phone-code">+91</span>
-                                            <input class="hm-enq__input" id="enqPhone" name="phone" type="tel"
-                                                   placeholder="Mobile Number" inputmode="numeric"
-                                                   pattern="[0-9]{10}" required>
-                                        </div>
-                                        <p class="hm-enq__error" data-hm-error>Enter a valid 10-digit mobile number.</p>
-                                    </div>
-                                </div>
-
-                                <div class="col-12 col-md-6">
-                                    <div class="hm-enq__field" data-hm-field>
-                                        <label class="hm-enq__label" for="enqCity">City/Location</label>
-                                        <input class="hm-enq__input" id="enqCity" name="city" type="text"
-                                               placeholder="Enter Your Place">
-                                        <p class="hm-enq__error" data-hm-error>Please enter your city.</p>
-                                    </div>
-                                </div>
-
-                                <div class="col-12 col-md-6">
-                                    <div class="hm-enq__field" data-hm-field>
-                                        <label class="hm-enq__label" for="enqCourse">Course</label>
-                                        <select class="hm-enq__input hm-enq__select" id="enqCourse" name="course_id" required>
-                                            <option value="" disabled {{ $selectedCourseId ? '' : 'selected' }} hidden>Select a course</option>
-                                            @foreach ($enquiryCourses as $option)
-                                                <option value="{{ $option->id }}" {{ $option->id === $selectedCourseId ? 'selected' : '' }}>{{ $option->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <p class="hm-enq__error" data-hm-error>Please choose a course.</p>
-                                    </div>
-                                </div>
-
-                                <div class="col-12 col-md-6">
-                                    <div class="hm-enq__field" data-hm-field>
-                                        <label class="hm-enq__label" for="enqCareerGoal">Current Career Goal</label>
-                                        <select class="hm-enq__input hm-enq__select" id="enqCareerGoal" name="career_goal" required>
-                                            <option value="" disabled selected hidden>Select your career goal</option>
-                                            @foreach ($careerGoals as $option)
-                                                <option>{{ $option }}</option>
-                                            @endforeach
-                                        </select>
-                                        <p class="hm-enq__error" data-hm-error>Please choose your career goal.</p>
-                                    </div>
-                                </div>
-
-                                <div class="col-12">
-                                    <div class="hm-enq__field" data-hm-field>
-                                        <label class="hm-enq__label" for="enqMessage">Message</label>
-                                        <textarea class="hm-enq__input hm-enq__textarea" id="enqMessage" name="message"
-                                                  placeholder="Tell us how we can help you..."></textarea>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button class="hm-enq__submit" type="submit">
-                                <span>Send Enquiry</span>
-                                <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-                            </button>
-
-                            <p class="hm-enq__note" id="hmEnquireNote" role="status" hidden>
-                                Thanks! Your enquiry has been received — our team will get back to you within 24 hours.
-                            </p>
-                        </form>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
+         Shared component — also opened by the Apply buttons in the Upcoming
+         Course Schedules table on the home page and /schedules. Bootstrap 5
+         supplies the show/hide, the backdrop, the focus trap, ESC and
+         click-outside; every surface is restyled in enquiry-modal.css. --}}
+    @include('frontend.partials.course-enquiry-modal', ['selectedCourseId' => $model->id])
 
 @endsection
 
@@ -483,111 +448,4 @@
          click-outside. Both are dead without this. --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
 
-    {{-- Enquiry modal — inline validation, no reload, no alert(). --}}
-    <script>
-        (function () {
-            'use strict';
-
-            var form = document.getElementById('hmEnquireForm');
-            if (!form) return;
-
-            var modalEl = document.getElementById('hmEnquireModal');
-            var note    = document.getElementById('hmEnquireNote');
-
-            // Field -> its own rule. Anything not listed is optional and always
-            // passes, so adding a field to the markup cannot silently block submit.
-            var rules = {
-                enqName:     function (v) { return v.trim().length > 0; },
-                enqEmail:    function (v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); },
-                enqPhone:    function (v) { return /^[0-9]{10}$/.test(v.trim()); },
-                enqCourse:      function (v) { return v !== ''; },
-                enqCareerGoal:  function (v) { return v !== ''; }
-            };
-
-            function fieldOf(el) { return el.closest('[data-hm-field]'); }
-
-            function validate(el) {
-                var rule = rules[el.id];
-                if (!rule) return true;
-
-                var ok    = rule(el.value);
-                var field = fieldOf(el);
-                if (field) field.classList.toggle('is-invalid', !ok);
-                return ok;
-            }
-
-            // Re-check as the user fixes a field, but only once it has been marked
-            // — validating on first keystroke would flag an empty field instantly.
-            Object.keys(rules).forEach(function (id) {
-                var el = document.getElementById(id);
-                if (!el) return;
-
-                el.addEventListener('blur', function () { validate(el); });
-                el.addEventListener('input', function () {
-                    var field = fieldOf(el);
-                    if (field && field.classList.contains('is-invalid')) validate(el);
-                });
-                el.addEventListener('change', function () { validate(el); });
-            });
-
-            var submitBtn = form.querySelector('.hm-enq__submit');
-
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
-
-                var firstInvalid = null;
-
-                Object.keys(rules).forEach(function (id) {
-                    var el = document.getElementById(id);
-                    if (!el) return;
-                    if (!validate(el) && !firstInvalid) firstInvalid = el;
-                });
-
-                if (firstInvalid) { firstInvalid.focus(); return; }
-
-                // Duplicate-submit guard — disable while the request is in flight.
-                if (submitBtn.disabled) return;
-                submitBtn.disabled = true;
-                var btnText = submitBtn.querySelector('span');
-                var original = btnText ? btnText.textContent : '';
-                if (btnText) btnText.textContent = 'Sending…';
-
-                fetch(form.action, {
-                    method: 'POST',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-                    body: new FormData(form)
-                })
-                .then(function (r) { return r.ok ? r.json() : Promise.reject(r); })
-                .then(function (data) {
-                    if (data && data.success) {
-                        form.reset();
-                        if (note) {
-                            note.hidden = false;
-                            clearTimeout(note._t);
-                            note._t = setTimeout(function () { note.hidden = true; }, 6000);
-                        }
-                    }
-                })
-                .catch(function () {
-                    if (note) { note.textContent = 'Sorry, something went wrong. Please try again.'; note.hidden = false; }
-                })
-                .finally(function () {
-                    submitBtn.disabled = false;
-                    if (btnText) btnText.textContent = original;
-                });
-            });
-
-            // Leave the modal as it was found: clear the values, the messages and
-            // the note, so reopening never shows the last visit's state.
-            if (modalEl) {
-                modalEl.addEventListener('hidden.bs.modal', function () {
-                    form.reset();
-                    form.querySelectorAll('[data-hm-field]').forEach(function (f) {
-                        f.classList.remove('is-invalid');
-                    });
-                    if (note) { note.hidden = true; clearTimeout(note._t); }
-                });
-            }
-        })();
-    </script>
 @endpush

@@ -158,40 +158,20 @@
 
     {{-- ============================ OUR STORY ============================ --}}
     @php
-        // One array drives both the text column and the image stack.
-        $stories = [
-            [
-                'img'   => 'people-1.webp',
-                'title' => 'It All Started with a Simple Mission',
-                'desc'  => 'HireMinds Academy was founded with a clear purpose—to bridge the gap between traditional education and real industry expectations. We recognized that many learners possessed academic knowledge but lacked the practical skills needed to build successful careers. This vision inspired us to create training programs that focus on hands-on learning, expert mentorship, and career readiness from day one.',
-            ],
-            [
-                'img'   => 'people-2.webp',
-                'title' => 'Learning That Matches Industry Needs',
-                'desc'  => 'Every course at HireMinds is carefully designed around current industry requirements rather than outdated academic models. Our learners gain practical experience through real-world projects, interactive classroom sessions, case studies, and expert guidance. By focusing on skills that employers actively seek, we help students build confidence while preparing them for professional challenges and workplace expectations.',
-            ],
-            [
-                'img'   => 'people-3.webp',
-                'title' => 'Guiding Every Step of the Career Journey',
-                'desc'  => 'Our responsibility goes beyond delivering quality training. We support learners throughout their career journey with personalized mentorship, resume building, interview preparation, communication skills, and placement assistance. Every student receives the guidance needed to confidently transition from learning to employment, ensuring they are prepared for opportunities in today\'s competitive job market.',
-            ],
-            [
-                // people-4.webp ships with a baked-in shadow border, so its photo
-                // only fills ~79% of the canvas. 'zoom' crops past that frame so it
-                // matches the edge-to-edge framing of the other four.
-                'img'   => 'people-4.webp',
-                'zoom'  => true,
-                'title' => 'Building Careers, Creating Impact',
-                'desc'  => 'Today, HireMinds Academy continues to empower students, graduates, career switchers, and working professionals through industry-focused education. Every successful placement, completed project, and learner achievement reflects our commitment to creating meaningful career opportunities. As industries continue to evolve, we remain dedicated to helping learners develop future-ready skills that support long-term professional growth and success.',
-            ],
-            [
-                'img'   => 'people-5.webp',
-                'title' => 'Shaping the Future of Professional Learning',
-                'desc'  => 'As technology and industries continue to evolve, HireMinds Academy remains committed to delivering future-ready education that adapts to changing workforce demands. We continuously update our programs, strengthen industry partnerships, and introduce innovative learning experiences that help learners stay competitive. Our journey doesn\'t end with a certificate—it begins with building confident professionals ready to make a lasting impact in their careers.',
-            ],
-        ];
-    @endphp
+        // Admin → Sections → About Us → Our Story. One collection drives both the
+        // text column and the image stack, mapped to the exact shape this markup
+        // already used — only the data source moved to the database.
+        $storySection = $aboutSections['story'] ?? null;
+        $storyLabel   = $storySection?->label ?: 'Our Story';
 
+        $stories = collect($storySection?->items ?? [])->map(fn ($item) => [
+            'img'   => $item->image,
+            'zoom'  => $item->zoom,
+            'title' => $item->title,
+            'desc'  => $item->text,
+        ])->all();
+    @endphp
+    @if (count($stories))
     <section class="hm-story" id="our-story" aria-labelledby="hmStoryHeading">
 
         <div class="hm-story__pin" id="hmStoryPin">
@@ -213,7 +193,7 @@
             </div>
 
             <div class="container">
-                <h2 class="visually-hidden" id="hmStoryHeading">Our Story</h2>
+                <h2 class="visually-hidden" id="hmStoryHeading">{{ $storyLabel }}</h2>
 
                 {{-- Each story is one <article> holding BOTH its text and its photo.
                      On desktop the article is `display: contents`, so the text lands
@@ -224,7 +204,7 @@
 
                     {{-- "OUR STORY" stays fixed; only title / description / photo / progress change --}}
                     <span class="hm-story__label">
-                        <span class="hm-story__label-sq" aria-hidden="true"></span> Our Story
+                        <span class="hm-story__label-sq" aria-hidden="true"></span> {{ $storyLabel }}
                     </span>
 
                     {{-- Blob artwork sits behind the whole photo stack --}}
@@ -238,10 +218,15 @@
                                 <p class="hm-story__desc">{{ $story['desc'] }}</p>
                             </div>
 
+                            {{-- The figure is rendered even for a chapter with no
+                                 photo: the scroll animation pairs one card with one
+                                 block of copy and stands down when the counts differ. --}}
                             <figure @class(['hm-story__card', 'hm-story__card--zoom' => ($story['zoom'] ?? false)])
                                     data-story-card="{{ $i }}">
-                                <img src="{{ asset('assets/images/about-page/'.$story['img']) }}"
-                                     alt="{{ $story['title'] }}" loading="lazy">
+                                @if ($story['img'])
+                                    <img src="{{ asset($story['img']) }}"
+                                         alt="{{ $story['title'] }}" loading="lazy">
+                                @endif
                             </figure>
                         </article>
                     @endforeach
@@ -249,6 +234,7 @@
             </div>
         </div>
     </section>
+    @endif
 
     {{-- ============================ COUNTERS ============================ --}}
     {{-- Shared with the home page — markup in partials/counters.blade.php --}}
@@ -260,21 +246,17 @@
 
     {{-- ============================ OUR PURPOSE ============================ --}}
     @php
-        // Both cards share one shape; 'tone' picks the colour set in about.css.
-        $purposeCards = [
-            [
-                'tone'  => 'vision',
-                'title' => 'Our Vision !',
-                'text'  => 'To deliver practical, industry-focused training that empowers individuals with job-ready skills, builds confidence through hands-on learning, and prepares them for long-term career success. We are committed to bridging the gap between academic knowledge and industry expectations by providing expert-led instruction, real-world projects, continuous mentorship, and career guidance. At the same time, today\'s fast-changing business environment.',
-            ],
-            [
-                'tone'  => 'mission',
-                'title' => 'Our Mission !',
-                'text'  => 'To empower individuals and organizations by building skilled, confident, and future-ready professionals through practical, industry-focused learning experiences. We envision creating a workforce that embraces innovation, adapts to emerging technologies, and thrives in an evolving job market. By fostering continuous learning, professional excellence, and career growth, we aim to strengthening organizations across industries.',
-            ],
-        ];
-    @endphp
+        // Admin → Sections → About Us → Our Purpose. Both cards share one shape;
+        // 'tone' picks the colour set in about.css.
+        $purposeSection = $aboutSections['purpose'] ?? null;
 
+        $purposeCards = collect($purposeSection?->items ?? [])->map(fn ($item) => [
+            'tone'  => $item->tone,
+            'title' => $item->title,
+            'text'  => $item->text,
+        ])->all();
+    @endphp
+    @if ($purposeSection && count($purposeCards))
     <section class="hm-purpose" id="our-purpose" aria-labelledby="hmPurposeTitle">
 
         {{-- Decorations — positions follow the reference --}}
@@ -292,27 +274,32 @@
             {{-- ------------------------------ Header ------------------------------ --}}
             <header class="hm-purpose__head">
                 <span class="hm-purpose__label hm-abt-anim">
-                    <span class="hm-purpose__label-sq" aria-hidden="true"></span> Our Purpose
+                    <span class="hm-purpose__label-sq" aria-hidden="true"></span> {{ $purposeSection->label }}
                 </span>
                 <h2 class="hm-purpose__title hm-abt-anim hm-abt-anim--d1" id="hmPurposeTitle">
-                    Driven by Purpose. Guided by Vision.
+                    {{ $purposeSection->title }}
                 </h2>
-                <p class="hm-purpose__lead hm-abt-anim hm-abt-anim--d2">
-                    Everything we do is built around one goal—to equip learners with practical skills, inspire
-                    confidence, and create opportunities that lead to meaningful careers and long-term success.
-                </p>
+                @if ($purposeSection->lead)
+                    <p class="hm-purpose__lead hm-abt-anim hm-abt-anim--d2">
+                        {{ $purposeSection->lead }}
+                    </p>
+                @endif
             </header>
 
-            {{-- ---------------------- Image + Vision / Mission ---------------------- --}}
+            {{-- ---------------------- Image + Vision / Mission ----------------------
+                 The alt text describes the slot rather than the file, so it still
+                 reads correctly after the photo is swapped in the panel. --}}
             <div class="row g-4 align-items-stretch hm-purpose__body">
+                @if ($purposeSection->image)
                 <div class="col-lg-6">
                     <figure class="hm-purpose__figure hm-abt-anim hm-abt-anim--d1">
-                        <img src="{{ asset('assets/images/about-page/our-purpose.webp') }}"
+                        <img src="{{ asset($purposeSection->image) }}"
                              alt="A HireMinds Academy mentor guiding learners through a session in the training centre" loading="lazy" decoding="async">
                     </figure>
                 </div>
+                @endif
 
-                <div class="col-lg-6">
+                <div class="{{ $purposeSection->image ? 'col-lg-6' : 'col-12' }}">
                     <div class="hm-purpose__cards">
                         @foreach ($purposeCards as $i => $card)
                             <article @class([
@@ -330,36 +317,23 @@
             </div>
         </div>
     </section>
+    @endif
 
     {{-- ============================ OUR FEATURES ============================ --}}
     @php
-        // 'tone' picks the colour set in about.css. Card 1 carries the eyes
-        // illustration instead of a description.
-        $features = [
-            [
-                'tone'  => 'purple',
-                'title' => 'Who We Are',
-                'text'  => '',
-                'eyes'  => true,
-            ],
-            [
-                'tone'  => 'red',
-                'title' => 'Industry-Focused Training',
-                'text'  => 'Learn with a curriculum designed around real industry requirements.',
-            ],
-            [
-                'tone'  => 'peach',
-                'title' => 'Hands-On Learning',
-                'text'  => 'Learn by doing with projects and practical exercises.',
-            ],
-            [
-                'tone'  => 'yellow',
-                'title' => 'Career Support',
-                'text'  => 'Get guidance, interview preparation, and placement assistance.',
-            ],
-        ];
-    @endphp
+        // Admin → Sections → About Us → Our Features. 'tone' picks the colour set
+        // in about.css; a card flagged for the eyes illustration carries it in
+        // place of a description.
+        $featureSection = $aboutSections['features'] ?? null;
 
+        $features = collect($featureSection?->items ?? [])->map(fn ($item) => [
+            'tone'  => $item->tone,
+            'title' => $item->title,
+            'text'  => $item->text,
+            'eyes'  => $item->eyes,
+        ])->all();
+    @endphp
+    @if ($featureSection && count($features))
     <section class="hm-feat" id="our-features" aria-labelledby="hmFeatTitle">
 
         {{-- Decorations --}}
@@ -373,15 +347,16 @@
 
             <header class="hm-feat__head">
                 <span class="hm-feat__label hm-abt-anim">
-                    <span class="hm-feat__label-sq" aria-hidden="true"></span> Our Features
+                    <span class="hm-feat__label-sq" aria-hidden="true"></span> {{ $featureSection->label }}
                 </span>
                 <h2 class="hm-feat__title-main hm-abt-anim hm-abt-anim--d1" id="hmFeatTitle">
-                    Shaping Future-Ready Professionals
+                    {{ $featureSection->title }}
                 </h2>
-                <p class="hm-feat__lead hm-abt-anim hm-abt-anim--d2">
-                    At HireMinds Academy, we combine expert guidance, practical training, and career support
-                    to help learners achieve their professional goals.
-                </p>
+                @if ($featureSection->lead)
+                    <p class="hm-feat__lead hm-abt-anim hm-abt-anim--d2">
+                        {{ $featureSection->lead }}
+                    </p>
+                @endif
             </header>
 
             {{-- Expanding cards. Hover is pure CSS; JS only adds tap/keyboard. --}}
@@ -409,21 +384,22 @@
             </div>
         </div>
     </section>
+    @endif
 
     {{-- ======================== OUR LEARNING APPROACH ======================== --}}
     @php
-        // 'pos' places the pill around the circle, 'tone' picks its pastel.
-        // Each drifts on its own delay so they never move in lockstep.
-        $approachPills = [
-            ['pos' => 'lt', 'tone' => 'blue',   'label' => 'Industry-Aligned Curriculum'],
-            ['pos' => 'lm', 'tone' => 'pink',   'label' => 'Hands-On Projects'],
-            ['pos' => 'lb', 'tone' => 'beige',  'label' => 'Classroom Learning'],
-            ['pos' => 'rt', 'tone' => 'green',  'label' => 'Hands-On Projects'],
-            ['pos' => 'rm', 'tone' => 'yellow', 'label' => 'Career Guidance'],
-            ['pos' => 'rb', 'tone' => 'blue',   'label' => 'Placement Support'],
-        ];
-    @endphp
+        // Admin → Sections → About Us → Our Approach. 'pos' places the pill around
+        // the circle, 'tone' picks its pastel. Each drifts on its own delay so they
+        // never move in lockstep.
+        $approachSection = $aboutSections['approach'] ?? null;
 
+        $approachPills = collect($approachSection?->items ?? [])->map(fn ($item) => [
+            'pos'   => $item->position,
+            'tone'  => $item->tone,
+            'label' => $item->title,
+        ])->all();
+    @endphp
+    @if ($approachSection)
     <section class="hm-appr" id="our-approach" aria-labelledby="hmApprTitle">
 
         {{-- Decorations --}}
@@ -437,15 +413,16 @@
 
             <header class="hm-appr__head">
                 <span class="hm-appr__label hm-abt-anim">
-                    <span class="hm-appr__label-sq" aria-hidden="true"></span> Our Approach
+                    <span class="hm-appr__label-sq" aria-hidden="true"></span> {{ $approachSection->label }}
                 </span>
                 <h2 class="hm-appr__title hm-abt-anim hm-abt-anim--d1" id="hmApprTitle">
-                    Our Learning Approach
+                    {{ $approachSection->title }}
                 </h2>
-                <p class="hm-appr__lead hm-abt-anim hm-abt-anim--d2">
-                    From classroom sessions to career guidance, every step of our training is designed to
-                    prepare learners for real-world opportunities.
-                </p>
+                @if ($approachSection->lead)
+                    <p class="hm-appr__lead hm-abt-anim hm-abt-anim--d2">
+                        {{ $approachSection->lead }}
+                    </p>
+                @endif
             </header>
 
             {{-- Circular composition: concentric rings + centre photo + orbiting pills --}}
@@ -460,11 +437,13 @@
                      56% of its height, which sliced her head off. -square is the same
                      image padded out to 1080->1920 square, with the orange backdrop
                      extended sideways, so the circle crops nothing. --}}
+                @if ($approachSection->image)
                 <figure class="hm-appr__figure">
-                    <img src="{{ asset('assets/images/about-page/our-approach-square.webp') }}"
+                    <img src="{{ asset($approachSection->image) }}"
                          alt="A HireMinds Academy learner working through a course on her laptop"
                          width="420" height="420" loading="lazy">
                 </figure>
+                @endif
 
                 {{-- Pills — a real list, positioned around the circle --}}
                 <ul class="hm-appr__pills">
@@ -482,6 +461,7 @@
             </div>
         </div>
     </section>
+    @endif
 
     {{-- ============================ TESTIMONIALS ============================ --}}
     {{-- Shared with the home page — markup in partials/testimonials.blade.php --}}
