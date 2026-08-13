@@ -102,7 +102,7 @@
                         <div>
                             <input type="file" id="photo" name="photo" accept="image/*"
                                    class="form-control-hm @error('photo') is-invalid @enderror" style="height:auto;padding:9px 12px">
-                            <p class="form-hint">WebP / PNG / JPG · max 2 MB · square headshot works best.</p>
+                            <p class="form-hint"><strong>400 × 400 px</strong> (square) · WebP / PNG / JPG · max 2 MB · a square headshot works best — it is shown in a circle.</p>
                         </div>
                     </div>
                     @error('photo') <p class="form-error">{{ $message }}</p> @enderror

@@ -187,6 +187,7 @@
                                         <input type="file" id="og_image" name="og_image" accept="image/*"
                                                class="form-control-hm @error('og_image') is-invalid @enderror" style="height:auto;padding:9px 12px;max-width:340px">
                                     </div>
+                                    <p class="form-hint"><strong>1200 × 630 px</strong> (landscape) · WebP / PNG / JPG · max 2 MB.</p>
                                     @error('og_image') <p class="form-error">{{ $message }}</p> @enderror
                                 </div>
                             </div>
@@ -220,7 +221,7 @@
                                         <input type="file" id="twitter_image" name="twitter_image" accept="image/*"
                                                class="form-control-hm @error('twitter_image') is-invalid @enderror" style="height:auto;padding:9px 12px;max-width:340px">
                                     </div>
-                                    <p class="form-hint">Leave blank to reuse the OG image.</p>
+                                    <p class="form-hint"><strong>1200 × 630 px</strong> (landscape) · WebP / PNG / JPG · max 2 MB. Leave blank to reuse the OG image.</p>
                                     @error('twitter_image') <p class="form-error">{{ $message }}</p> @enderror
                                 </div>
                             </div>

@@ -38,7 +38,7 @@
                         <input type="file" id="site_logo" name="site_logo" accept="image/*"
                                class="form-control-hm @error('site_logo') is-invalid @enderror" style="height:auto;padding:9px 12px">
                         <p class="form-hint">
-                            WebP / PNG / JPG / SVG · max 2 MB · around 300 × 88 px.
+                            <strong>300 × 88 px</strong> (landscape) · WebP / PNG / JPG / SVG · max 2 MB.
                             A transparent PNG works best. Used in the site header, footer and enquiry emails.
                         </p>
                         @error('site_logo') <p class="form-error">{{ $message }}</p> @enderror
@@ -70,7 +70,7 @@
                         <input type="file" id="site_favicon" name="site_favicon" accept="image/*"
                                class="form-control-hm @error('site_favicon') is-invalid @enderror" style="height:auto;padding:9px 12px">
                         <p class="form-hint">
-                            PNG / ICO / SVG · max 1 MB · a square image, 512 × 512 px or larger.
+                            <strong>512 × 512 px</strong> (square) · PNG / ICO / SVG · max 1 MB.
                             Shown in the browser tab and when the site is bookmarked.
                         </p>
                         @error('site_favicon') <p class="form-error">{{ $message }}</p> @enderror

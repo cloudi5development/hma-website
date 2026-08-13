@@ -77,7 +77,7 @@
                     <div style="flex:1;min-width:220px">
                         <input type="file" name="speakers[{{ $r }}][photo]" accept="image/*"
                                class="form-control-hm" style="height:auto;padding:9px 12px">
-                        <p class="form-hint">WebP / PNG / JPG · max 2 MB. Blank shows the speaker's initials instead.</p>
+                        <p class="form-hint"><strong>600 × 600 px</strong> (square) · WebP / PNG / JPG · max 2 MB · shown in a circle. Blank shows the speaker's initials instead.</p>
                     </div>
                 </div>
             </div>

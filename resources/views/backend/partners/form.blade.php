@@ -62,7 +62,7 @@
                         <div>
                             <input type="file" id="logo" name="logo" accept="image/*"
                                    class="form-control-hm @error('logo') is-invalid @enderror" style="height:auto;padding:9px 12px">
-                            <p class="form-hint">WebP / PNG / JPG / SVG · max 2 MB · transparent background recommended.</p>
+                            <p class="form-hint"><strong>480 × 160 px</strong> (landscape) · WebP / PNG / JPG / SVG · max 2 MB · transparent background recommended.</p>
                         </div>
                     </div>
                     @error('logo') <p class="form-error">{{ $message }}</p> @enderror

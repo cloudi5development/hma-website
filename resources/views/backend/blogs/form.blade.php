@@ -125,7 +125,7 @@
                         <div>
                             <input type="file" id="image" name="image" accept="image/*"
                                    class="form-control-hm @error('image') is-invalid @enderror" style="height:auto;padding:9px 12px">
-                            <p class="form-hint">WebP / PNG / JPG · max 2 MB · used on the cards and the article hero.</p>
+                            <p class="form-hint"><strong>1200 × 630 px</strong> (landscape) · WebP / PNG / JPG · max 2 MB · used on the cards and the article hero, so keep the subject centred.</p>
                         </div>
                     </div>
                     @error('image') <p class="form-error">{{ $message }}</p> @enderror

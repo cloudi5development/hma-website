@@ -123,11 +123,14 @@
                             <div>
                                 <input type="file" id="image" name="image" accept="image/*"
                                        class="form-control-hm @error('image') is-invalid @enderror" style="height:auto;padding:9px 12px">
+                                {{-- Both slots are square in about.css: the Approach
+                                     photo fills a circle, the Purpose one a 1:1 figure
+                                     beside the two cards. --}}
                                 <p class="form-hint">
-                                    WebP / PNG / JPG · max 3 MB ·
+                                    <strong>1000 × 1000 px</strong> (square) · WebP / PNG / JPG · max 3 MB ·
                                     {{ $section->key === 'approach'
-                                        ? 'a square photo — the circle crops anything taller.'
-                                        : 'a wide photo sits beside the two cards.' }}
+                                        ? 'the circle crops anything taller.'
+                                        : 'it sits in a square frame beside the two cards.' }}
                                 </p>
                                 @if ($section->image)
                                     <label class="d-inline-flex align-items-center gap-2 form-hint" style="cursor:pointer">

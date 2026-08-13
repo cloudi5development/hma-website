@@ -81,7 +81,7 @@
                         <div style="flex:1;min-width:220px">
                             <input type="file" name="items[{{ $r }}][image]" accept="image/*"
                                    class="form-control-hm" style="height:auto;padding:9px 12px">
-                            <p class="form-hint">WebP / PNG / JPG · max 3 MB · a square photo sits best in the stack.</p>
+                            <p class="form-hint"><strong>800 × 800 px</strong> (square) · WebP / PNG / JPG · max 3 MB · the cards in the stack are square.</p>
                             <label class="d-inline-flex align-items-center gap-2 form-hint" style="cursor:pointer">
                                 <input type="hidden" name="items[{{ $r }}][zoom]" value="0">
                                 <input type="checkbox" name="items[{{ $r }}][zoom]" value="1" {{ !empty($row['zoom']) ? 'checked' : '' }}>

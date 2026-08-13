@@ -216,7 +216,7 @@
                     <div>
                         <input type="file" id="image" name="image" accept="image/*"
                                class="form-control-hm @error('image') is-invalid @enderror" style="height:auto;padding:9px 12px">
-                        <p class="form-hint">WebP / PNG / JPG · max 3 MB.</p>
+                        <p class="form-hint"><strong>1200 × 750 px</strong> (16:10 landscape) · WebP / PNG / JPG · max 3 MB · the card crops to this shape.</p>
                         @error('image') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
                 </div>

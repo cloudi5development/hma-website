@@ -88,7 +88,7 @@
                         <div>
                             <input type="file" id="image" name="image" accept="image/*"
                                    class="form-control-hm @error('image') is-invalid @enderror" style="height:auto;padding:9px 12px">
-                            <p class="form-hint">WebP / PNG / JPG · max 2 MB · a transparent cut-out of the student works best.</p>
+                            <p class="form-hint"><strong>900 × 1200 px</strong> (portrait) · WebP / PNG / JPG · max 2 MB · a transparent cut-out of the student works best.</p>
                         </div>
                     </div>
                     @error('image') <p class="form-error">{{ $message }}</p> @enderror

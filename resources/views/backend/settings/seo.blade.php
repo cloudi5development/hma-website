@@ -45,6 +45,7 @@
                     <label class="form-label" for="seo_default_og_image">Default Open Graph Image</label>
                     <input type="file" id="seo_default_og_image" name="seo_default_og_image" accept="image/*"
                            class="form-control-hm" style="height:auto;padding:9px 12px">
+                    <p class="form-hint"><strong>1200 × 630 px</strong> (landscape) · WebP / PNG / JPG / AVIF · max 2 MB · used whenever a page has no share image of its own.</p>
                     @if ($s('seo_default_og_image'))
                         <img src="{{ \App\Models\Setting::image('seo_default_og_image', 'assets/images/branding/logo.png') }}"
                              alt="Current default Open Graph image"

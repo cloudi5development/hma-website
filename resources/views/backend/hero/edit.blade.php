@@ -114,9 +114,10 @@
                             <input type="file" id="image" name="image" accept="image/*"
                                    class="form-control-hm @error('image') is-invalid @enderror" style="height:auto;padding:9px 12px">
                             <p class="form-hint">
-                                WebP / PNG / JPG · max 3 MB. A <strong>cut-out with a transparent
-                                background</strong> works best — it sits on the yellow shape rather
-                                than in a box. Leave empty to keep the current photo.
+                                <strong>1000 × 1150 px</strong> (portrait) · WebP / PNG / JPG · max 3 MB.
+                                A <strong>cut-out with a transparent background</strong> works best — it
+                                sits on the yellow shape rather than in a box. Leave empty to keep the
+                                current photo.
                             </p>
                             @error('image') <p class="form-error">{{ $message }}</p> @enderror
                         </div>

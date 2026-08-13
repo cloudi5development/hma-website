@@ -369,7 +369,7 @@
                         <div>
                             <input type="file" id="image" name="image" accept="image/*"
                                    class="form-control-hm @error('image') is-invalid @enderror" style="height:auto;padding:9px 12px">
-                            <p class="form-hint">WebP / PNG / JPG · max 2 MB · a transparent cut-out of the person works best.</p>
+                            <p class="form-hint"><strong>800 × 1000 px</strong> (portrait) · WebP / PNG / JPG · max 2 MB · a transparent cut-out of the person works best.</p>
                         </div>
                     </div>
                     @error('image') <p class="form-error">{{ $message }}</p> @enderror
@@ -385,7 +385,7 @@
                         <div>
                             <input type="file" id="banner_image" name="banner_image" accept="image/*"
                                    class="form-control-hm @error('banner_image') is-invalid @enderror" style="height:auto;padding:9px 12px">
-                            <p class="form-hint">Wide strip behind the title · max 3 MB · 1920 × 480 or wider.</p>
+                            <p class="form-hint"><strong>1920 × 480 px</strong> (wide strip behind the title) · WebP / PNG / JPG · max 3 MB.</p>
                             @if ($event->banner_image)
                                 <label class="d-inline-flex align-items-center gap-2 form-hint" style="cursor:pointer">
                                     <input type="checkbox" name="remove_banner_image" value="1"> Remove the current banner
@@ -406,7 +406,7 @@
                         <div>
                             <input type="file" id="thumbnail" name="thumbnail" accept="image/*"
                                    class="form-control-hm @error('thumbnail') is-invalid @enderror" style="height:auto;padding:9px 12px">
-                            <p class="form-hint">Square image for the “Upcoming Events” list · max 2 MB. Blank uses the speaker photo.</p>
+                            <p class="form-hint"><strong>600 × 600 px</strong> (square) for the “Upcoming Events” list · WebP / PNG / JPG · max 2 MB. Blank uses the speaker photo.</p>
                             @if ($event->thumbnail)
                                 <label class="d-inline-flex align-items-center gap-2 form-hint" style="cursor:pointer">
                                     <input type="checkbox" name="remove_thumbnail" value="1"> Remove the current thumbnail
@@ -522,7 +522,7 @@
                         <div>
                             <input type="file" id="og_image" name="og_image" accept="image/*"
                                    class="form-control-hm @error('og_image') is-invalid @enderror" style="height:auto;padding:9px 12px">
-                            <p class="form-hint">Used when the page is shared · max 2 MB · 1200 × 630 works best.</p>
+                            <p class="form-hint"><strong>1200 × 630 px</strong> (landscape) · WebP / PNG / JPG · max 2 MB · used when the page is shared.</p>
                             @if ($event->og_image)
                                 <label class="d-inline-flex align-items-center gap-2 form-hint" style="cursor:pointer">
                                     <input type="checkbox" name="remove_og_image" value="1"> Remove the current share image

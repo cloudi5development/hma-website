@@ -69,8 +69,8 @@
                                 $capped  = \App\Support\UploadLimit::isServerCapped(\App\Http\Requests\Backend\ReelRequest::PREFERRED_MAX_KB);
                             @endphp
                             <p class="form-hint">
-                                MP4 / WebM / MOV · max {{ \App\Support\UploadLimit::label($maxKb) }} ·
-                                a <strong>portrait (9:16)</strong> clip works best.
+                                <strong>1080 × 1920 px</strong> (portrait 9:16) ·
+                                MP4 / WebM / MOV · max {{ \App\Support\UploadLimit::label($maxKb) }}.
                                 It <strong>autoplays (muted) right in the card</strong> — no cover needed.
                             </p>
                             @if ($capped)
