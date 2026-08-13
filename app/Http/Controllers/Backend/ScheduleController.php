@@ -29,17 +29,23 @@ class ScheduleController extends Controller
                 CourseSchedule::with('course.category'),
                 ['duration', 'course.name'],
             )
-            // Soonest first, but batches that have already started sink to the
-            // bottom rather than heading the list forever. Today is bound rather
-            // than written as CURDATE(), which is MySQL-only.
-            ->orderByRaw('CASE WHEN start_date >= ? THEN 0 ELSE 1 END', [now()->toDateString()])
+            // Soonest first, but finished batches sink to the bottom rather than
+            // heading the list forever. Sorted on the end date where there is one
+            // — a batch that started last week is still live, so it belongs with
+            // the live ones. Today is bound rather than written as CURDATE(),
+            // which is MySQL-only.
+            ->orderByRaw('CASE WHEN COALESCE(end_date, start_date) >= ? THEN 0 ELSE 1 END', [now()->toDateString()])
             ->orderBy('start_date')->orderBy('id')
             ->when(request('course'), fn ($q, $id) => $q->where('course_id', $id))
             ->paginate($this->perPage())->withQueryString();
 
         return view('backend.schedules.index', [
-            'schedules'   => $schedules,
-            'upcoming'    => CourseSchedule::active()->upcoming()->count(),
+            'schedules' => $schedules,
+            // Exactly what the site would list — same three conditions as the
+            // frontend queries, so the header count and the website agree.
+            'onSite' => CourseSchedule::active()->upcoming()
+                ->whereHas('course', fn ($q) => $q->where('is_active', true))
+                ->count(),
             'courseFilter' => request('course') ? Course::find(request('course')) : null,
         ]);
     }

@@ -11,7 +11,7 @@
             <h1 class="page-head__title">Course Schedule</h1>
             <p class="page-head__sub">
                 {{ $schedules->total() }} batch{{ $schedules->total() === 1 ? '' : 'es' }} ·
-                {{ $upcoming }} showing on the website
+                {{ $onSite }} showing on the website
                 @if ($courseFilter)
                     · filtered to <strong>{{ $courseFilter->name }}</strong>
                     <a href="{{ route('backend.schedules.index') }}" class="hm-table__sub">(clear)</a>
@@ -36,13 +36,7 @@
                 </thead>
                 <tbody>
                     @forelse ($schedules as $schedule)
-                        @php
-                            $course = $schedule->course;
-                            // A batch that has already started is kept and listed,
-                            // but the website leaves it out — say so here rather
-                            // than letting it look live.
-                            $past = $schedule->start_date->isPast();
-                        @endphp
+                        @php $course = $schedule->course; @endphp
                         <tr>
                             <td class="hm-table__name">
                                 {{ $course?->name ?? '—' }}
@@ -78,13 +72,19 @@
                                     <span class="hm-table__sub">Contact for Fee</span>
                                 @endif
                             </td>
+                            {{-- Badged from $shows_on_site, so this column always
+                                 agrees with what the website is doing. --}}
                             <td>
                                 @if (! $schedule->is_active)
                                     <span class="pill pill--tiny pill--inactive">Hidden</span>
-                                @elseif ($past)
-                                    <span class="pill pill--tiny pill--inactive">Started</span>
-                                @else
+                                @elseif ($course && ! $course->is_active)
+                                    <span class="pill pill--tiny pill--inactive" title="The course itself is hidden">Course hidden</span>
+                                @elseif ($schedule->is_running)
+                                    <span class="pill pill--tiny pill--active" title="Started, still running — shown on the site until it ends">Running</span>
+                                @elseif ($schedule->shows_on_site)
                                     <span class="pill pill--tiny pill--active">Active</span>
+                                @else
+                                    <span class="pill pill--tiny pill--inactive" title="This batch has finished, so the site leaves it out">Finished</span>
                                 @endif
                             </td>
                             <td class="text-end">

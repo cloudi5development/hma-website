@@ -46,16 +46,54 @@ class CourseSchedule extends Model
     }
 
     /**
-     * Batches that have not started yet and have not finished — what the home
-     * page is allowed to show. A batch with no end date is judged on its start
-     * date alone.
+     * Batches the site is allowed to list: anything that has not finished.
+     *
+     * A batch that has already started but is still running counts — it is what
+     * an admin means by "upcoming" when they enter a course running to the end
+     * of September. The earlier rule required the start date to be in the future
+     * too, which quietly hid a live batch the day it began.
+     *
+     * Without an end date there is nothing to expire against, so such a batch
+     * falls back to the old rule and drops off the day it starts.
+     *
+     * Kept in step with $shows_on_site below — change one, change the other.
      */
     public function scopeUpcoming(Builder $q): Builder
     {
         $today = Carbon::today()->toDateString();
 
-        return $q->whereDate('start_date', '>=', $today)
-            ->where(fn ($sub) => $sub->whereNull('end_date')->orWhereDate('end_date', '>=', $today));
+        return $q->where(fn ($sub) => $sub
+            ->whereDate('end_date', '>=', $today)
+            ->orWhere(fn ($noEnd) => $noEnd
+                ->whereNull('end_date')
+                ->whereDate('start_date', '>=', $today)));
+    }
+
+    /**
+     * Whether the website will actually list this batch — the row-level twin of
+     * scopeUpcoming, plus the two active flags the queries also apply.
+     *
+     * The panel badges rows with this rather than re-deriving the rule, so the
+     * listing can never claim a batch is live while the site leaves it out. That
+     * mismatch is what sent the admin looking for a bug on 2026-08-13.
+     */
+    public function getShowsOnSiteAttribute(): bool
+    {
+        if (! $this->is_active || ! $this->course?->is_active) {
+            return false;
+        }
+
+        $today = Carbon::today();
+
+        return $this->end_date
+            ? $this->end_date->gte($today)
+            : $this->start_date->gte($today);
+    }
+
+    /** Started, but not finished — listed on the site, and badged differently. */
+    public function getIsRunningAttribute(): bool
+    {
+        return $this->shows_on_site && $this->start_date->lt(Carbon::today());
     }
 
     /** "20 Aug 2026" — the first line of a date cell. */

@@ -273,16 +273,18 @@ WHERE @n = 0;
 --     daily timing (optional) and fee. "Show Fee" off — or no fee entered —
 --     prints "Contact for Fee" rather than ₹0.
 --
---     Note the website only lists batches that have NOT started yet and have not
---     finished (CourseSchedule::scopeUpcoming); a batch dated in the past stays
---     hidden by design, and the admin listing labels it "Started".
+--     The website lists a batch until it FINISHES (CourseSchedule::scopeUpcoming)
+--     — one that has already started but is still running stays listed, badged
+--     "Running" in the panel. A batch with no end date is the exception: there is
+--     nothing to expire it against, so it drops off the day it starts.
 --
 --     Quick check that a batch is live-visible:
 --       SELECT c.name, c.is_active, s.start_date, s.end_date, s.is_active
 --       FROM course_schedules s JOIN courses c ON c.id = s.course_id
---       ORDER BY s.start_date;
+--       ORDER BY COALESCE(s.end_date, s.start_date);
 --     A row appears on the site when c.is_active = 1 AND s.is_active = 1
---     AND s.start_date >= CURDATE().
+--     AND COALESCE(s.end_date, s.start_date) >= CURDATE().
+--     The listing header states the same number ("N showing on the website").
 --
 --  b) MODULE ACCESS. "Schedule" is a new module. The main admin already has it;
 --     any sub-admin who should manage batches needs it ticked under
