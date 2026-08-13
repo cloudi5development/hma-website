@@ -21,6 +21,7 @@ class AdminModules
             'departments' => 'Departments',
             'categories'  => 'Categories',
             'courses'     => 'Courses',
+            'schedules'   => 'Schedule',
         ],
         'Website Content' => [
             'hero'            => 'Hero Section',

@@ -9,7 +9,7 @@
     <div class="page-head">
         <div>
             <h1 class="page-head__title">Courses</h1>
-            <p class="page-head__sub">{{ $courses->total() }} course{{ $courses->total() === 1 ? '' : 's' }} · {{ $popularCount }} of {{ \App\Models\Course::MAX_POPULAR }} popular</p>
+            <p class="page-head__sub">{{ $courses->total() }} course{{ $courses->total() === 1 ? '' : 's' }} · {{ $popularCount }} in the home slider</p>
         </div>
         <a href="{{ route('backend.courses.create') }}" class="btn-brand">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>

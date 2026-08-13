@@ -253,6 +253,23 @@
     color: var(--hm-muted, #6D6357);
 }
 
+/* Daily timing, only rendered when the batch has one. Sits with the day name
+   under the date, aligned to it, and stays quieter than the date itself. */
+.hm-sched__stack-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--hm-muted, #6D6357);
+    white-space: nowrap;
+}
+
+.hm-sched__stack-time i {
+    font-size: .72rem;
+    color: var(--hm-gold-dark, #C6851A);
+}
+
 .hm-sched__none {
     color: var(--hm-muted, #6D6357);
 }

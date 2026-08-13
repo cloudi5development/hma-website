@@ -28,9 +28,10 @@
 --}}
     @php
         // Fed by the career-success composer (active reels, in order). Each card
-        // is an uploaded clip that autoplays (muted, looped) right in the card —
-        // no cover image. 'url' is optional: if set, clicking the card opens the
-        // full reel on Instagram.
+        // is an uploaded clip that autoplays (muted, looped) right in the card,
+        // and shows a still frame of itself until then — no cover image, nothing
+        // to upload. 'url' is optional: if set, clicking the card opens the full
+        // reel on Instagram.
         $reels = collect($reels ?? [])->map(fn ($r) => [
             'video' => $r->video_url,
             'url'   => $r->instagram_url,
@@ -75,9 +76,14 @@
                         <div class="swiper-slide hm-reels__slide">
                             <div class="hm-reel-float">
                                 <div class="hm-reel" aria-label="{{ $reel['title'] }}">
-                                    {{-- Muted + looped, but the file is NOT fetched until the card
-                                         is on screen: the src lives in data-src and preload is off,
-                                         so opening the page no longer pulls every reel down at once.
+                                    {{-- Muted + looped, but nothing is fetched until the section is
+                                         on screen: the src lives in data-src and preload is off, so
+                                         opening the page no longer pulls every reel down at once.
+
+                                         Once the section scrolls into view each card loads just its
+                                         first frame and sits paused on it (see attach() below) —
+                                         that still IS the video, so there is no cover image to
+                                         upload and nothing to keep in sync.
 
                                          disablepictureinpicture + controlslist keep the browser's
                                          own overlay chrome out of the way — the bar below is the
@@ -189,8 +195,23 @@
 
             function videoOf(reel) { return reel.querySelector('.hm-reel__video'); }
 
+            /**
+             * Give a card its still, which is a frame of its own clip.
+             *
+             * The src is pointed at a media fragment a fraction of a second in,
+             * so the browser fetches the metadata plus that one frame and paints
+             * it — the card then looks paused on the video rather than showing
+             * the player's empty box. #t=0.1 rather than #t=0 on purpose: a lot
+             * of clips open on a black fade-in frame, and Safari will not paint
+             * frame zero from metadata alone.
+             *
+             * preload stays at metadata, so this is a header and a frame, not
+             * the clip. Only the card in the middle ever downloads the rest.
+             */
             function attach(video) {
-                if (video && !video.src && video.dataset.src) video.src = video.dataset.src;
+                if (!video || video.src || !video.dataset.src) return;
+                video.preload = 'metadata';
+                video.src = video.dataset.src + '#t=0.1';
             }
 
             function setPlayIcon(reel, playing) {
@@ -277,9 +298,12 @@
                 if (!centre) return;
 
                 // Only roll while the section is actually on screen — a clip
-                // playing three screens away is decoding for nobody.
+                // playing three screens away is decoding for nobody. Every card
+                // gets its still at that point, not just the middle one, so the
+                // deck reads as a row of paused videos; the middle one then
+                // goes on to play.
                 if (sectionVisible) {
-                    attach(videoOf(centre));
+                    reels.forEach(function (reel) { attach(videoOf(reel)); });
                     if (!centre.dataset.userPaused) play(centre);
                 } else {
                     pause(centre);
@@ -302,6 +326,23 @@
                 }, { threshold: 0.25 }).observe(section);
             } else {
                 sectionVisible = true;
+            }
+
+            /* ---- Stills, fetched a screen early ----
+               Separate from the observer above on purpose. That one fires at 25%
+               visible, which is already too late — the visitor would watch the
+               cards fill in. This one starts the frames 600px out, so the deck is
+               sitting on its stills by the time it is looked at. One-shot. ---- */
+            if ('IntersectionObserver' in window && section) {
+                var frameLoader = new IntersectionObserver(function (entries) {
+                    if (!entries.some(function (entry) { return entry.isIntersecting; })) return;
+                    reels.forEach(function (reel) { attach(videoOf(reel)); });
+                    frameLoader.disconnect();
+                }, { rootMargin: '600px 0px' });
+
+                frameLoader.observe(section);
+            } else {
+                reels.forEach(function (reel) { attach(videoOf(reel)); });
             }
 
             /* ---- Controls ---- */

@@ -19,6 +19,7 @@ use App\Http\Controllers\Backend\NotificationController;
 use App\Http\Controllers\Backend\PartnerController;
 use App\Http\Controllers\Backend\PasswordResetController;
 use App\Http\Controllers\Backend\ReelController;
+use App\Http\Controllers\Backend\ScheduleController;
 use App\Http\Controllers\Backend\SeoPageController;
 use App\Http\Controllers\Backend\SettingController;
 use App\Http\Controllers\Backend\SuccessStoryController;
@@ -70,10 +71,17 @@ Route::prefix('admin')->name('backend.')->group(function () {
         Route::get('notifications/{adminNotification}/open', [NotificationController::class, 'open'])->name('notifications.open');
         Route::post('notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
 
-        // Courses → Departments / Categories / Courses
+        // Courses → Departments / Categories / Courses / Schedule
         Route::resource('departments', DepartmentController::class)->except(['show']);
         Route::resource('categories', CategoryController::class)->except(['show']);
         Route::resource('courses', CourseController::class)->except(['show']);
+
+        // Upcoming batches, across every course. Bound to CourseSchedule under
+        // the shorter "schedule" parameter, which keeps the module key (and so
+        // the permission it is granted under) "schedules".
+        Route::resource('schedules', ScheduleController::class)
+            ->except(['show'])
+            ->parameters(['schedules' => 'schedule']);
 
         // Sections → Hero (singleton: overview + edit only)
         Route::get('hero', [HeroController::class, 'index'])->name('hero.index');

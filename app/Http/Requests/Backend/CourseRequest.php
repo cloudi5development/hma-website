@@ -45,7 +45,6 @@ class CourseRequest extends FormRequest
             'is_popular'           => ['nullable', 'boolean'],
             'is_continue_learning' => ['nullable', 'boolean'],
             'is_featured'          => ['nullable', 'boolean'],
-            'schedule_enabled'     => ['nullable', 'boolean'],
 
             'meta_title'           => ['nullable', 'string', 'max:180'],
             'meta_description'     => ['nullable', 'string', 'max:300'],
@@ -55,19 +54,6 @@ class CourseRequest extends FormRequest
             'faqs'                 => ['nullable', 'array', 'max:' . Course::MAX_FAQS],
             'faqs.*.question'      => ['nullable', 'string', 'max:255'],
             'faqs.*.answer'        => ['nullable', 'string', 'max:2000'],
-
-            /* ---- Course Schedule repeater (upcoming batches) ----
-               A row without a start date is not a batch, so it is dropped in the
-               controller and every field stays nullable here. The end date is
-               checked against this row's own start date, which `after_or_equal`
-               resolves through the field path. ---- */
-            'schedules'              => ['nullable', 'array'],
-            'schedules.*.start_date' => ['nullable', 'date'],
-            'schedules.*.end_date'   => ['nullable', 'date', 'after_or_equal:schedules.*.start_date'],
-            'schedules.*.duration'   => ['nullable', 'string', 'max:60'],
-            'schedules.*.fee'        => ['nullable', 'numeric', 'min:0', 'max:99999999'],
-            'schedules.*.show_fee'   => ['nullable', 'boolean'],
-            'schedules.*.is_active'  => ['nullable', 'boolean'],
         ];
     }
 
@@ -75,33 +61,12 @@ class CourseRequest extends FormRequest
     {
         $this->merge([
             'is_active'            => $this->boolean('is_active'),
-            'is_popular'          => $this->boolean('is_popular'),
+            'is_popular'           => $this->boolean('is_popular'),
             'is_continue_learning' => $this->boolean('is_continue_learning'),
             'is_featured'          => $this->boolean('is_featured'),
-            'schedule_enabled'     => $this->boolean('schedule_enabled'),
             'sort_order'           => $this->input('sort_order', 0),
             'remove_brochure'      => $this->boolean('remove_brochure'),
-            'schedules'            => $this->cleanedSchedules(),
         ]);
-    }
-
-    /**
-     * Drop the blank row left behind when an admin clicks "Add Schedule" and
-     * saves without filling it in — otherwise `after_or_equal` fires on a row
-     * that was never going to be stored.
-     */
-    private function cleanedSchedules(): array
-    {
-        $rows = $this->input('schedules');
-
-        if (! is_array($rows)) {
-            return [];
-        }
-
-        return array_values(array_filter(
-            $rows,
-            fn ($row) => is_array($row) && filled($row['start_date'] ?? null),
-        ));
     }
 
     public function messages(): array
@@ -114,8 +79,6 @@ class CourseRequest extends FormRequest
             'category_id.required'      => 'Please choose a category.',
             'batch_start_date.required' => 'Please set the batch start date.',
             'faqs.max'                  => 'Maximum ' . Course::MAX_FAQS . ' FAQs allowed.',
-            'schedules.*.end_date.after_or_equal' => 'The batch end date must fall on or after its start date.',
-            'schedules.*.fee.numeric'   => 'Enter the schedule fee as a number, without the ₹ sign.',
         ];
     }
 }

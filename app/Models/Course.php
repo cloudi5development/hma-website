@@ -15,7 +15,7 @@ class Course extends Model
         'training_mode', 'skill_level', 'rating', 'short_description',
         'full_description', 'overview', 'learning_outcomes', 'prerequisites',
         'certification', 'sort_order', 'is_active', 'is_popular',
-        'is_continue_learning', 'is_featured', 'schedule_enabled',
+        'is_continue_learning', 'is_featured',
         'meta_title', 'meta_description', 'meta_keywords',
     ];
 
@@ -28,11 +28,7 @@ class Course extends Model
         'is_popular'           => 'boolean',
         'is_continue_learning' => 'boolean',
         'is_featured'          => 'boolean',
-        'schedule_enabled'     => 'boolean',
     ];
-
-    /** Home "Popular Courses" is capped at this many. */
-    public const MAX_POPULAR = 4;
 
     /** A course may carry at most this many FAQs. */
     public const MAX_FAQS = 5;
@@ -60,7 +56,7 @@ class Course extends Model
         return $this->hasMany(CourseFaq::class)->orderBy('sort_order')->orderBy('id');
     }
 
-    /** Upcoming batches, soonest first — see Admin → Courses → Course Schedule. */
+    /** Upcoming batches, soonest first — see Admin → Courses → Schedule. */
     public function schedules(): HasMany
     {
         return $this->hasMany(CourseSchedule::class)->orderBy('start_date')->orderBy('id');

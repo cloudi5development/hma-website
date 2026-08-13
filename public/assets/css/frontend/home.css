@@ -1562,6 +1562,72 @@
     transform: translateX(4px);
 }
 
+/* ---- Slider variant — used only when more than 4 courses are flagged popular.
+   Shows 4 at a time (responsive) with the rest behind the arrows. The vertical
+   padding gives room for the card's hover lift + shadow, which Swiper's overflow
+   clipping would otherwise cut off. ---- */
+.hm-courses__swiper {
+    margin-top: 46px;
+    padding: 16px 6px 28px;
+    overflow: hidden;
+}
+
+/* Equal-height cards: the slide stretches, the card fills it, so a course with
+   a longer title does not leave a short card floating beside a tall one. */
+.hm-courses__swiper .swiper-slide {
+    height: auto;
+    display: flex;
+}
+
+.hm-courses__swiper .swiper-slide>.hm-course {
+    width: 100%;
+}
+
+/* The reveal animation is on the deck, not the cards: a per-card stagger would
+   leave the slides Swiper has parked off-screen stuck at opacity 0. */
+.hm-courses__swiper .hm-course {
+    opacity: 1;
+    transform: none;
+    animation: none;
+}
+
+.hm-courses__nav {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 6px;
+}
+
+.hm-courses__navbtn {
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: transform .25s var(--hm-ease), box-shadow .25s var(--hm-ease), background .25s var(--hm-ease);
+}
+
+.hm-courses__navbtn--prev { background: #FBEDC7; color: #843D21; }
+.hm-courses__navbtn--next { background: linear-gradient(135deg, var(--hm-gold-2), var(--hm-gold-dark)); color: #fff; }
+
+.hm-courses__navbtn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 26px rgba(42, 29, 20, .22);
+}
+
+/* Swiper adds this to an arrow with nowhere left to go. loop is on, so it
+   should not fire — but if it ever does, a dead-looking button beats one that
+   silently does nothing. */
+.hm-courses__navbtn.swiper-button-disabled {
+    opacity: .45;
+    cursor: default;
+    transform: none;
+    box-shadow: none;
+}
+
 /* Little floating JS card near "See all" */
 /* .hm-courses__float (the floating JS badge) was removed from the markup; the
    two `display: none` rules for it left in the responsive blocks below are inert

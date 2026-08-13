@@ -236,11 +236,11 @@
 
             {{-- ========================= UPCOMING BATCHES =========================
                  The batches listed for this course in Admin → Courses →
-                 Create/Edit Course → Course Schedule, eager-loaded already
-                 filtered to the active, not-yet-started ones. The whole block is
-                 left out when the course has none, so a course that is not
-                 scheduled reads exactly as it did before. --}}
-            @php $batches = $model->schedule_enabled ? $model->schedules : collect(); @endphp
+                 Schedule, eager-loaded already filtered to the active,
+                 not-yet-started ones. The whole block is left out when the
+                 course has none, so a course that is not scheduled reads exactly
+                 as it did before. --}}
+            @php $batches = $model->schedules; @endphp
             @if ($batches->count())
                 <section class="hm-cd-sec hm-cd-batches" aria-labelledby="hmCdBatches">
                     <h2 class="hm-cd-sec__title" id="hmCdBatches">Upcoming Batches</h2>
@@ -285,6 +285,13 @@
                                                     {{ $batch->start_date_label }}
                                                 </span>
                                                 <span class="hm-sched__stack-sub">{{ $batch->start_day_label }}</span>
+                                                {{-- Daily timing, when the batch has one. --}}
+                                                @if ($batch->time_range_label)
+                                                    <span class="hm-sched__stack-time">
+                                                        <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                                                        {{ $batch->time_range_label }}
+                                                    </span>
+                                                @endif
                                             </span>
                                         </td>
 

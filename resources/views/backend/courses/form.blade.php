@@ -2,27 +2,10 @@
 
 @php
     $editing = $course->exists;
-    $canAddPopular = $course->is_popular || $popularOther < \App\Models\Course::MAX_POPULAR;
 
     // Existing FAQ rows (or old input on validation error), blank rows dropped.
     $faqRows = old('faqs', $course->faqs->map(fn ($f) => ['question' => $f->question, 'answer' => $f->answer])->all());
     $faqRows = array_values(array_filter($faqRows, fn ($r) => trim($r['question'] ?? '') !== '' || trim($r['answer'] ?? '') !== ''));
-
-    // Existing batches (or old input on a validation error). Dates come back out
-    // as Y-m-d because that is what <input type="date"> reads and posts.
-    $scheduleRows = old('schedules', $course->schedules->map(fn ($s) => [
-        'start_date' => $s->start_date?->format('Y-m-d'),
-        'end_date'   => $s->end_date?->format('Y-m-d'),
-        'duration'   => $s->duration,
-        'fee'        => $s->fee === null ? null : rtrim(rtrim((string) $s->fee, '0'), '.'),
-        'show_fee'   => $s->show_fee,
-        'is_active'  => $s->is_active,
-    ])->all());
-    $scheduleRows = array_values(array_filter($scheduleRows, fn ($r) => filled($r['start_date'] ?? null)));
-
-    // The block opens already expanded when the switch is on, or when a failed
-    // submit is coming back with rows the admin would otherwise not see.
-    $scheduleOn = (bool) old('schedule_enabled', $course->schedule_enabled) || count($scheduleRows);
 @endphp
 
 @section('title', $editing ? 'Edit Course' : 'Add Course')
@@ -43,7 +26,6 @@
     <form method="POST"
           action="{{ $editing ? route('backend.courses.update', $course) : route('backend.courses.store') }}"
           enctype="multipart/form-data" novalidate
-          data-popular-can="{{ $canAddPopular ? '1' : '0' }}"
           data-max-faqs="{{ \App\Models\Course::MAX_FAQS }}">
         @csrf
         @if ($editing) @method('PUT') @endif
@@ -309,7 +291,7 @@
                             <span class="check-chip__box">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                             </span>
-                            <span class="check-chip__label">Show in Popular Courses <span class="form-hint" style="display:inline">(home, max {{ \App\Models\Course::MAX_POPULAR }})</span></span>
+                            <span class="check-chip__label">Show in Popular Courses <span class="form-hint" style="display:inline">(home slider)</span></span>
                         </label>
                         <label class="check-chip">
                             <input type="hidden" name="is_continue_learning" value="0">
@@ -357,40 +339,22 @@
                 </div>
                 <p class="form-hint" id="faqEmpty" @if(count($faqRows)) style="display:none" @endif>No FAQs yet — add up to {{ \App\Models\Course::MAX_FAQS }}.</p>
 
-                {{-- ========================= COURSE SCHEDULE ========================= --}}
+                {{-- Batches used to be a repeater down here. They now have their own
+                     module (Catalog → Courses → Schedule), so one batch can be added
+                     or corrected without opening the whole course. --}}
+                @if ($editing)
                 <div class="form-section">
                     <h2 class="form-section__title">Course Schedule</h2>
-                    <button type="button" class="btn-soft" id="scheduleAdd" @if (! $scheduleOn) style="display:none" @endif>
+                    <a href="{{ route('backend.schedules.index', ['course' => $course->id]) }}" class="btn-soft">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                        Add Schedule
-                    </button>
+                        Manage Schedules
+                    </a>
                 </div>
-
-                <div class="form-row">
-                    <label class="switch">
-                        <input type="hidden" name="schedule_enabled" value="0">
-                        <input type="checkbox" id="scheduleEnabled" name="schedule_enabled" value="1" {{ $scheduleOn ? 'checked' : '' }}>
-                        <span class="switch__track"></span>
-                        <span class="switch__label">Enable Schedule</span>
-                    </label>
-                    <p class="form-hint">
-                        Schedule this course for an upcoming batch. Switched off, the batches below are kept
-                        but the course is left out of “Upcoming Course Schedules” on the home page.
-                    </p>
-                </div>
-
-                {{-- Every batch is edited in place, so the list below is both the
-                     table of existing schedules and the form that changes them. --}}
-                <div id="scheduleFields" @if (! $scheduleOn) style="display:none" @endif>
-                    <div id="scheduleRepeater">
-                        @foreach ($scheduleRows as $r => $row)
-                            @include('backend.courses.partials.schedule-row', ['r' => $r, 'row' => $row])
-                        @endforeach
-                    </div>
-                    <p class="form-hint" id="scheduleEmpty" @if (count($scheduleRows)) style="display:none" @endif>
-                        No batches yet — use “Add Schedule” to list one.
-                    </p>
-                </div>
+                <p class="form-hint">
+                    Upcoming batches for this course are managed under
+                    <strong>Courses → Schedule</strong>.
+                </p>
+                @endif
 
                 {{-- =============================== SEO =============================== --}}
                 <div class="form-section">
@@ -448,11 +412,6 @@
         </div>
     </template>
 
-    {{-- Schedule row template (cloned by JS) --}}
-    <template id="scheduleTemplate">
-        @include('backend.courses.partials.schedule-row', ['r' => '__I__', 'row' => []])
-    </template>
-
 @endsection
 
 @push('scripts')
@@ -469,16 +428,6 @@
                     var wrap = document.getElementById('coursePreviewWrap');
                     if (wrap) wrap.classList.remove('hm-media--empty');
                     preview.src = URL.createObjectURL(this.files[0]);
-                }
-            });
-
-            // ---- Popular cap ----
-            var canPopular = form.getAttribute('data-popular-can') === '1';
-            var popBox = document.getElementById('isPopular');
-            if (popBox) popBox.addEventListener('change', function () {
-                if (this.checked && !canPopular) {
-                    window.alert('You can only select {{ \App\Models\Course::MAX_POPULAR }} Popular Courses.');
-                    this.checked = false;
                 }
             });
 
@@ -509,53 +458,6 @@
             });
 
             refresh();
-
-            // ---- Course Schedule ----
-            var schedToggle = document.getElementById('scheduleEnabled');
-            var schedFields = document.getElementById('scheduleFields');
-            var schedAdd    = document.getElementById('scheduleAdd');
-            var schedBox    = document.getElementById('scheduleRepeater');
-            var schedTpl    = document.getElementById('scheduleTemplate');
-            var schedEmpty  = document.getElementById('scheduleEmpty');
-
-            if (!schedToggle || !schedBox) return;
-
-            var schedCounter = schedBox.querySelectorAll('[data-schedule-row]').length;
-
-            function schedRows() { return schedBox.querySelectorAll('[data-schedule-row]').length; }
-
-            function schedRefresh() {
-                if (schedEmpty) schedEmpty.style.display = schedRows() ? 'none' : '';
-            }
-
-            function addSchedule() {
-                schedBox.insertAdjacentHTML('beforeend',
-                    schedTpl.innerHTML.replace(/__I__/g, 'n' + (schedCounter++)));
-                schedRefresh();
-            }
-
-            // Off hides the whole block — including its Add button, so a batch is
-            // never typed into a section that is switched off.
-            schedToggle.addEventListener('change', function () {
-                schedFields.style.display = this.checked ? '' : 'none';
-                schedAdd.style.display    = this.checked ? '' : 'none';
-
-                // Turning it on with nothing listed opens the first empty batch,
-                // rather than showing an explanation and no fields.
-                if (this.checked && !schedRows()) addSchedule();
-            });
-
-            schedAdd.addEventListener('click', addSchedule);
-
-            schedBox.addEventListener('click', function (e) {
-                var btn = e.target.closest('[data-schedule-remove]');
-                if (!btn) return;
-                var row = btn.closest('[data-schedule-row]');
-                if (row) row.remove();
-                schedRefresh();
-            });
-
-            schedRefresh();
         })();
     </script>
 @endpush

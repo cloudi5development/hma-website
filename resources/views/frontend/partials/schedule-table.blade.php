@@ -77,6 +77,11 @@
                         @endif
                     </td>
 
+                    {{-- The times are the batch's DAILY timing ("10:00 AM – 01:30 PM"),
+                         not the clock time of the first and last day, so the range
+                         stays together as one line rather than being split across
+                         the two date cells. Optional, so the cell only grows the
+                         extra line when a time was entered. --}}
                     <td data-label="Start Date">
                         <span class="hm-sched__stack">
                             <span class="hm-sched__stack-main">
@@ -84,6 +89,12 @@
                                 {{ $schedule->start_date_label }}
                             </span>
                             <span class="hm-sched__stack-sub">{{ $schedule->start_day_label }}</span>
+                            @if ($schedule->time_range_label)
+                                <span class="hm-sched__stack-time">
+                                    <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                                    {{ $schedule->time_range_label }}
+                                </span>
+                            @endif
                         </span>
                     </td>
 

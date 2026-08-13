@@ -9,8 +9,8 @@ use Illuminate\Support\Carbon;
 
 /**
  * One upcoming batch of a course — the rows behind "Upcoming Course Schedules"
- * on the home page. Created inside Admin → Courses → Create/Edit Course, not in
- * a module of its own.
+ * on the home page and the /schedules listing. Managed in Admin → Courses →
+ * Schedule, which owns the whole set across every course.
  */
 class CourseSchedule extends Model
 {
@@ -19,9 +19,13 @@ class CourseSchedule extends Model
 
     protected $fillable = [
         'course_id', 'start_date', 'end_date', 'duration',
-        'fee', 'show_fee', 'is_active',
+        'start_time', 'end_time', 'fee', 'show_fee', 'is_active',
     ];
 
+    // The times are deliberately NOT cast to a date type: 'datetime' would
+    // resolve a bare "10:00" against today and start printing a date with it.
+    // They are stored and read as the plain "HH:MM:SS" strings MySQL keeps, and
+    // formatted through the label accessors below.
     protected $casts = [
         'course_id'  => 'integer',
         'start_date' => 'date',
@@ -74,6 +78,63 @@ class CourseSchedule extends Model
     public function getEndDayLabelAttribute(): ?string
     {
         return $this->end_date?->format('l');
+    }
+
+    /** "10:00 AM", or null when no start time was entered. */
+    public function getStartTimeLabelAttribute(): ?string
+    {
+        return $this->timeLabel($this->start_time);
+    }
+
+    /** "01:30 PM", or null when no end time was entered. */
+    public function getEndTimeLabelAttribute(): ?string
+    {
+        return $this->timeLabel($this->end_time);
+    }
+
+    /**
+     * The batch's daily timing as one string — "10:00 AM – 01:30 PM", or just
+     * the start when there is no end, or null when neither was entered. Times
+     * are optional, so every caller has to cope with all three cases; doing it
+     * once here keeps that out of the views.
+     */
+    public function getTimeRangeLabelAttribute(): ?string
+    {
+        $start = $this->start_time_label;
+        $end   = $this->end_time_label;
+
+        if ($start && $end) {
+            return $start . ' – ' . $end;
+        }
+
+        return $start ?: $end;
+    }
+
+    /** "HH:MM" for the admin form's <input type="time">. */
+    public function getStartTimeInputAttribute(): ?string
+    {
+        return blank($this->start_time) ? null : substr($this->start_time, 0, 5);
+    }
+
+    public function getEndTimeInputAttribute(): ?string
+    {
+        return blank($this->end_time) ? null : substr($this->end_time, 0, 5);
+    }
+
+    /**
+     * "10:00 AM" from what the column holds. MySQL hands a TIME back as
+     * "HH:MM:SS"; a value that has not been through the database yet (old input
+     * on a failed submit) is the "HH:MM" the form posted, so both are accepted.
+     */
+    private function timeLabel(?string $time): ?string
+    {
+        if (blank($time)) {
+            return null;
+        }
+
+        [$hour, $minute] = array_pad(explode(':', $time), 2, '0');
+
+        return Carbon::createFromTime((int) $hour, (int) $minute)->format('h:i A');
     }
 
     /**

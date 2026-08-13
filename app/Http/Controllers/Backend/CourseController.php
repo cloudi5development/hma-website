@@ -34,18 +34,13 @@ class CourseController extends Controller
     public function create(): View
     {
         return view('backend.courses.form', [
-            'course'       => new Course(['is_active' => true, 'rating' => 4.5]),
-            'categories'   => $this->categoryOptions(),
-            'popularOther' => Course::popular()->count(),
+            'course'     => new Course(['is_active' => true, 'rating' => 4.5]),
+            'categories' => $this->categoryOptions(),
         ]);
     }
 
     public function store(CourseRequest $request): RedirectResponse
     {
-        if ($error = $this->popularGuard($request)) {
-            return $error;
-        }
-
         $data = $this->clean($request);
         $data['image'] = $this->storeImage($request);
 
@@ -55,28 +50,22 @@ class CourseController extends Controller
 
         $course = Course::create($data);
         $this->syncFaqs($course, $request->input('faqs', []));
-        $this->syncSchedules($course, $request->input('schedules', []));
 
         return redirect()->route('backend.courses.index')->with('success', 'Course added.');
     }
 
     public function edit(Course $course): View
     {
-        $course->load(['faqs', 'schedules']);
+        $course->load('faqs');
 
         return view('backend.courses.form', [
-            'course'       => $course,
-            'categories'   => $this->categoryOptions(),
-            'popularOther' => Course::popular()->whereKeyNot($course->id)->count(),
+            'course'     => $course,
+            'categories' => $this->categoryOptions(),
         ]);
     }
 
     public function update(CourseRequest $request, Course $course): RedirectResponse
     {
-        if ($error = $this->popularGuard($request, $course)) {
-            return $error;
-        }
-
         $data = $this->clean($request);
 
         if ($request->hasFile('image')) {
@@ -96,7 +85,6 @@ class CourseController extends Controller
 
         $course->update($data);
         $this->syncFaqs($course, $request->input('faqs', []));
-        $this->syncSchedules($course, $request->input('schedules', []));
 
         return redirect()->route('backend.courses.index')->with('success', 'Course updated.');
     }
@@ -105,30 +93,9 @@ class CourseController extends Controller
     {
         $this->deleteImage($course->image);
         $this->deleteUpload($course->brochure);
-        $course->delete();   // FAQs cascade via the FK
+        $course->delete();   // FAQs and schedules cascade via their FKs
 
         return redirect()->route('backend.courses.index')->with('success', 'Course deleted.');
-    }
-
-    /**
-     * Enforce the four-course Popular cap. Only matters when this request marks
-     * the course popular AND it isn't already counted in the current four.
-     */
-    private function popularGuard(CourseRequest $request, ?Course $course = null): ?RedirectResponse
-    {
-        if (! $request->boolean('is_popular')) {
-            return null;
-        }
-
-        $alreadyPopular = $course?->is_popular ?? false;
-        $currentCount   = Course::popular()->when($course, fn ($q) => $q->whereKeyNot($course->id))->count();
-
-        if (! $alreadyPopular && $currentCount >= Course::MAX_POPULAR) {
-            return back()->withInput()
-                ->with('error', 'You can only select ' . Course::MAX_POPULAR . ' Popular Courses.');
-        }
-
-        return null;
     }
 
     /**
@@ -138,7 +105,7 @@ class CourseController extends Controller
     private function clean(CourseRequest $request): array
     {
         return collect($request->validated())
-            ->except(['faqs', 'schedules', 'image', 'brochure', 'remove_brochure'])
+            ->except(['faqs', 'image', 'brochure', 'remove_brochure'])
             ->all();
     }
 
@@ -155,36 +122,6 @@ class CourseController extends Controller
                 continue;
             }
             $course->faqs()->create(['question' => $q, 'answer' => $a, 'sort_order' => $order++]);
-        }
-    }
-
-    /**
-     * Replace the course's upcoming batches with the submitted rows.
-     *
-     * The repeater edits the whole set in place, so this mirrors syncFaqs: wipe
-     * and re-create. A row needs a start date to be a batch at all — the request
-     * has already dropped the ones without — and an empty fee stays NULL so the
-     * home page prints "Contact for Fee" instead of ₹0.
-     */
-    private function syncSchedules(Course $course, array $rows): void
-    {
-        $course->schedules()->delete();
-
-        foreach ($rows as $row) {
-            if (blank($row['start_date'] ?? null)) {
-                continue;
-            }
-
-            $fee = $row['fee'] ?? null;
-
-            $course->schedules()->create([
-                'start_date' => $row['start_date'],
-                'end_date'   => ($row['end_date'] ?? null) ?: null,
-                'duration'   => trim($row['duration'] ?? '') ?: null,
-                'fee'        => $fee === null || $fee === '' ? null : $fee,
-                'show_fee'   => (bool) ($row['show_fee'] ?? false),
-                'is_active'  => (bool) ($row['is_active'] ?? false),
-            ]);
         }
     }
 

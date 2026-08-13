@@ -367,8 +367,9 @@
 
     {{-- ============================ POPULAR COURSES ============================ --}}
     @php
-        // Fed by the view composer (max 4). Mapped to the exact card shape the
-        // shared partial expects; the thumbnail is a ready-built URL.
+        // Fed by the view composer — every course flagged "Show in Popular
+        // Courses", with no cap. Mapped to the exact card shape the shared
+        // partial expects; the thumbnail is a ready-built URL.
         $courses = collect($popularCourses ?? [])->map(fn ($c) => [
             'img_url'     => $c->image_url,
             'badge'       => $c->badge,
@@ -412,16 +413,43 @@
                 </a>
             </div>
 
-            {{-- Grid: 4 cards desktop · 2 tablet · 2 mobile --}}
-            <div class="row g-4 hm-courses__grid">
-                @foreach ($courses as $i => $course)
-                    <div class="col-6 col-lg-3">
-                        {{-- Shared with the courses listing page — markup in
-                             partials/course-card.blade.php, CSS in courses.css. --}}
-                        @include('frontend.partials.course-card', ['course' => $course, 'i' => $i])
+            {{-- ≤4 courses → the static 4-up grid this section has always been
+                 (4 desktop · 2 tablet · 2 mobile), so nothing moves for a site
+                 with a handful of courses.
+                 >4 courses → a slider showing 4 at a time with the rest behind
+                 the arrows, which is what lets the panel flag as many as it
+                 likes. Same treatment as Success Stories above; Swiper's JS/CSS
+                 are already on this page (head + the reels partial). --}}
+            @if (count($courses) > 4)
+                <div class="swiper hm-courses__swiper hm-anim hm-anim--up hm-anim--d2">
+                    <div class="swiper-wrapper">
+                        @foreach ($courses as $i => $course)
+                            <div class="swiper-slide">
+                                {{-- Shared with the courses listing page — markup in
+                                     partials/course-card.blade.php, CSS in courses.css. --}}
+                                @include('frontend.partials.course-card', ['course' => $course, 'i' => $i])
+                            </div>
+                        @endforeach
                     </div>
-                @endforeach
-            </div>
+                </div>
+
+                <div class="hm-courses__nav hm-anim hm-anim--up hm-anim--d3">
+                    <button type="button" class="hm-courses__navbtn hm-courses__navbtn--prev" id="hmCoursesPrev" aria-label="Previous courses">
+                        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="hm-courses__navbtn hm-courses__navbtn--next" id="hmCoursesNext" aria-label="Next courses">
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </button>
+                </div>
+            @else
+                <div class="row g-4 hm-courses__grid">
+                    @foreach ($courses as $i => $course)
+                        <div class="col-6 col-lg-3">
+                            @include('frontend.partials.course-card', ['course' => $course, 'i' => $i])
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </section>
     @endif
@@ -1119,6 +1147,30 @@
                 breakpoints: {
                     576:  { slidesPerView: 2, spaceBetween: 24 },
                     992:  { slidesPerView: 3, spaceBetween: 24 },
+                    1200: { slidesPerView: 4, spaceBetween: 24 }
+                }
+            });
+        });
+    </script>
+
+    {{-- Popular Courses slider — only rendered when more than 4 courses are
+         flagged. Driven by its own arrows rather than autoplay: a card the
+         visitor is reading the meta of should not slide out from under them.
+         Two per view on phones, matching the 2-up grid it replaces. --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var el = document.querySelector('.hm-courses__swiper');
+            if (!el || typeof Swiper === 'undefined') return;
+
+            new Swiper(el, {
+                slidesPerView: 2,
+                spaceBetween: 16,
+                loop: true,
+                speed: 700,
+                grabCursor: true,
+                navigation: { prevEl: '#hmCoursesPrev', nextEl: '#hmCoursesNext' },
+                breakpoints: {
+                    768:  { slidesPerView: 3, spaceBetween: 24 },
                     1200: { slidesPerView: 4, spaceBetween: 24 }
                 }
             });

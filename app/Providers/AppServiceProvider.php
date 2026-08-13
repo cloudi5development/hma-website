@@ -128,19 +128,21 @@ class AppServiceProvider extends ServiceProvider
                 ->orderBy('department_id')->orderBy('sort_order')->orderBy('id')
                 ->get());
 
+            // Popular Courses — a slider now rather than a row of four, so every
+            // flagged course is sent and the deck carries as many as the admin
+            // marks. Their thumbnails are lazy-loaded, so a long list costs the
+            // visitor nothing until they scroll it.
             $view->with('popularCourses', Course::active()->popular()
                 ->with('category')
-                ->take(Course::MAX_POPULAR)
                 ->get());
 
-            // Upcoming Course Schedules — the batches created inside
-            // Admin → Courses → Create/Edit Course → Course Schedule. Queried
-            // from the schedule side so the five soonest batches win across all
-            // courses, with the course and its category eager-loaded (and only
-            // the columns the section prints) so the table costs three queries
-            // however many rows come back.
+            // Upcoming Course Schedules — the batches created in Admin →
+            // Courses → Schedule. Queried from the schedule side so the soonest
+            // batches win across all courses, with the course and its category
+            // eager-loaded (and only the columns the section prints) so the
+            // table costs three queries however many rows come back.
             $view->with('courseSchedules', CourseSchedule::active()->upcoming()
-                ->whereHas('course', fn ($q) => $q->where('is_active', true)->where('schedule_enabled', true))
+                ->whereHas('course', fn ($q) => $q->where('is_active', true))
                 ->with(['course' => fn ($q) => $q->select('id', 'category_id', 'name', 'slug', 'image', 'duration')
                     ->with(['category' => fn ($c) => $c->select('id', 'name', 'slug')])])
                 ->orderBy('start_date')->orderBy('id')

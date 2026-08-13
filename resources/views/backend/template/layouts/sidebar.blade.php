@@ -11,6 +11,7 @@
         'department'=> '<path d="M6 22V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v18"/><path d="M4 22h16M9.5 7h1M13.5 7h1M9.5 11h1M13.5 11h1M10 22v-4h4v4"/>',
         'category'  => '<path d="M20.6 13.4 12 22l-8-8V4h10l6.6 6.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.1"/>',
         'book'      => '<path d="M12 6.5C10.5 5 8 4.5 4 5v13c4-.5 6.5 0 8 1.5 1.5-1.5 4-2 8-1.5V5c-4-.5-6.5 0-8 1.5Z"/><path d="M12 6.5v13"/>',
+        'schedule'  => '<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 3v3M16 3v3"/><path d="M11.5 13h5M11.5 16.5h3"/>',
         'sections'  => '<rect x="3" y="3" width="18" height="18" rx="2.2"/><path d="M3 9h18M9 21V9"/>',
         'hero'      => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M6.5 9.5h5M6.5 12.5h3"/><rect x="14.5" y="8.5" width="4" height="7" rx="1"/>',
         'partners'  => '<path d="M12 3 5 6v5c0 4.6 3 7.6 7 9 4-1.4 7-4.4 7-9V6l-7-3Z"/><path d="M9.3 12l1.8 1.8 3.4-3.8"/>',
@@ -75,11 +76,11 @@
         </div>
 
         {{-- ---- CATALOG ---- --}}
-        @if ($canAny('departments', 'categories', 'courses'))
+        @if ($canAny('departments', 'categories', 'courses', 'schedules'))
         <p class="app-sidebar__heading">Catalog</p>
 
         {{-- Courses (group) --}}
-        @php $coursesOpen = request()->routeIs('backend.departments.*', 'backend.categories.*', 'backend.courses.*'); @endphp
+        @php $coursesOpen = request()->routeIs('backend.departments.*', 'backend.categories.*', 'backend.courses.*', 'backend.schedules.*'); @endphp
         <div class="app-nav__item {{ $coursesOpen ? 'is-open' : '' }}" data-group>
             <a class="app-nav__link" role="button" tabindex="0">
                 {!! $ic('courses') !!}
@@ -90,12 +91,14 @@
                 @if ($can('departments'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.departments.*') ? 'is-active' : '' }}" href="{{ route('backend.departments.index') }}">{!! $ic('department') !!}<span>Departments</span></a></li>@endif
                 @if ($can('categories'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.categories.*') ? 'is-active' : '' }}" href="{{ route('backend.categories.index') }}">{!! $ic('category') !!}<span>Categories</span></a></li>@endif
                 @if ($can('courses'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.courses.*') ? 'is-active' : '' }}" href="{{ route('backend.courses.index') }}">{!! $ic('book') !!}<span>Courses</span></a></li>@endif
+                @if ($can('schedules'))<li><a class="app-nav__sublink {{ request()->routeIs('backend.schedules.*') ? 'is-active' : '' }}" href="{{ route('backend.schedules.index') }}">{!! $ic('schedule') !!}<span>Schedule</span></a></li>@endif
             </ul>
             <div class="app-nav__flyout">
                 <div class="app-nav__flyout-title">Courses</div>
                 @if ($can('departments'))<a href="{{ route('backend.departments.index') }}">Departments</a>@endif
                 @if ($can('categories'))<a href="{{ route('backend.categories.index') }}">Categories</a>@endif
                 @if ($can('courses'))<a href="{{ route('backend.courses.index') }}">Courses</a>@endif
+                @if ($can('schedules'))<a href="{{ route('backend.schedules.index') }}">Schedule</a>@endif
             </div>
         </div>
         @endif
