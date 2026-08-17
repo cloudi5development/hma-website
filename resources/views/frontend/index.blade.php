@@ -209,11 +209,19 @@
                     </span>
 
                     <h2 class="hm-about__title hm-anim hm-anim--right hm-anim--d1" id="hmAboutTitle">
-                     Empowering Learners with Skills That Build Successful Careers
+                        From Learning to Getting Hired.
                     </h2>
 
                     <p class="hm-about__text hm-anim hm-anim--right hm-anim--d2">
-            At HireMinds Academy, we bridge the gap between learning and employment through practical, industry-focused training. Our programs are designed to equip aspiring professionals with the skills, confidence, and real-world experience needed to thrive in today's competitive job market.
+                        At HireMinds Academy, we go beyond traditional training. We provide industry-ready, practical learning that helps learners build the skills and confidence needed to succeed in today's competitive job market.
+                    </p>
+
+                    <p class="hm-about__text hm-anim hm-anim--right hm-anim--d2">
+                        Our approach doesn't stop at teaching skills. We take learners one step further by preparing them to become job-ready professionals. From resume building and LinkedIn profile optimization to interview preparation and professional skills, we provide the guidance and support needed to confidently navigate the journey from learning to employment.
+                    </p>
+
+                    <p class="hm-about__text hm-anim hm-anim--right hm-anim--d2">
+                        We don't just prepare you to learn. We prepare you to get hired and succeed.
                     </p>
 
                     <div class="hm-about__cards">

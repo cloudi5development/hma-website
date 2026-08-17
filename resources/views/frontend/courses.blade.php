@@ -145,8 +145,9 @@
                     <h1 class="hm-crs-hero__title" id="hmCrsHeroTitle">Explore Technical Training Programs</h1>
 
                     <p class="hm-crs-hero__desc">
-                        Choose from career-focused technical courses designed to help you build
-                        practical skills, gain confidence, and stay ahead in a competitive job market.
+                        Explore our tailored programs designed for every need—corporate training,
+                        individual skill development, and college-focused courses. Each program is
+                        crafted to deliver practical knowledge, industry relevance, and real-world impact.
                     </p>
 
                     <a class="hm-crs-hero__cta" href="{{ route('frontend.contact-us') }}">

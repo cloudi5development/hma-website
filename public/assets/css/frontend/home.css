@@ -925,10 +925,16 @@
 
 .hm-about__text {
     max-width: 560px;
-    margin: 0 0 28px;
+    margin: 0 0 16px;
     font-size: 15px;
     line-height: 1.8;
     color: #6D6357;
+}
+/* The copy runs to several paragraphs. They sit 16px apart so they read as one
+   block; the last one keeps the original 28px that separates the copy from the
+   feature cards below it. */
+.hm-about__text:last-of-type {
+    margin-bottom: 28px;
 }
 
 /* Feature cards */
