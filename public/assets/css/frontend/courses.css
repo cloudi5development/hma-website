@@ -41,6 +41,10 @@
     margin-bottom: 14px;
     border-radius: 10px;
     overflow: hidden;
+    /* Shown when the course has no image yet — a bulk-imported course carries
+       none until one is uploaded from Course → Edit. A soft brand tint keeps the
+       card's proportions and reads as "artwork pending" rather than broken. */
+    background: linear-gradient(135deg, #FBF1DF 0%, #F6E7CF 100%);
 }
 
 .hm-course__thumb img {

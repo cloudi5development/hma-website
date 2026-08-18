@@ -11,10 +11,20 @@
             <h1 class="page-head__title">Courses</h1>
             <p class="page-head__sub">{{ $courses->total() }} course{{ $courses->total() === 1 ? '' : 's' }} · {{ $popularCount }} in the home slider</p>
         </div>
-        <a href="{{ route('backend.courses.create') }}" class="btn-brand">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-            Add Course
-        </a>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ route('backend.courses.create') }}" class="btn-brand">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                Add Course
+            </a>
+
+            {{-- One entry point. Exporting, the template and the upload itself
+                 all live on that page, alongside the rules they need explaining
+                 with — three bare buttons up here explained none of them. --}}
+            <a href="{{ route('backend.courses.bulk.form') }}" class="btn-ghost">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L8 8m4-4 4 4M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>
+                Bulk Upload &amp; Export
+            </a>
+        </div>
     </div>
 
     @include('backend.partials.flash')

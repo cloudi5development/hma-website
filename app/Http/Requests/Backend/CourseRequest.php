@@ -18,15 +18,33 @@ class CourseRequest extends FormRequest
         $creating = $this->isMethod('post');
         $id = $this->route('course')?->id;
 
-        return [
-            'category_id'          => ['required', 'integer', 'exists:categories,id'],
-            'name'                 => ['required', 'string', 'max:180'],
-            'slug'                 => ['nullable', 'string', 'max:200', 'alpha_dash', Rule::unique('courses', 'slug')->ignore($id)],
-            'image'                => [$creating ? 'required' : 'nullable', 'image', 'mimes:webp,png,jpg,jpeg', 'max:3072'],
+        return static::columnRules() + [
+            'category_id'     => ['required', 'integer', 'exists:categories,id'],
+            'slug'            => ['nullable', 'string', 'max:200', 'alpha_dash', Rule::unique('courses', 'slug')->ignore($id)],
+            'image'           => [$creating ? 'required' : 'nullable', 'image', 'mimes:webp,png,jpg,jpeg', 'max:3072'],
             // Brochure PDF. Always optional; 'mimetypes' checks the real file
             // signature, not just the extension, so a renamed .exe is rejected.
-            'brochure'             => ['nullable', 'file', 'mimes:pdf', 'mimetypes:application/pdf', 'max:10240'],
-            'remove_brochure'      => ['nullable', 'boolean'],
+            'brochure'        => ['nullable', 'file', 'mimes:pdf', 'mimetypes:application/pdf', 'max:10240'],
+            'remove_brochure' => ['nullable', 'boolean'],
+        ];
+    }
+
+    /**
+     * The rules for the plain course columns — everything that does not depend on
+     * the request (no uploaded files, no "is this an edit?" slug exemption, no
+     * category lookup).
+     *
+     * Split out so the bulk uploader can validate a spreadsheet row against the
+     * very rules this form applies, instead of keeping a second copy that drifts.
+     * A field added here reaches both paths at once. The four request-dependent
+     * rules stay in rules() above.
+     *
+     * @see \App\Services\CourseBulkImportService
+     */
+    public static function columnRules(): array
+    {
+        return [
+            'name'                 => ['required', 'string', 'max:180'],
             'batch_start_date'     => ['required', 'date'],
             'duration'             => ['required', 'string', 'max:60'],
             'training_mode'        => ['required', Rule::in(Course::TRAINING_MODES)],

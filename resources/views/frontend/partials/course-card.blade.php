@@ -36,14 +36,25 @@
 --}}
 @php
     $i ??= 0;
+
+    // 'img_url' is a ready-built URL (DB-driven cards); 'img' is a bare filename
+    // in assets/images/courses/ (static callers).
+    //
+    // A course may legitimately have neither: the column is nullable, and a
+    // bulk-imported course carries no artwork until somebody uploads it from
+    // Course → Edit. Reaching for $course['img'] in that case used to raise
+    // "Undefined array key" and take the whole listing down with it.
+    $thumb = $course['img_url']
+        ?? (isset($course['img']) ? asset('assets/images/courses/' . $course['img']) : null);
 @endphp
 
 <article class="hm-course hm-anim hm-anim--up hm-anim--d{{ ($i % 4) + 1 }}">
     <div class="hm-course__thumb">
-        {{-- 'img_url' is a ready-built URL (DB-driven cards); 'img' is a bare
-             filename in assets/images/courses/ (legacy/static callers). --}}
-        <img src="{{ $course['img_url'] ?? asset('assets/images/courses/' . $course['img']) }}"
-             alt="{{ $course['title'] }} course thumbnail" loading="lazy">
+        {{-- No image yet: the tile is left empty and courses.css tints it, the
+             same way the schedule table handles a course with no thumbnail. --}}
+        @if ($thumb)
+            <img src="{{ $thumb }}" alt="{{ $course['title'] }} course thumbnail" loading="lazy">
+        @endif
     </div>
 
     <div class="hm-course__body">

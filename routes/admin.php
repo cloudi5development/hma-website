@@ -7,6 +7,7 @@ use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\ContactEnquiryController;
 use App\Http\Controllers\Backend\ContentPageController;
 use App\Http\Controllers\Backend\CounterController;
+use App\Http\Controllers\Backend\CourseBulkUploadController;
 use App\Http\Controllers\Backend\CourseController;
 use App\Http\Controllers\Backend\CourseEnquiryController;
 use App\Http\Controllers\Backend\EventRegistrationController;
@@ -74,6 +75,24 @@ Route::prefix('admin')->name('backend.')->group(function () {
         // Courses → Departments / Categories / Courses / Schedule
         Route::resource('departments', DepartmentController::class)->except(['show']);
         Route::resource('categories', CategoryController::class)->except(['show']);
+
+        // Courses → Bulk Upload. Registered BEFORE the courses resource so
+        // "courses/bulk-upload" can never be swallowed by a {course} segment,
+        // and named "courses.bulk.*" so admin.module resolves it to the same
+        // "courses" module the rest of the screen uses — no new permission key.
+        Route::prefix('courses/bulk-upload')->name('courses.bulk.')
+            ->controller(CourseBulkUploadController::class)->group(function () {
+                Route::get('/', 'form')->name('form');
+                Route::get('template', 'template')->name('template');
+                Route::get('export', 'export')->name('export');
+                Route::post('validate', 'check')->name('validate');
+                Route::get('preview', 'preview')->name('preview');
+                Route::post('import', 'import')->name('import');
+                Route::get('summary', 'summary')->name('summary');
+                Route::get('errors', 'errors')->name('errors');
+                Route::post('cancel', 'cancel')->name('cancel');
+            });
+
         Route::resource('courses', CourseController::class)->except(['show']);
 
         // Upcoming batches, across every course. Bound to CourseSchedule under
