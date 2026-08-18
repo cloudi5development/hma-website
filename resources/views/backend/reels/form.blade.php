@@ -52,6 +52,39 @@
                     </div>
                 </div>
 
+                {{-- The two ways to add a reel, said plainly before either field.
+                     They do not behave the same on the site and an admin needs to
+                     know that before choosing. --}}
+                <div class="form-section">
+                    <h2 class="form-section__title">How this reel plays</h2>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="reel-mode reel-mode--upload">
+                            <p class="reel-mode__title">Upload a video file <span class="pill pill--tiny pill--active">Autoplays</span></p>
+                            <p class="reel-mode__text">
+                                Served from this site. The card <strong>starts playing on its own</strong>
+                                (muted, looped) when it reaches the middle of the slider, with our own
+                                play, sound and scrub controls.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="reel-mode reel-mode--link">
+                            <p class="reel-mode__title">Paste an Instagram link <span class="pill pill--tiny">Click to play</span></p>
+                            <p class="reel-mode__text">
+                                Nothing to upload — Instagram's own player is shown. It
+                                <strong>cannot autoplay</strong>: Instagram embeds are click-to-play by
+                                their design, and the card uses their look rather than ours.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <p class="form-hint">
+                    Fill in <strong>one</strong> of the two below. Do both and the uploaded file wins —
+                    it plays on the card, and the link becomes the "Instagram Reel" badge on it.
+                </p>
+
                 {{-- Row 2 — video --}}
                 <div class="form-row mt-4">
                     <label class="form-label" for="video">Reel Video</label>
@@ -93,12 +126,16 @@
                 <div class="row g-3">
                     <div class="col-12 col-md-6">
                         <div class="form-row" style="margin-bottom:0">
-                            <label class="form-label" for="instagram_url">Instagram Link <span class="form-hint" style="display:inline">(optional)</span></label>
+                            <label class="form-label" for="instagram_url">Instagram Link</label>
                             <input type="url" id="instagram_url" name="instagram_url"
                                    class="form-control-hm @error('instagram_url') is-invalid @enderror"
                                    value="{{ old('instagram_url', $reel->instagram_url) }}"
                                    placeholder="https://www.instagram.com/reel/XXXXXXXXX/">
-                            <p class="form-hint">Optional — if set, clicking the card opens the full reel on Instagram.</p>
+                            <p class="form-hint">
+                                With <strong>no video uploaded</strong>, the reel is played from here —
+                                paste the link and it appears on the site (click-to-play).
+                                Alongside an upload, it just adds the "Instagram Reel" badge to the card.
+                            </p>
                             @error('instagram_url') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
                     </div>
@@ -139,4 +176,20 @@
             }
         });
     </script>
+@endpush
+
+@push('styles')
+    <style>
+        .reel-mode {
+            height: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--line, #E7DED2);
+            border-left: 3px solid var(--line, #E7DED2);
+            border-radius: 10px;
+        }
+        .reel-mode--upload { border-left-color: #1F7A4D; }
+        .reel-mode--link   { border-left-color: #E1306C; }
+        .reel-mode__title  { margin: 0 0 6px; font-size: 13.5px; font-weight: 700; color: var(--ink, #2E2620); }
+        .reel-mode__text   { margin: 0; font-size: 12.5px; line-height: 1.7; color: var(--muted, #8A7E70); }
+    </style>
 @endpush

@@ -22,18 +22,53 @@ class ReelRequest extends FormRequest
 
     public function rules(): array
     {
-        // On create the video is required; on update it is optional (keep existing).
-        $creating = $this->isMethod('post');
-
         return [
             'title'         => ['required', 'string', 'max:160'],
             // Capped by what PHP will actually accept, so the rule and the
             // server agree and the admin gets a message that makes sense.
-            'video'         => [$creating ? 'required' : 'nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg,video/quicktime', 'max:' . UploadLimit::cap(self::PREFERRED_MAX_KB)],
+            //
+            // Never unconditionally required now: a reel may be an Instagram
+            // link instead of a file. Which of the two is missing is settled in
+            // withValidator, where both fields can be looked at together.
+            'video'         => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg,video/quicktime', 'max:' . UploadLimit::cap(self::PREFERRED_MAX_KB)],
             'instagram_url' => ['nullable', 'url', 'max:255'],
             'sort_order'    => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_active'     => ['nullable', 'boolean'],
         ];
+    }
+
+    /**
+     * A reel has to be playable: either an uploaded clip or an Instagram link
+     * we can actually embed.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $reel = $this->route('reel');
+
+            $hasUpload = $this->hasFile('video') || filled($reel?->video);
+            $link      = trim((string) $this->input('instagram_url'));
+
+            if (! $hasUpload && $link === '') {
+                $validator->errors()->add('video',
+                    'Add something to play: either upload a clip, or paste the reel\'s Instagram link.');
+
+                return;
+            }
+
+            // A link-only reel is embedded, so the URL has to be one Instagram
+            // can actually frame. Checked here rather than left to fail
+            // silently as an empty card on the site.
+            if (! $hasUpload && $link !== '') {
+                $code = (new \App\Models\Reel(['instagram_url' => $link]))->instagramCode();
+
+                if (! $code) {
+                    $validator->errors()->add('instagram_url',
+                        'That does not look like an Instagram reel link. It should look like '
+                        . 'https://www.instagram.com/reel/XXXXXXXXX/ — or upload a video file instead.');
+                }
+            }
+        });
     }
 
     protected function prepareForValidation(): void

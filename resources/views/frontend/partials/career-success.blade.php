@@ -34,6 +34,7 @@
         // reel on Instagram.
         $reels = collect($reels ?? [])->map(fn ($r) => [
             'video' => $r->video_url,
+            'embed' => $r->usesEmbed() ? $r->embed_url : null,
             'url'   => $r->instagram_url,
             'title' => $r->title,
         ])->all();
@@ -75,6 +76,47 @@
                     @foreach (array_merge($reels, $reels) as $reel)
                         <div class="swiper-slide hm-reels__slide">
                             <div class="hm-reel-float">
+                                @if ($reel['embed'])
+                                    {{-- ------------------- INSTAGRAM REEL -------------------
+                                         Added by pasting a link, so there is no file to serve and
+                                         Instagram's own player is framed instead.
+
+                                         It does NOT autoplay, and cannot be made to: their embed is
+                                         click-to-play by design. The uploaded-clip card below is the
+                                         one that starts on its own.
+
+                                         The iframe src is withheld until the section scrolls into
+                                         view (see attach()), because each embed pulls a few hundred
+                                         KB of Instagram's player — loading five on page load would
+                                         undo the lazy behaviour the uploaded reels already have. --}}
+                                    <div class="hm-reel hm-reel--embed" aria-label="{{ $reel['title'] }}">
+                                        <iframe class="hm-reel__embed"
+                                                data-src="{{ $reel['embed'] }}"
+                                                title="{{ $reel['title'] }}"
+                                                loading="lazy"
+                                                allowtransparency="true"
+                                                allow="encrypted-media; picture-in-picture; web-share"
+                                                referrerpolicy="strict-origin-when-cross-origin"
+                                                scrolling="no"
+                                                frameborder="0"></iframe>
+
+                                        {{-- Shown until the embed is attached, so the card is never
+                                             an empty box while the visitor scrolls towards it. --}}
+                                        <span class="hm-reel__embed-wait" aria-hidden="true">
+                                            <i class="fa-brands fa-instagram"></i>
+                                        </span>
+
+                                        {{-- Instagram's own "View more on Instagram" link sits in the
+                                             footer band, which the card crops away — so the way out to
+                                             the post is put back here, in the same badge the uploaded
+                                             cards use. --}}
+                                        <a class="hm-reel__badge" href="{{ $reel['url'] }}"
+                                           target="_blank" rel="noopener"
+                                           aria-label="Watch {{ $reel['title'] }} on Instagram">
+                                            <i class="fa-brands fa-instagram" aria-hidden="true"></i> Instagram Reel
+                                        </a>
+                                    </div>
+                                @else
                                 <div class="hm-reel" aria-label="{{ $reel['title'] }}">
                                     {{-- Muted + looped, but nothing is fetched until the section is
                                          on screen: the src lives in data-src and preload is off, so
@@ -135,6 +177,7 @@
                                         </button>
                                     </div>
                                 </div>
+                                @endif
                             </div>
                         </div>
                     @endforeach
@@ -212,6 +255,32 @@
                 if (!video || video.src || !video.dataset.src) return;
                 video.preload = 'metadata';
                 video.src = video.dataset.src + '#t=0.1';
+            }
+
+            /**
+             * Give a card whatever it needs to be looked at.
+             *
+             * An uploaded clip gets its still, as above. An Instagram card gets
+             * its iframe src, withheld until now because each embed pulls a few
+             * hundred KB of their player — attaching five on page load would
+             * undo the lazy behaviour the uploaded reels already have.
+             *
+             * play() and pause() leave embed cards alone on their own: both bail
+             * when the card has no <video> in it.
+             */
+            function attachCard(reel) {
+                var frame = reel.querySelector('.hm-reel__embed');
+
+                if (frame) {
+                    if (!frame.src && frame.dataset.src) {
+                        frame.src = frame.dataset.src;
+                        reel.classList.add('is-embedded');
+                    }
+
+                    return;
+                }
+
+                attach(videoOf(reel));
             }
 
             function setPlayIcon(reel, playing) {
@@ -303,7 +372,7 @@
                 // deck reads as a row of paused videos; the middle one then
                 // goes on to play.
                 if (sectionVisible) {
-                    reels.forEach(function (reel) { attach(videoOf(reel)); });
+                    reels.forEach(attachCard);
                     if (!centre.dataset.userPaused) play(centre);
                 } else {
                     pause(centre);
@@ -336,13 +405,13 @@
             if ('IntersectionObserver' in window && section) {
                 var frameLoader = new IntersectionObserver(function (entries) {
                     if (!entries.some(function (entry) { return entry.isIntersecting; })) return;
-                    reels.forEach(function (reel) { attach(videoOf(reel)); });
+                    reels.forEach(attachCard);
                     frameLoader.disconnect();
                 }, { rootMargin: '600px 0px' });
 
                 frameLoader.observe(section);
             } else {
-                reels.forEach(function (reel) { attach(videoOf(reel)); });
+                reels.forEach(attachCard);
             }
 
             /* ---- Controls ---- */

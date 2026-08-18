@@ -46,12 +46,24 @@ class ContentSecurityPolicyTest extends TestCase
         }
     }
 
-    public function test_nothing_may_be_framed_except_the_branch_maps(): void
+    public function test_only_the_named_third_parties_may_be_framed(): void
     {
         $frames = $this->sources('frame-src');
 
         $this->assertContains("'self'", $frames);
-        $this->assertContains('https://www.google.com', $frames);   // the contact page map
+        $this->assertContains('https://www.google.com', $frames);      // the contact page map
+        $this->assertContains('https://www.instagram.com', $frames);   // reels added as a link
+
+        // Nothing beyond the maps and Instagram. This list is the thing standing
+        // between the site and an injected iframe, so it is asserted whole
+        // rather than only checked for the entries we expect to be there.
+        $this->assertEqualsCanonicalizing([
+            "'self'",
+            'https://www.google.com',
+            'https://maps.google.com',
+            'https://www.instagram.com',
+            'https://instagram.com',
+        ], $frames);
 
         // A wildcard here would let any ad network drop an iframe in.
         $this->assertNotContains('*', $frames);

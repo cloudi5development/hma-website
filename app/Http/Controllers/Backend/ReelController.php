@@ -33,7 +33,10 @@ class ReelController extends Controller
     public function store(ReelRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $data['video'] = $this->storeVideo($request);
+
+        // A link-only reel has no file to store — the request has already made
+        // sure one of the two was supplied.
+        $data['video'] = $request->hasFile('video') ? $this->storeVideo($request) : null;
 
         Reel::create($data);
 

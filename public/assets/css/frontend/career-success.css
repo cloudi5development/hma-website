@@ -475,3 +475,64 @@
     .hm-reel__controls,
     .hm-reel__ctrl { transition: none !important; }
 }
+
+/* ==========================================================================
+   Instagram reels — cards added by pasting a link rather than uploading a clip.
+   Instagram's own player is framed here, so it is click-to-play; the uploaded
+   cards above are the ones that autoplay.
+   ========================================================================== */
+.hm-reel--embed {
+    cursor: default;
+    background:
+        radial-gradient(120% 90% at 50% 12%, rgba(233, 163, 32, .22), transparent 62%),
+        linear-gradient(160deg, #3A2A1C 0%, #241A12 55%, #16100B 100%);
+}
+/* Instagram's embed is three stacked bands: their header (avatar, username,
+   "View profile"), the video, then their footer (like/comment/share, "View more
+   on Instagram", the like count).
+
+   None of it can be styled — it is a cross-origin iframe, so no CSS of ours
+   reaches inside it. What CAN be done is crop: make the iframe taller than the
+   card by exactly the two bands, pull it up by the header, and let the card's
+   overflow:hidden clip both. What is left showing is the video, filling the card
+   like an uploaded clip does.
+
+   The two heights are measured from Instagram's current embed. They are declared
+   as variables because they are the one part of this that Instagram can change
+   without warning — if a strip of their chrome ever reappears at the top or
+   bottom of a card, adjust these two numbers and nothing else. */
+.hm-reel--embed {
+    --ig-header: 54px;
+    --ig-footer: 108px;
+}
+.hm-reel__embed {
+    position: absolute;
+    top: calc(var(--ig-header) * -1);
+    left: 0;
+    display: block;
+    width: 100%;
+    height: calc(100% + var(--ig-header) + var(--ig-footer));
+    border: 0;
+    opacity: 0;
+    transition: opacity .35s ease;
+}
+.hm-reel--embed.is-embedded .hm-reel__embed { opacity: 1; }
+
+/* Holding state, until the section scrolls into view and the src is attached. */
+.hm-reel__embed-wait {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    color: rgba(255, 255, 255, .55);
+    pointer-events: none;
+    transition: opacity .3s ease;
+}
+.hm-reel--embed.is-embedded .hm-reel__embed-wait { opacity: 0; }
+
+/* The float and hover-lift look wrong on a card the visitor is about to click
+   into — an iframe that drifts is hard to hit. */
+.hm-reel--embed:hover { transform: none; box-shadow: 0 16px 40px rgba(42, 29, 20, .12); }
+.hm-reels__slide:has(.hm-reel--embed) .hm-reel-float { animation: none; }

@@ -61,11 +61,18 @@ return [
         ],
 
         // The only frames allowed: the branch maps on the contact page and in
-        // the admin's branch editor. This is the line that stops an ad network
-        // dropping an iframe onto the site.
+        // the admin's branch editor, plus Instagram for reels added as a link
+        // (Sections → Our Journey). This is the line that stops an ad network
+        // dropping an iframe onto the site, so keep it to what is actually used.
+        //
+        // Instagram serves the embed from instagram.com and redirects some
+        // requests through www.instagram.com — both are listed rather than
+        // wildcarding the domain.
         'frames' => [
             'https://www.google.com',
             'https://maps.google.com',
+            'https://www.instagram.com',
+            'https://instagram.com',
         ],
     ],
 
