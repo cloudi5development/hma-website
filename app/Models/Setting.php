@@ -149,13 +149,19 @@ class Setting extends Model
         return $input;
     }
 
-    /** Platforms offered on Settings → Social Media, in the order they render. */
+    /**
+     * Platforms offered on Settings → Social Media, in the order they render.
+     *
+     * This list is the single source for both the admin form and the footer
+     * icons, so dropping a platform here removes its field and its icon together
+     * — which is how X/Twitter left on 2026-08-19. A `social_x` row may still
+     * sit in the settings table on an older install; nothing reads it.
+     */
     public const SOCIAL_PLATFORMS = [
         'social_facebook'  => ['label' => 'Facebook',  'icon' => 'fa-brands fa-facebook-f'],
         'social_instagram' => ['label' => 'Instagram', 'icon' => 'fa-brands fa-instagram'],
         'social_linkedin'  => ['label' => 'LinkedIn',  'icon' => 'fa-brands fa-linkedin-in'],
         'social_youtube'   => ['label' => 'YouTube',   'icon' => 'fa-brands fa-youtube'],
-        'social_x'         => ['label' => 'X',         'icon' => 'fa-brands fa-x-twitter'],
         'social_whatsapp'  => ['label' => 'WhatsApp',  'icon' => 'fa-brands fa-whatsapp'],
     ];
 

@@ -213,7 +213,8 @@
             </div>
 
             <p class="form-hint mt-3" style="margin-bottom:0">
-                <strong>Dates</strong> — {{ implode(' or ', Template::DATE_FORMATS) }}; DD-MM-YYYY is the one to use.
+                <strong>Batches</strong> — start dates, end dates and the training Mode are not in this file;
+                they belong to the batch and are managed at <strong>Courses → Schedule</strong>.
                 <strong>Yes/No columns</strong> — Yes, No, Y, N, 1, 0, True, False, Active and Inactive are all understood.
                 <strong>FAQs</strong> — up to {{ \App\Models\Course::MAX_FAQS }} per course; leave both cells of a pair blank
                 to skip it, and note that on an update the FAQ columns replace that course's existing FAQs.

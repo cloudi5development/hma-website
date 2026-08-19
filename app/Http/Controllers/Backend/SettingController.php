@@ -104,7 +104,6 @@ class SettingController extends Controller
             'social_instagram' => ['nullable', 'url', 'max:255'],
             'social_youtube'   => ['nullable', 'url', 'max:255'],
             'social_linkedin'  => ['nullable', 'url', 'max:255'],
-            'social_x'         => ['nullable', 'url', 'max:255'],
             'social_whatsapp'  => ['nullable', 'string', 'max:255'],
         ]);
 

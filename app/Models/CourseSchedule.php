@@ -17,8 +17,16 @@ class CourseSchedule extends Model
     /** How many batches the home-page section shows before "View All Schedules". */
     public const MAX_HOME = 4;
 
+    /**
+     * How the batch is taught. Lived on the course until 2026-08-19, which meant
+     * one mode for every intake — an evening online batch and a weekend campus
+     * batch of the same course could not both be described. It belongs to the
+     * batch, so it lives here.
+     */
+    public const TRAINING_MODES = ['Online', 'Offline', 'Hybrid'];
+
     protected $fillable = [
-        'course_id', 'start_date', 'end_date', 'duration',
+        'course_id', 'start_date', 'end_date', 'duration', 'training_mode',
         'start_time', 'end_time', 'fee', 'show_fee', 'is_active',
     ];
 

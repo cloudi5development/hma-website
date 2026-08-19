@@ -21,7 +21,7 @@ class CourseController extends Controller
     {
         $courses = $this->applyTableFilters(
                 Course::with('category.department'),
-                ['name', 'duration', 'training_mode', 'skill_level', 'category.name']
+                ['name', 'duration', 'skill_level', 'category.name']
             )
             ->orderBy('sort_order')->orderBy('id')
             ->paginate($this->perPage())->withQueryString();

@@ -45,9 +45,9 @@ class CourseRequest extends FormRequest
     {
         return [
             'name'                 => ['required', 'string', 'max:180'],
-            'batch_start_date'     => ['required', 'date'],
             'duration'             => ['required', 'string', 'max:60'],
-            'training_mode'        => ['required', Rule::in(Course::TRAINING_MODES)],
+            // No batch start date and no mode: both belong to the batch, and
+            // Courses → Schedule is where they are entered.
             'skill_level'          => ['required', Rule::in(Course::SKILL_LEVELS)],
             'rating'               => ['nullable', 'numeric', 'min:0', 'max:5'],
 
@@ -96,7 +96,6 @@ class CourseRequest extends FormRequest
             'brochure.mimetypes'        => 'The brochure must be a PDF file.',
             'brochure.max'              => 'The brochure may not be larger than 10 MB.',
             'category_id.required'      => 'Please choose a category.',
-            'batch_start_date.required' => 'Please set the batch start date.',
             'faqs.max'                  => 'Maximum ' . Course::MAX_FAQS . ' FAQs allowed.',
         ];
     }

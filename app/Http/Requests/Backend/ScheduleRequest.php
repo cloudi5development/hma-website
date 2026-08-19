@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Backend;
 
+use App\Models\CourseSchedule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ScheduleRequest extends FormRequest
 {
@@ -24,6 +26,11 @@ class ScheduleRequest extends FormRequest
             'start_date'  => ['required', 'date'],
             'end_date'    => ['nullable', 'date', 'after_or_equal:start_date'],
             'duration'    => ['nullable', 'string', 'max:60'],
+
+            // Required, unlike the other optional batch fields: the mode moved
+            // here off the course, so this is now the only place the website can
+            // learn whether a course is taught online, on campus or both.
+            'training_mode' => ['required', Rule::in(CourseSchedule::TRAINING_MODES)],
 
             // Optional, and independent of each other: a batch may advertise a
             // start time with no finish. The pair is only compared when both are
@@ -76,6 +83,8 @@ class ScheduleRequest extends FormRequest
             'course_id.required'       => 'Please choose the course this batch is for.',
             'start_date.required'      => 'Please set the batch start date.',
             'end_date.after_or_equal'  => 'The end date must fall on or after the start date.',
+            'training_mode.required'   => 'Please choose how this batch is taught.',
+            'training_mode.in'         => 'Choose one of: ' . implode(', ', CourseSchedule::TRAINING_MODES) . '.',
             'start_time.date_format'   => 'Enter the start time as a time, e.g. 10:00.',
             'end_time.date_format'     => 'Enter the end time as a time, e.g. 13:30.',
             'fee.numeric'              => 'Enter the fee as a number, without the ₹ sign.',

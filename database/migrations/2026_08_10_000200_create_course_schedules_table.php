@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\Schema;
  * `schedule_enabled` on the course is the master switch the admin flips at the
  * top of the Course Schedule block: off, the course keeps its batches but shows
  * none of them on the site.
+ *
+ * Both of those notes have since been overtaken: `schedule_enabled` was dropped
+ * when batches became their own module (2026_08_13_000200), and the course's
+ * `batch_start_date` was dropped along with its `training_mode` when both moved
+ * onto the batch (2026_08_19_000200). This file is left as it ran.
  */
 return new class extends Migration
 {

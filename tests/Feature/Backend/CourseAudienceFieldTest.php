@@ -68,9 +68,7 @@ class CourseAudienceFieldTest extends TestCase
         $payload = [
             'category_id'      => $this->category->id,
             'name'             => 'Full Stack Development',
-            'batch_start_date' => '2026-09-01',
             'duration'         => '6 Months',
-            'training_mode'    => 'Online',
             'skill_level'      => 'Beginner',
             'audience'         => "Freshers\nWorking professionals",
             'image'            => UploadedFile::fake()->image('course.jpg', 600, 400),
@@ -93,9 +91,7 @@ class CourseAudienceFieldTest extends TestCase
         $this->signedIn($admin)->put(route('backend.courses.update', $course), [
             'category_id'      => $this->category->id,
             'name'             => 'Full Stack Development',
-            'batch_start_date' => '2026-09-01',
             'duration'         => '6 Months',
-            'training_mode'    => 'Online',
             'skill_level'      => 'Beginner',
             'audience'         => 'Graduates only.',
         ])->assertRedirect(route('backend.courses.index'))->assertSessionHasNoErrors();
@@ -109,9 +105,7 @@ class CourseAudienceFieldTest extends TestCase
             'category_id'      => $this->category->id,
             'name'             => 'Quiet Course',
             'slug'             => 'quiet-course',
-            'batch_start_date' => '2026-09-01',
             'duration'         => '6 Months',
-            'training_mode'    => 'Online',
             'skill_level'      => 'Beginner',
         ]);
 

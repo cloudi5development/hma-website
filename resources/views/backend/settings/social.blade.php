@@ -14,7 +14,6 @@
         'social_instagram' => 'https://www.instagram.com/hireminds_academy/',
         'social_linkedin'  => 'https://linkedin.com/company/hiremindsacademy',
         'social_youtube'   => 'https://youtube.com/@hiremindsacademy',
-        'social_x'         => 'https://x.com/hiremindsacademy',
         'social_whatsapp'  => '917824094044 or https://wa.me/917824094044',
     ];
 @endphp

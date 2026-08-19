@@ -56,9 +56,7 @@ class CourseBulkImportService
     private const FIELD_MAP = [
         'course_name'               => 'name',
         'category'                  => 'category_id',
-        'batch_start'               => 'batch_start_date',
         'duration'                  => 'duration',
-        'mode'                      => 'training_mode',
         'skill_level'               => 'skill_level',
         'short_description'         => 'short_description',
         'full_description'          => 'full_description',
@@ -376,16 +374,6 @@ class CourseBulkImportService
             $flags[$column] = $parsed;
         }
 
-        // ---- Date ----------------------------------------------------------
-        $rawDate = $data['batch_start'] ?? null;
-        $date    = CourseImportTemplate::toDate($rawDate);
-
-        if ($date === null && ! CourseImportTemplate::isBlank($rawDate)) {
-            $shown = is_scalar($rawDate) ? trim((string) $rawDate) : '(unreadable)';
-            $result['errors'][] = "batch_start: '{$shown}' is not a date the importer recognises. Use DD-MM-YYYY, e.g. 04-08-2026.";
-            $result['error_type'] ??= 'Invalid Date';
-        }
-
         // ---- Identity ------------------------------------------------------
         $slug = CourseImportTemplate::toText($data['slug'] ?? null);
 
@@ -409,9 +397,7 @@ class CourseBulkImportService
         // ---- The shared column rules, straight off the manual form ----------
         $payload = [
             'name'                 => $name,
-            'batch_start_date'     => $date,
             'duration'             => CourseImportTemplate::toText($data['duration'] ?? null),
-            'training_mode'        => $this->matchAllowed($data['mode'] ?? null, Course::TRAINING_MODES),
             'skill_level'          => $this->matchAllowed($data['skill_level'] ?? null, Course::SKILL_LEVELS),
             'rating'               => CourseImportTemplate::isBlank($data['rating'] ?? null) ? null : $data['rating'],
             'short_description'    => CourseImportTemplate::toText($data['short_description'] ?? null),
@@ -430,9 +416,7 @@ class CourseBulkImportService
 
         $validator = Validator::make($payload, $this->rulesFor($existing !== null), [
             'name.required'             => 'course_name is required.',
-            'batch_start_date.required' => 'batch_start is required.',
             'duration.required'         => 'duration is required.',
-            'training_mode.required'    => 'mode is required.',
             'skill_level.required'      => 'skill_level is required.',
         ]);
 
@@ -440,8 +424,6 @@ class CourseBulkImportService
         // the admin is looking at rather than like the database.
         $validator->setAttributeNames([
             'name'             => 'course_name',
-            'batch_start_date' => 'batch_start',
-            'training_mode'    => 'mode',
             'overview'         => 'course_overview',
             'certification'    => 'certification_details',
             'sort_order'       => 'order',
@@ -525,9 +507,7 @@ class CourseBulkImportService
             'category_id'          => $categoryId ?? $this->categoryFallback($existing),
             'name'                 => $name,
             'slug'                 => $slug,
-            'batch_start_date'     => $date,
             'duration'             => $payload['duration'],
-            'training_mode'        => $payload['training_mode'],
             'skill_level'          => $payload['skill_level'],
             // The column defaults to 4.5, and upsert does not apply model
             // defaults, so a blank cell is filled in explicitly.
@@ -558,12 +538,12 @@ class CourseBulkImportService
      * The rules to judge one row by.
      *
      * A create is held to the manual form's full rule set — a new course needs
-     * its category, dates, mode and level just as much when it arrives from a
+     * its category, duration and level just as much when it arrives from a
      * spreadsheet.
      *
      * An update is judged only on the columns the sheet actually carries. Upload
      * a file of course_name, slug and duration and you are editing the duration
-     * of existing courses; demanding a batch_start the course already has would
+     * of existing courses; demanding a skill_level the course already has would
      * make narrow, targeted edits impossible. A column that IS present but left
      * empty still fails its required rule — that is the admin clearing a field,
      * which the form would refuse too.
@@ -673,14 +653,9 @@ class CourseBulkImportService
         return $text;
     }
 
-    /** Give the two enum failures the wording the spec asks for. */
+    /** Give the enum failure the wording the spec asks for. */
     private function humanise(string $message, array $data): string
     {
-        if (str_contains($message, 'mode is invalid')) {
-            return 'Mode "' . trim((string) ($data['mode'] ?? '')) . '" is not supported. Use one of: '
-                . implode(', ', Course::TRAINING_MODES) . '.';
-        }
-
         if (str_contains($message, 'skill level is invalid')) {
             return 'Skill level "' . trim((string) ($data['skill_level'] ?? '')) . '" is not supported. Use one of: '
                 . implode(', ', Course::SKILL_LEVELS) . '.';

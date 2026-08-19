@@ -6,13 +6,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 class Course extends Model
 {
     protected $fillable = [
-        'category_id', 'name', 'slug', 'image', 'brochure', 'batch_start_date', 'duration',
-        'training_mode', 'skill_level', 'rating', 'short_description',
+        'category_id', 'name', 'slug', 'image', 'brochure', 'duration',
+        'skill_level', 'rating', 'short_description',
         'full_description', 'overview', 'learning_outcomes', 'prerequisites',
         'certification', 'audience', 'sort_order', 'is_active', 'is_popular',
         'is_continue_learning', 'is_featured',
@@ -21,7 +22,6 @@ class Course extends Model
 
     protected $casts = [
         'category_id'          => 'integer',
-        'batch_start_date'     => 'date',
         'rating'               => 'decimal:1',
         'sort_order'           => 'integer',
         'is_active'            => 'boolean',
@@ -32,8 +32,6 @@ class Course extends Model
 
     /** A course may carry at most this many FAQs. */
     public const MAX_FAQS = 5;
-
-    public const TRAINING_MODES = ['Online', 'Offline', 'Hybrid'];
 
     public const SKILL_LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
 
@@ -60,6 +58,27 @@ class Course extends Model
     public function schedules(): HasMany
     {
         return $this->hasMany(CourseSchedule::class)->orderBy('start_date')->orderBy('id');
+    }
+
+    /**
+     * The one batch the course's own meta speaks for: the soonest one the site
+     * would list.
+     *
+     * The course used to carry a `batch_start_date` and a `training_mode` of its
+     * own, which said nothing about the batches an admin had actually scheduled.
+     * The card and the details hero read this relation instead, so "starts on"
+     * and "mode" are whatever the next real intake says.
+     *
+     * Eager-load it (`with('nextSchedule')`) wherever a list of courses prints
+     * that meta, or it is a query per card.
+     */
+    public function nextSchedule(): HasOne
+    {
+        return $this->hasOne(CourseSchedule::class)
+            ->active()
+            ->upcoming()
+            ->orderBy('start_date')
+            ->orderBy('id');
     }
 
     /** Enquiries submitted for this course (newest first). */
@@ -141,5 +160,43 @@ class Course extends Model
     public function getBadgeAttribute(): string
     {
         return $this->category?->name ?? '';
+    }
+
+    /**
+     * The training mode the site shows for this course — the next batch's.
+     *
+     * Null when the course has no upcoming batch, which every caller already
+     * copes with: the card falls back to its default line and the details page
+     * leaves the stat blank rather than inventing a mode nobody entered.
+     */
+    public function getTrainingModeAttribute(): ?string
+    {
+        return $this->nextSchedule?->training_mode;
+    }
+
+    /** "20 Aug 2026" for the next batch, or null when none is scheduled. */
+    public function getBatchStartLabelAttribute(): ?string
+    {
+        return $this->nextSchedule?->start_date_label;
+    }
+
+    /** The same date as "2026-08-20", for a <time datetime> attribute. */
+    public function getBatchStartIsoAttribute(): ?string
+    {
+        return $this->nextSchedule?->start_date?->toDateString();
+    }
+
+    /** "20 Aug 2026 – 14 Nov 2026", or just the start when the batch has no end. */
+    public function getBatchRangeLabelAttribute(): ?string
+    {
+        $batch = $this->nextSchedule;
+
+        if (! $batch) {
+            return null;
+        }
+
+        return $batch->end_date_label
+            ? $batch->start_date_label . ' – ' . $batch->end_date_label
+            : $batch->start_date_label;
     }
 }

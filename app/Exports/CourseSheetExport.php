@@ -13,7 +13,6 @@ use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
-use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 /**
  * The "Courses" grid — the one sheet that is both downloaded and uploaded.
@@ -83,15 +82,7 @@ class CourseSheetExport implements FromArray, WithHeadings, WithTitle, WithEvent
             'course_name'               => $course->name,
             'category'                  => $course->category?->name,
             'slug'                      => $course->slug,
-            // A real date cell, not text: the column carries a date rule and a
-            // DD-MM-YYYY format, so writing "04-08-2026" as a string would make
-            // the export fail its own validation. The importer reads the serial
-            // back happily (CourseImportTemplate::toDate).
-            'batch_start'               => $course->batch_start_date
-                ? ExcelDate::PHPToExcel($course->batch_start_date)
-                : null,
             'duration'                  => $course->duration,
-            'mode'                      => $course->training_mode,
             'skill_level'               => $course->skill_level,
             'short_description'         => $course->short_description,
             'full_description'          => $course->full_description,
@@ -160,22 +151,8 @@ class CourseSheetExport implements FromArray, WithHeadings, WithTitle, WithEvent
                     );
                 }
 
-                // ---- Dates -------------------------------------------------
-                foreach (CourseImportTemplate::DATE_COLUMNS as $column) {
-                    $letter = CourseImportTemplate::columnLetter($column);
-
-                    if (! $letter) {
-                        continue;
-                    }
-
-                    $range = "{$letter}2:{$letter}{$lastRow}";
-
-                    // Format AND rule together: the cells hold real dates (see
-                    // row()), so without the format they would show as serial
-                    // numbers like 46238.
-                    $sheet->getStyle($range)->getNumberFormat()->setFormatCode('DD-MM-YYYY');
-                    $sheet->setDataValidation($range, $this->dateValidation());
-                }
+                // The sheet carries no date column any more — batch dates moved
+                // to Courses → Schedule, which is not part of this file.
 
                 // ---- Numbers -----------------------------------------------
                 foreach ([
@@ -228,32 +205,6 @@ class CourseSheetExport implements FromArray, WithHeadings, WithTitle, WithEvent
         // to OPERATOR_BETWEEN and writes it, which leaves a list validation
         // carrying an attribute Excel does not expect on one.
         $validation->setOperator('');
-
-        return $validation;
-    }
-
-    /**
-     * The date rule on batch_start.
-     *
-     * Paired with a DD-MM-YYYY number format on the column, and with real date
-     * values in the export rather than text, so the cell is a genuine date cell.
-     * Google Sheets renders a calendar picker for it; Excel has no in-cell
-     * calendar for plain cells, so there it enforces the type and rejects
-     * anything that is not a date.
-     */
-    private function dateValidation(): DataValidation
-    {
-        $validation = $this->baseValidation(
-            'Batch start',
-            'Pick a date, or type it as DD-MM-YYYY (e.g. 04-08-2026).',
-            'Not a date',
-            'Enter a real date, written DD-MM-YYYY — for example 04-08-2026.',
-        );
-
-        $validation->setType(DataValidation::TYPE_DATE);
-        $validation->setOperator(DataValidation::OPERATOR_BETWEEN);
-        $validation->setFormula1((string) (int) ExcelDate::stringToExcel('2000-01-01'));
-        $validation->setFormula2((string) (int) ExcelDate::stringToExcel('2100-12-31'));
 
         return $validation;
     }

@@ -27,7 +27,7 @@ class ScheduleController extends Controller
     {
         $schedules = $this->applyTableFilters(
                 CourseSchedule::with('course.category'),
-                ['duration', 'course.name'],
+                ['duration', 'training_mode', 'course.name'],
             )
             // Soonest first, but finished batches sink to the bottom rather than
             // heading the list forever. Sorted on the end date where there is one

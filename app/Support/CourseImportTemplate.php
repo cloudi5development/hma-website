@@ -4,10 +4,6 @@ namespace App\Support;
 
 use App\Models\Category;
 use App\Models\Course;
-use Carbon\CarbonInterface;
-use DateTimeInterface;
-use Illuminate\Support\Carbon;
-use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 /**
  * The shape of the bulk-course spreadsheet, in one place.
@@ -20,13 +16,17 @@ use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
  * internal id. Artwork and PDFs stay with the manual Course Edit screen, and the
  * department is derived from the category (see CourseBulkImportService), so an
  * admin never types a database key.
+ *
+ * Also absent, since 2026-08-19: batch_start and mode. Both moved onto the batch
+ * — a course has as many start dates and modes as it has intakes — and batches
+ * are managed at Courses → Schedule, which this file has never covered.
  */
 class CourseImportTemplate
 {
     /**
      * Every column, in the order they appear on the sheet.
      *
-     * `required` mirrors the manual Course form: those six are the fields
+     * `required` mirrors the manual Course form: those are the fields
      * CourseRequest refuses to save without. `help` is what the Instructions
      * sheet prints beside the column name.
      */
@@ -43,17 +43,11 @@ class CourseImportTemplate
             'required' => false,
             'help'     => 'Leave blank to generate it from the course name. Letters, numbers, dashes and underscores only. Must be unique.',
         ],
-        'batch_start' => [
-            'required' => true,
-            'help'     => 'Batch start date. Write it as DD-MM-YYYY, e.g. 04-08-2026. A real Excel date cell works too.',
-        ],
+        // No batch_start and no mode: both belong to the batch, and batches are
+        // not part of this file at all — they are managed at Courses → Schedule.
         'duration' => [
             'required' => true,
             'help'     => 'Free text, as on the course form: "30 Days", "6 Months", "12 Weeks". Up to 60 characters.',
-        ],
-        'mode' => [
-            'required' => true,
-            'help'     => 'One of: ' . self::MODES_HELP,
         ],
         'skill_level' => [
             'required' => true,
@@ -126,16 +120,14 @@ class CourseImportTemplate
         'meta_description' => ['required' => false, 'help' => 'Up to 300 characters.'],
     ];
 
-    private const MODES_HELP  = 'Online, Offline, Hybrid';
-
     private const LEVELS_HELP = 'Beginner, Intermediate, Advanced';
 
     /**
      * Columns the file MUST carry for the importer to run at all.
      *
-     * Only the six the manual form requires. Everything else may be left out of
-     * the sheet entirely — an admin who only wants name/category/dates should not
-     * have to keep 25 empty columns around.
+     * Only the ones the manual form requires. Everything else may be left out of
+     * the sheet entirely — an admin who only wants name/category/duration should
+     * not have to keep 25 empty columns around.
      */
     public static function requiredHeadings(): array
     {
@@ -150,9 +142,6 @@ class CourseImportTemplate
     {
         return array_keys(self::COLUMNS);
     }
-
-    /** The date formats the importer accepts for batch_start, best first. */
-    public const DATE_FORMATS = ['d-m-Y', 'd/m/Y', 'Y-m-d', 'd.m.Y'];
 
     /** What a "yes" looks like in a boolean column, lower-cased. */
     private const TRUTHY = ['1', 'yes', 'y', 'true', 'active', 'show', 'enabled', 'on'];
@@ -185,57 +174,6 @@ class CourseImportTemplate
 
         if (in_array($needle, self::FALSY, true)) {
             return false;
-        }
-
-        return null;
-    }
-
-    /**
-     * Read a date cell as Y-m-d, or null when it is not a date we recognise.
-     *
-     * Excel hands a real date cell over as a float (days since 1900), a CSV hands
-     * the same date over as whatever the admin typed, so both are accepted. The
-     * text formats are matched explicitly rather than left to strtotime, which
-     * silently reads 04-08-2026 and 04/08/2026 as two different days.
-     */
-    public static function toDate(mixed $value): ?string
-    {
-        if (self::isBlank($value)) {
-            return null;
-        }
-
-        if ($value instanceof DateTimeInterface || $value instanceof CarbonInterface) {
-            return Carbon::instance($value)->format('Y-m-d');
-        }
-
-        // A real Excel date cell: a serial number, not text.
-        if (is_numeric($value) && ! is_string($value)) {
-            try {
-                return Carbon::instance(ExcelDate::excelToDateTimeObject((float) $value))->format('Y-m-d');
-            } catch (\Throwable) {
-                return null;
-            }
-        }
-
-        $text = trim((string) $value);
-
-        foreach (self::DATE_FORMATS as $format) {
-            // Carbon runs in strict mode here, so a format that does not fit
-            // throws rather than returning false — a wrong guess is expected on
-            // the way to the right one, so it is caught and the next is tried.
-            try {
-                $parsed = Carbon::createFromFormat($format, $text);
-            } catch (\Throwable) {
-                continue;
-            }
-
-            // Even a matching format is forgiving about impossible days —
-            // "32-01-2026" rolls forward into February rather than failing — so
-            // the value is round-tripped and only accepted if it comes back the
-            // same. That is what rejects 32-13-2026.
-            if ($parsed && $parsed->format($format) === $text) {
-                return $parsed->format('Y-m-d');
-            }
         }
 
         return null;
@@ -277,7 +215,6 @@ class CourseImportTemplate
     public static function allowedValues(): array
     {
         return [
-            'mode'        => Course::TRAINING_MODES,
             'skill_level' => Course::SKILL_LEVELS,
             'status'      => ['Active', 'Inactive'],
             'yes_no'      => ['Yes', 'No'],
@@ -296,9 +233,7 @@ class CourseImportTemplate
             'course_name'               => 'Full Stack Development',
             'category'                  => $category ?? 'IT & Software',
             'slug'                      => '',
-            'batch_start'               => '04-08-2026',
             'duration'                  => '6 Months',
-            'mode'                      => 'Offline',
             'skill_level'               => 'Beginner',
             'short_description'         => 'Build complete web applications end to end.',
             'full_description'          => 'A practical, project-led programme covering the front end, the back end and everything that joins them.',
@@ -343,7 +278,6 @@ class CourseImportTemplate
      */
     public const MASTER_COLUMNS = [
         'category'                  => 'sheet',
-        'mode'                      => 'inline',
         'skill_level'               => 'inline',
         'status'                    => 'inline',
         'show_in_popular'           => 'inline',
@@ -366,7 +300,6 @@ class CourseImportTemplate
 
         return [
             'category'                  => Category::query()->orderBy('name')->pluck('name')->unique()->values()->all(),
-            'mode'                      => Course::TRAINING_MODES,
             'skill_level'               => Course::SKILL_LEVELS,
             'status'                    => ['Active', 'Inactive'],
             'show_in_popular'           => $yesNo,
@@ -384,12 +317,6 @@ class CourseImportTemplate
             ? null
             : \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
     }
-
-    /**
-     * Every column that carries a date, so the export can format it and the
-     * template can validate it.
-     */
-    public const DATE_COLUMNS = ['batch_start'];
 
     /** Columns holding a number, for the template's numeric validation. */
     public const NUMERIC_COLUMNS = ['order', 'rating'];

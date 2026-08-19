@@ -41,8 +41,13 @@
         'title'       => $model->name,
         'description' => $model->short_description ?: $model->overview,
         'image'       => $model->image_url,
-        'date'        => optional($model->batch_start_date)->format('d/m/Y'),
-        'datetime'    => optional($model->batch_start_date)->toDateString(),
+        // The dates and the mode come off the soonest upcoming batch (Admin →
+        // Courses → Schedule), not off the course row — the course carried a
+        // single batch_start_date and training_mode of its own until 2026-08-19,
+        // which routinely disagreed with the batches actually scheduled. Null
+        // when nothing is scheduled, and every slot below copes with that.
+        'date'        => $model->batch_range_label,
+        'datetime'    => $model->batch_start_iso,
         'students'    => '2,250 Students',
         'duration'    => $model->duration,
         'mode'        => $model->training_mode,
@@ -112,6 +117,11 @@
         ['value' => $course['placement'],   'label' => 'Placement',   'tone' => 'gold',  'icon' => 'icons-details/icon-5.png'],   // briefcase
     ];
 
+    // Mode is the batch's now, so a course with nothing scheduled has none. A
+    // tile with a label and no value looks broken, so it is left out and the
+    // strip closes up around it.
+    $features = array_values(array_filter($features, fn ($f) => filled($f['value'])));
+
     // Highlight cards — the tone drives both the pastel card and its icon tile.
     $highlights = [
         ['title' => 'Expert-Led Training',             'tone' => 'red',    'icon' => 'icons-details/icon-6.png'],   // person + star
@@ -179,12 +189,17 @@
                     <p class="hm-cd-hero__desc">{{ $course['description'] }}</p>
 
                     <ul class="hm-cd-hero__meta">
-                        <li class="hm-cd-hero__meta-item">
-                            {{-- No calendar icon ships in courses/, so this reuses the
-                                 blog one rather than inventing a placeholder. --}}
-                            <img src="{{ asset('assets/images/blog/calendar.png') }}" alt="" aria-hidden="true">
-                            <time datetime="{{ $course['datetime'] }}">{{ $course['date'] }}</time>
-                        </li>
+                        {{-- The next batch's dates. Dropped entirely when the course
+                             has no upcoming batch — an empty <time> next to a
+                             calendar icon reads as a page that failed to load. --}}
+                        @if ($course['date'])
+                            <li class="hm-cd-hero__meta-item">
+                                {{-- No calendar icon ships in courses/, so this reuses the
+                                     blog one rather than inventing a placeholder. --}}
+                                <img src="{{ asset('assets/images/blog/calendar.png') }}" alt="" aria-hidden="true">
+                                <time datetime="{{ $course['datetime'] }}">{{ $course['date'] }}</time>
+                            </li>
+                        @endif
                         <li class="hm-cd-hero__meta-item">
                             <img src="{{ asset('assets/images/courses/school.png') }}" alt="" aria-hidden="true">
                             {{ $course['students'] }}
@@ -354,13 +369,20 @@
                                             @endif
                                         </td>
 
+                                        {{-- Mode under the duration, as on the wide
+                                             table — see partials/schedule-table. --}}
                                         <td data-label="Duration">
-                                            @if ($batchDuration)
+                                            @if ($batchDuration || $batch->training_mode)
                                                 <span class="hm-sched__stack">
-                                                    <span class="hm-sched__stack-main">
-                                                        <i class="fa-regular fa-clock" aria-hidden="true"></i>
-                                                        {{ $batchDuration }}
-                                                    </span>
+                                                    @if ($batchDuration)
+                                                        <span class="hm-sched__stack-main">
+                                                            <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                                                            {{ $batchDuration }}
+                                                        </span>
+                                                    @endif
+                                                    @if ($batch->training_mode)
+                                                        <span class="hm-sched__stack-sub">{{ $batch->training_mode }}</span>
+                                                    @endif
                                                 </span>
                                             @else
                                                 <span class="hm-sched__none">—</span>

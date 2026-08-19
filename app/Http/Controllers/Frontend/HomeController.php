@@ -68,7 +68,10 @@ class HomeController extends Controller
     {
         // All active courses (client-side filter/search keeps the design's live
         // toolbar working); departments+categories drive the filter panel.
-        $courses = Course::active()->with('category.department')->get();
+        //
+        // nextSchedule is the soonest upcoming batch, which is where each card
+        // now gets its mode from — eager-loaded, or it is a query per card.
+        $courses = Course::active()->with(['category.department', 'nextSchedule'])->get();
 
         $departments = Department::active()
             ->with(['categories' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
@@ -117,12 +120,14 @@ class HomeController extends Controller
                 'category.department',
                 'faqs',
                 'schedules' => fn ($q) => $q->active()->upcoming(),
+                // The soonest of those — the hero's dates and the "Mode" stat.
+                'nextSchedule',
             ])
             ->where('slug', $slug)
             ->firstOrFail();
 
         $continueLearning = Course::active()->continueLearning()
-            ->with('category')
+            ->with(['category', 'nextSchedule'])
             ->whereKeyNot($course->id)
             ->take(4)
             ->get();

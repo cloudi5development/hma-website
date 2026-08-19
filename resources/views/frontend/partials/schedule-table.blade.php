@@ -112,13 +112,23 @@
                         @endif
                     </td>
 
+                    {{-- The mode sits under the duration rather than in a column of
+                         its own: this table is already seven columns wide, and the
+                         stack's sub line is exactly the slot for a short qualifier.
+                         Optional, so a batch entered before the field moved off the
+                         course simply shows the duration alone. --}}
                     <td data-label="Duration">
-                        @if ($duration)
+                        @if ($duration || $schedule->training_mode)
                             <span class="hm-sched__stack">
-                                <span class="hm-sched__stack-main">
-                                    <i class="fa-regular fa-clock" aria-hidden="true"></i>
-                                    {{ $duration }}
-                                </span>
+                                @if ($duration)
+                                    <span class="hm-sched__stack-main">
+                                        <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                                        {{ $duration }}
+                                    </span>
+                                @endif
+                                @if ($schedule->training_mode)
+                                    <span class="hm-sched__stack-sub">{{ $schedule->training_mode }}</span>
+                                @endif
                             </span>
                         @else
                             <span class="hm-sched__none">—</span>

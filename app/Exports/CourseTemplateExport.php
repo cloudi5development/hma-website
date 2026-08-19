@@ -21,7 +21,7 @@ use Maatwebsite\Excel\Concerns\WithTitle;
  * Sheets:
  *   Courses         the grid. Headings in row 1, data from row 2. Nothing else.
  *   Instructions    what each column wants
- *   Allowed Values  the categories/modes/levels this installation accepts today
+ *   Allowed Values  the categories and skill levels this installation accepts today
  *   _master         hidden; the source ranges behind the Courses dropdowns
  *
  * Only the Courses sheet is read on import (see CourseRowsImport::sheets), so the
@@ -104,8 +104,7 @@ class CourseTemplateInstructionsSheet implements FromArray, WithHeadings, WithTi
             ['Create or update', '', 'The "slug" column is the identity of a row. A slug that already exists UPDATES that course; a new slug CREATES one. Leave slug blank on a new course and it is built from the course name.'],
             ['Editing existing courses', '', 'Use Export Courses to download what is already there, edit the rows, and upload the same file back. Do not change the slug of a row you mean to update.'],
             ['Images and brochures', '', 'NOT part of this file. Add them from Courses → Edit after importing. An import never changes a course image or brochure.'],
-            ['Batches / schedules', '', 'NOT part of this file. Manage them at Courses → Schedule.'],
-            ['Date format', '', 'batch_start accepts ' . implode(' or ', CourseImportTemplate::DATE_FORMATS) . '. DD-MM-YYYY is recommended, e.g. 04-08-2026. A real Excel date cell works too.'],
+            ['Batches / schedules', '', 'NOT part of this file. Batch start dates, end dates and the training Mode are managed at Courses → Schedule — the website reads them off the soonest upcoming batch.'],
             ['Yes / No columns', '', 'Yes, No, Y, N, 1, 0, True, False, Active and Inactive are all understood. Anything else is reported as an error rather than guessed at.'],
             ['FAQ rules', '', 'Up to ' . Course::MAX_FAQS . ' per course. Leave both cells of a pair blank to skip it. A question without an answer (or the reverse) is an error. On update, the FAQ columns replace that course\'s existing FAQs.'],
             ['Learning outcomes', '', 'One outcome per line. Press Alt+Enter inside the cell to add a line. Line breaks are kept exactly as typed.'],
@@ -154,10 +153,6 @@ class CourseTemplateAllowedValuesSheet implements FromArray, WithHeadings, WithT
 
         if ($categories->isEmpty()) {
             $rows[] = ['category', '(none yet)', 'Create a category first, under Courses → Categories.'];
-        }
-
-        foreach (Course::TRAINING_MODES as $mode) {
-            $rows[] = ['mode', $mode, ''];
         }
 
         foreach (Course::SKILL_LEVELS as $level) {

@@ -49,9 +49,7 @@ class CourseBrochureTest extends TestCase
         return array_merge([
             'category_id'      => $this->category()->id,
             'name'             => 'IT Software Fundamentals',
-            'batch_start_date' => '2026-09-01',
             'duration'         => '6 Months',
-            'training_mode'    => 'Offline',
             'skill_level'      => 'Beginner',
             'is_active'        => 1,
             'image'            => UploadedFile::fake()->image('course.png', 900, 600),
@@ -172,9 +170,7 @@ class CourseBrochureTest extends TestCase
             ->put(route('backend.courses.update', $course), [
                 'category_id'      => $course->category_id,
                 'name'             => $course->name,
-                'batch_start_date' => '2026-09-01',
                 'duration'         => '6 Months',
-                'training_mode'    => 'Offline',
                 'skill_level'      => 'Beginner',
                 'is_active'        => 1,
                 'brochure'         => $this->pdf('second.pdf'),
@@ -201,9 +197,7 @@ class CourseBrochureTest extends TestCase
             ->put(route('backend.courses.update', $course), [
                 'category_id'      => $course->category_id,
                 'name'             => $course->name,
-                'batch_start_date' => '2026-09-01',
                 'duration'         => '6 Months',
-                'training_mode'    => 'Offline',
                 'skill_level'      => 'Beginner',
                 'is_active'        => 1,
                 'remove_brochure'  => 1,
@@ -227,9 +221,7 @@ class CourseBrochureTest extends TestCase
             ->put(route('backend.courses.update', $course), [
                 'category_id'      => $course->category_id,
                 'name'             => 'Renamed Course',
-                'batch_start_date' => '2026-09-01',
                 'duration'         => '6 Months',
-                'training_mode'    => 'Offline',
                 'skill_level'      => 'Beginner',
                 'is_active'        => 1,
             ])

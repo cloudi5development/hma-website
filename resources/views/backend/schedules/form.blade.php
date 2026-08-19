@@ -101,9 +101,15 @@
                     </div>
                 </div>
 
-                {{-- Row 3 — duration + the daily timing --}}
+                {{-- Row 3 — duration, mode, and the daily timing.
+
+                     Mode moved here off the course form: a course does not have
+                     one mode, its batches do — an evening online intake and a
+                     weekend campus intake of the same course are both normal.
+                     The course card and the course page read this off the
+                     soonest upcoming batch. --}}
                 <div class="row g-3 mt-1">
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
                         <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="duration">Duration <span class="form-hint" style="display:inline">(optional)</span></label>
                             <input type="text" id="duration" name="duration"
@@ -113,7 +119,21 @@
                             @error('duration') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
                     </div>
-                    <div class="col-6 col-md-4">
+                    <div class="col-12 col-md-3">
+                        <div class="form-row" style="margin-bottom:0">
+                            <label class="form-label" for="training_mode">Mode</label>
+                            <select id="training_mode" name="training_mode"
+                                    class="form-control-hm @error('training_mode') is-invalid @enderror" required>
+                                <option value="">—</option>
+                                @foreach (\App\Models\CourseSchedule::TRAINING_MODES as $mode)
+                                    <option value="{{ $mode }}" {{ old('training_mode', $schedule->training_mode) === $mode ? 'selected' : '' }}>{{ $mode }}</option>
+                                @endforeach
+                            </select>
+                            <p class="form-hint">How this batch is taught.</p>
+                            @error('training_mode') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
                         <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="start_time">Start Time <span class="form-hint" style="display:inline">(optional)</span></label>
                             <input type="time" id="start_time" name="start_time"
@@ -122,7 +142,7 @@
                             @error('start_time') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
                     </div>
-                    <div class="col-6 col-md-4">
+                    <div class="col-6 col-md-3">
                         <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="end_time">End Time <span class="form-hint" style="display:inline">(optional)</span></label>
                             <input type="time" id="end_time" name="end_time"

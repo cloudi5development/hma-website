@@ -384,6 +384,8 @@
             'title'       => $c->name,
             'rating'      => $c->rating,
             'duration'    => $c->duration,
+            // Off the course's soonest upcoming batch (Courses → Schedule) —
+            // null when it has none, and the card then prints its own default.
             'mode'        => $c->training_mode,
             'certificate' => 'Industry Certificate',
             'url'         => route('frontend.course-details', $c->slug),

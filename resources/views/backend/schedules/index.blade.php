@@ -31,7 +31,7 @@
                 <thead>
                     <tr>
                         <th>Course</th><th>Category</th><th>Start Date</th><th>End Date</th>
-                        <th>Duration</th><th>Timing</th><th>Fee</th><th>Status</th><th class="text-end">Actions</th>
+                        <th>Duration</th><th>Mode</th><th>Timing</th><th>Fee</th><th>Status</th><th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -64,6 +64,15 @@
                                 @endif
                             </td>
                             <td>{{ $schedule->duration ?: $course?->duration ?: '—' }}</td>
+                            {{-- Blank on a batch that predates the field moving off
+                                 the course; editing the batch is what fills it in. --}}
+                            <td>
+                                @if ($schedule->training_mode)
+                                    <span class="pill pill--tiny">{{ $schedule->training_mode }}</span>
+                                @else
+                                    <span class="hm-table__sub">—</span>
+                                @endif
+                            </td>
                             <td>{{ $schedule->time_range_label ?: '—' }}</td>
                             <td>
                                 @if ($schedule->fee_label)
@@ -103,7 +112,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="9" class="text-center py-5 hm-table__sub">No batches yet. Add your first one.</td></tr>
+                        <tr><td colspan="10" class="text-center py-5 hm-table__sub">No batches yet. Add your first one.</td></tr>
                     @endforelse
                 </tbody>
             </table>

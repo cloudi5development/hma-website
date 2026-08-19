@@ -94,9 +94,7 @@ class CourseModuleSeeder extends Seeder
                     'category_id'          => $category->id,
                     'name'                 => $name,
                     'image'                => 'assets/images/courses/course-' . (($i % 4) + 1) . '.webp',
-                    'batch_start_date'     => now()->addDays(14 + $i * 7)->toDateString(),
                     'duration'             => $durations[$i % count($durations)],
-                    'training_mode'        => $modes[$i % count($modes)],
                     'skill_level'          => $levels[$i % count($levels)],
                     'rating'               => 4.5,
                     'short_description'    => 'Build practical, job-ready skills in ' . $category->name . ' through hands-on projects and expert mentorship.',
@@ -117,7 +115,32 @@ class CourseModuleSeeder extends Seeder
             );
 
             $this->seedFaqs($course);
+            $this->seedBatch($course, $modes[$i % count($modes)], 14 + $i * 7);
         }
+    }
+
+    /**
+     * One upcoming batch per course.
+     *
+     * The course row used to carry a batch_start_date and a training_mode of its
+     * own; both moved onto the batch, and the card's mode line and the details
+     * hero's dates read off the soonest upcoming one. So a seeded install has to
+     * schedule something, or every course renders with those slots empty.
+     */
+    private function seedBatch(Course $course, string $mode, int $startsInDays): void
+    {
+        $start = now()->addDays($startsInDays)->startOfDay();
+
+        $course->schedules()->updateOrCreate(
+            ['start_date' => $start->toDateString()],
+            [
+                'end_date'      => $start->copy()->addMonths(3)->toDateString(),
+                'duration'      => $course->duration,
+                'training_mode' => $mode,
+                'is_active'     => true,
+                'show_fee'      => true,
+            ]
+        );
     }
 
     /** Four standard FAQs per course (idempotent — cleared then re-added). */

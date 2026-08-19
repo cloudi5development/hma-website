@@ -83,35 +83,20 @@
                     </div>
                 </div>
 
+                {{-- The batch start date and the Mode used to sit here. Both are
+                     the batch's business, not the course's, and Courses →
+                     Schedule already holds them per intake — so the website reads
+                     them off the soonest upcoming batch and this form no longer
+                     asks for a second, contradictory copy. --}}
                 <div class="row g-3 mt-2">
-                    <div class="col-6 col-md-3">
-                        <div class="form-row" style="margin-bottom:0">
-                            <label class="form-label" for="batch_start_date">Batch Start</label>
-                            <input type="date" id="batch_start_date" name="batch_start_date"
-                                   class="form-control-hm @error('batch_start_date') is-invalid @enderror"
-                                   value="{{ old('batch_start_date', optional($course->batch_start_date)->toDateString()) }}" required>
-                            @error('batch_start_date') <p class="form-error">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
                     <div class="col-6 col-md-3">
                         <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="duration">Duration</label>
                             <input type="text" id="duration" name="duration"
                                    class="form-control-hm @error('duration') is-invalid @enderror"
                                    value="{{ old('duration', $course->duration) }}" placeholder="3 Months" required>
+                            <p class="form-hint">The batch's own duration, where it has one, wins over this.</p>
                             @error('duration') <p class="form-error">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="form-row" style="margin-bottom:0">
-                            <label class="form-label" for="training_mode">Mode</label>
-                            <select id="training_mode" name="training_mode" class="form-control-hm @error('training_mode') is-invalid @enderror" required>
-                                <option value="">—</option>
-                                @foreach (\App\Models\Course::TRAINING_MODES as $mode)
-                                    <option value="{{ $mode }}" {{ old('training_mode', $course->training_mode) === $mode ? 'selected' : '' }}>{{ $mode }}</option>
-                                @endforeach
-                            </select>
-                            @error('training_mode') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
@@ -360,7 +345,9 @@
                 </div>
                 <p class="form-hint">
                     Upcoming batches for this course are managed under
-                    <strong>Courses → Schedule</strong>.
+                    <strong>Courses → Schedule</strong> — including their
+                    <strong>start date, end date and mode</strong>, which the website
+                    reads off the soonest upcoming batch.
                 </p>
                 @endif
 

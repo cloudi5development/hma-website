@@ -77,9 +77,7 @@ class CourseBulkUploadTest extends TestCase
             'course_name'               => 'Full Stack Development',
             'category'                  => 'IT & Software',
             'slug'                      => '',
-            'batch_start'               => '04-08-2026',
             'duration'                  => '6 Months',
-            'mode'                      => 'Offline',
             'skill_level'               => 'Beginner',
             'short_description'         => 'Build complete web applications.',
             'full_description'          => 'Long form copy.',
@@ -169,9 +167,7 @@ class CourseBulkUploadTest extends TestCase
             'category_id'      => $this->category->id,
             'name'             => 'Existing Course',
             'slug'             => 'existing-course',
-            'batch_start_date' => '2026-01-01',
             'duration'         => '2 Months',
-            'training_mode'    => 'Online',
             'skill_level'      => 'Beginner',
             'image'            => 'storage/courses/original.webp',
             'brochure'         => 'storage/courses/brochures/original.pdf',
@@ -192,9 +188,7 @@ class CourseBulkUploadTest extends TestCase
         $this->assertSame('Full Stack Development', $course->name);
         $this->assertSame('full-stack-development', $course->slug);
         $this->assertSame($this->category->id, $course->category_id);
-        $this->assertSame('2026-08-04', $course->batch_start_date->format('Y-m-d'));
         $this->assertSame('6 Months', $course->duration);
-        $this->assertSame('Offline', $course->training_mode);
         $this->assertSame('Beginner', $course->skill_level);
         $this->assertTrue($course->is_active);
         $this->assertTrue($course->is_popular);
@@ -273,14 +267,6 @@ class CourseBulkUploadTest extends TestCase
         $this->assertStringContainsString('course_name is required', $this->firstError($report));
     }
 
-    public function test_an_invalid_mode_is_named_in_the_error(): void
-    {
-        $report = $this->import($this->row(['mode' => 'Physical']));
-
-        $this->assertSame(0, Course::count());
-        $this->assertStringContainsString('Mode "Physical" is not supported', $this->firstError($report));
-    }
-
     public function test_an_invalid_skill_level_is_named_in_the_error(): void
     {
         $report = $this->import($this->row(['skill_level' => 'Wizard']));
@@ -289,33 +275,26 @@ class CourseBulkUploadTest extends TestCase
         $this->assertStringContainsString('Skill level "Wizard" is not supported', $this->firstError($report));
     }
 
-    public function test_mode_and_skill_level_tolerate_case_and_spacing(): void
+    public function test_skill_level_tolerates_case_and_spacing(): void
     {
-        $report = $this->import($this->row(['mode' => '  online ', 'skill_level' => 'ADVANCED']));
+        $report = $this->import($this->row(['skill_level' => '  ADVANCED ']));
 
         $this->assertSame(1, $report['summary']['ready']);
-
-        $course = Course::firstOrFail();
-        $this->assertSame('Online', $course->training_mode);
-        $this->assertSame('Advanced', $course->skill_level);
+        $this->assertSame('Advanced', Course::firstOrFail()->skill_level);
     }
 
-    public function test_an_invalid_date_is_an_error(): void
+    /**
+     * batch_start and mode left the sheet when they moved onto the batch
+     * (Courses → Schedule). A file still carrying them is an old export, and it
+     * must import cleanly rather than reporting unknown columns.
+     */
+    public function test_a_sheet_still_carrying_the_retired_batch_columns_imports_anyway(): void
     {
-        $report = $this->import($this->row(['batch_start' => '32-13-2026']));
+        $report = $this->import($this->row(['batch_start' => '04-08-2026', 'mode' => 'Offline']));
 
-        $this->assertSame(0, Course::count());
-        $this->assertStringContainsString('not a date the importer recognises', $this->firstError($report));
-    }
-
-    public function test_the_documented_date_formats_all_parse_to_the_same_day(): void
-    {
-        foreach (['04-08-2026' => '2026-08-04', '04/08/2026' => '2026-08-04', '2026-08-04' => '2026-08-04'] as $input => $expected) {
-            $this->assertSame($expected, CourseImportTemplate::toDate($input), "failed on {$input}");
-        }
-
-        // A real Excel date cell arrives as a serial number, not text.
-        $this->assertSame('2026-08-04', CourseImportTemplate::toDate(46238.0));
+        $this->assertSame(1, $report['summary']['ready']);
+        $this->assertSame(0, $report['summary']['errors']);
+        $this->assertSame('Full Stack Development', Course::firstOrFail()->name);
     }
 
     /**
@@ -511,9 +490,7 @@ class CourseBulkUploadTest extends TestCase
         $report = $this->importer()->import($this->rows([
             'course_name' => 'Bare Minimum',
             'category'    => 'IT & Software',
-            'batch_start' => '04-08-2026',
             'duration'    => '1 Month',
-            'mode'        => 'Online',
             'skill_level' => 'Beginner',
         ]));
 
@@ -578,7 +555,7 @@ class CourseBulkUploadTest extends TestCase
     {
         $report = $this->import(
             $this->row(['course_name' => 'Good One']),
-            $this->row(['course_name' => 'Bad One', 'mode' => 'Telepathic']),
+            $this->row(['course_name' => 'Bad One', 'skill_level' => 'Telepathic']),
             $this->row(['course_name' => 'Good Two']),
         );
 
@@ -708,9 +685,9 @@ class CourseBulkUploadTest extends TestCase
     {
         Storage::fake('local');
 
-        $csv = "course_name,category,batch_start,duration,mode,skill_level\n"
-             . "Full Stack Development,IT & Software,04-08-2026,6 Months,Offline,Beginner\n"
-             . "Dupe,Astrophysics,04-08-2026,6 Months,Offline,Beginner\n";
+        $csv = "course_name,category,duration,skill_level\n"
+             . "Full Stack Development,IT & Software,6 Months,Beginner\n"
+             . "Dupe,Astrophysics,6 Months,Beginner\n";
 
         $admin = $this->mainAdmin();
 
@@ -774,8 +751,12 @@ class CourseBulkUploadTest extends TestCase
         }
 
         // ...and the dropdown values are shown, not just named.
-        $this->assertStringContainsString('Online, Offline, Hybrid', $html);
         $this->assertStringContainsString('Beginner, Intermediate, Advanced', $html);
+
+        // The batch fields are not on this page at all — the copy points at
+        // Courses → Schedule instead of documenting columns that no longer exist.
+        $this->assertStringNotContainsString('batch_start', $html);
+        $this->assertStringContainsString('Courses → Schedule', $html);
     }
 
     /** A bad file bounces back to the upload page with a toastable message. */
@@ -812,9 +793,9 @@ class CourseBulkUploadTest extends TestCase
     {
         Storage::fake('local');
 
-        $csv = "course_name,category,batch_start,duration,mode,skill_level\n"
-             . "Full Stack Development,IT & Software,04-08-2026,6 Months,Offline,Beginner\n"
-             . "Data Science,Astrophysics,04-08-2026,3 Months,Online,Beginner\n";
+        $csv = "course_name,category,duration,skill_level\n"
+             . "Full Stack Development,IT & Software,6 Months,Beginner\n"
+             . "Data Science,Astrophysics,3 Months,Beginner\n";
 
         $admin = $this->mainAdmin();
 
@@ -851,8 +832,8 @@ class CourseBulkUploadTest extends TestCase
     {
         Storage::fake('local');
 
-        $csv = "course_name,category,batch_start,duration,mode,skill_level\n"
-             . "Full Stack Development,IT & Software,04-08-2026,6 Months,Offline,Beginner\n";
+        $csv = "course_name,category,duration,skill_level\n"
+             . "Full Stack Development,IT & Software,6 Months,Beginner\n";
 
         $admin = $this->mainAdmin();
 
@@ -883,10 +864,10 @@ class CourseBulkUploadTest extends TestCase
     {
         Storage::fake('local');
 
-        $csv = "course_name,category,batch_start,duration,mode,skill_level\n"
-             . "Full Stack Development,IT & Software,04-08-2026,6 Months,Offline,Beginner\n"
-             . ",,,,,\n"
-             . ",,,,,\n";
+        $csv = "course_name,category,duration,skill_level\n"
+             . "Full Stack Development,IT & Software,6 Months,Beginner\n"
+             . ",,,\n"
+             . ",,,\n";
 
         $admin = $this->mainAdmin();
 
@@ -906,9 +887,9 @@ class CourseBulkUploadTest extends TestCase
     {
         Storage::fake('local');
 
-        $csv = "course_name,category,batch_start,duration,mode,skill_level\n"
-             . "Good,IT & Software,04-08-2026,6 Months,Offline,Beginner\n"
-             . "Bad,Astrophysics,04-08-2026,3 Months,Online,Beginner\n";
+        $csv = "course_name,category,duration,skill_level\n"
+             . "Good,IT & Software,6 Months,Beginner\n"
+             . "Bad,Astrophysics,3 Months,Beginner\n";
 
         $admin = $this->mainAdmin();
 
@@ -1195,11 +1176,11 @@ class CourseBulkUploadTest extends TestCase
         $this->assertCount(0, $book->getNamedRanges());
 
         $formula = $book->getSheetByName('Courses')
-            ->getCell(CourseImportTemplate::columnLetter('mode') . '2')
+            ->getCell(CourseImportTemplate::columnLetter('skill_level') . '2')
             ->getDataValidation()
             ->getFormula1();
 
-        $this->assertSame('"Online,Offline,Hybrid"', $formula);
+        $this->assertSame('"Beginner,Intermediate,Advanced"', $formula);
     }
 
     /**
@@ -1240,12 +1221,12 @@ class CourseBulkUploadTest extends TestCase
         $this->assertNotNull($book->getNamedRange($formula));
 
         // The short lists stay inline even so.
-        $mode = $book->getSheetByName('Courses')
-            ->getCell(CourseImportTemplate::columnLetter('mode') . '2')
+        $level = $book->getSheetByName('Courses')
+            ->getCell(CourseImportTemplate::columnLetter('skill_level') . '2')
             ->getDataValidation()
             ->getFormula1();
 
-        $this->assertSame('"Online,Offline,Hybrid"', $mode);
+        $this->assertSame('"Beginner,Intermediate,Advanced"', $level);
     }
 
     public function test_a_category_containing_a_comma_is_not_inlined(): void
@@ -1263,14 +1244,13 @@ class CourseBulkUploadTest extends TestCase
         $this->assertTrue(\App\Exports\CourseMasterDataSheet::usesRange('category'));
     }
 
-    public function test_the_date_and_number_columns_carry_their_own_rules(): void
+    public function test_the_number_columns_carry_their_own_rules(): void
     {
         $sheet = $this->loadWorkbook(\App\Exports\CourseTemplateExport::template())->getSheetByName('Courses');
 
         $expected = [
-            'batch_start' => \PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_DATE,
-            'order'       => \PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_WHOLE,
-            'rating'      => \PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_DECIMAL,
+            'order'  => \PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_WHOLE,
+            'rating' => \PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_DECIMAL,
         ];
 
         foreach ($expected as $column => $type) {
@@ -1280,33 +1260,19 @@ class CourseBulkUploadTest extends TestCase
             $this->assertSame($type, $rule->getType(), "The '{$column}' column is missing its {$type} rule.");
             $this->assertTrue($rule->getShowDropDown());
         }
-
-        // A date rule is useless if the cell then shows 46238 instead of a date.
-        $dateLetter = CourseImportTemplate::columnLetter('batch_start');
-        $this->assertSame(
-            'DD-MM-YYYY',
-            $sheet->getStyle($dateLetter . '2')->getNumberFormat()->getFormatCode(),
-        );
     }
 
     /**
-     * Dates must be written as real date cells, not text — the column carries a
-     * date rule, so a text value would make the export fail its own validation.
+     * The sheet carries no batch fields at all any more — those live on the
+     * batch (Courses → Schedule), and an admin who finds a batch_start column
+     * here would reasonably expect editing it to move a batch.
      */
-    public function test_exported_dates_are_real_date_cells_and_re_import_correctly(): void
+    public function test_the_sheet_no_longer_carries_the_batch_columns(): void
     {
-        $this->seedCourse(['name' => 'Dated', 'slug' => 'dated', 'batch_start_date' => '2026-08-04']);
+        $headings = CourseImportTemplate::headings();
 
-        $sheet = $this->loadWorkbook(\App\Exports\CourseTemplateExport::withData())->getSheetByName('Courses');
-        $cell  = $sheet->getCell(CourseImportTemplate::columnLetter('batch_start') . '2');
-
-        $this->assertIsNumeric($cell->getValue(), 'batch_start must be a date serial, not text.');
-
-        // ...and the importer reads that serial straight back.
-        $reader = $this->readWorkbook(\App\Exports\CourseTemplateExport::withData());
-        $this->importer()->import($reader->rows());
-
-        $this->assertSame('2026-08-04', Course::where('slug', 'dated')->firstOrFail()->batch_start_date->format('Y-m-d'));
+        $this->assertNotContains('batch_start', $headings);
+        $this->assertNotContains('mode', $headings);
     }
 
     /** The category dropdown lists what is actually in the database right now. */
@@ -1359,7 +1325,7 @@ class CourseBulkUploadTest extends TestCase
         $this->seedCourse(['name' => 'Beta', 'slug' => 'beta', 'is_active' => false, 'is_popular' => true]);
 
         $before = Course::orderBy('id')->get()->map->only([
-            'id', 'name', 'slug', 'duration', 'training_mode', 'skill_level',
+            'id', 'name', 'slug', 'duration', 'skill_level',
             'sort_order', 'is_active', 'is_popular', 'image', 'brochure',
         ])->toArray();
 
@@ -1374,7 +1340,7 @@ class CourseBulkUploadTest extends TestCase
         $this->assertSame(2, Course::count(), 'A re-imported export must not duplicate anything.');
 
         $after = Course::orderBy('id')->get()->map->only([
-            'id', 'name', 'slug', 'duration', 'training_mode', 'skill_level',
+            'id', 'name', 'slug', 'duration', 'skill_level',
             'sort_order', 'is_active', 'is_popular', 'image', 'brochure',
         ])->toArray();
 

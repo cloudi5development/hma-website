@@ -133,7 +133,7 @@ class AppServiceProvider extends ServiceProvider
             // marks. Their thumbnails are lazy-loaded, so a long list costs the
             // visitor nothing until they scroll it.
             $view->with('popularCourses', Course::active()->popular()
-                ->with('category')
+                ->with(['category', 'nextSchedule'])
                 ->get());
 
             // Upcoming Course Schedules — the batches created in Admin →
