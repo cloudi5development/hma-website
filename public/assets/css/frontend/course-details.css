@@ -378,6 +378,34 @@
 
 .hm-cd-sec__desc--about { max-width: 100%; }
 
+/* ============================== AUDIENCE ==============================
+   "Who This Course Is For" — a body section in the page's own rhythm, sat
+   under About the Course. Chips rather than a paragraph so a short list scans
+   at a glance, in the page's terracotta on a warm cream fill (the family the
+   hero label and the Enroll button already use). */
+.hm-cd-aud__list {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.hm-cd-aud__chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 18px;
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.45;
+    color: #7A3A1E;
+    background: linear-gradient(135deg, #FFF4EA, #FFE7D9);
+    border: 1px solid rgba(132, 61, 33, .16);
+    border-radius: 999px;
+}
+
 /* ============================== HIGHLIGHTS ==============================
    Built here rather than reusing home's .hm-cat: that card carries a course
    count and a 56px badge image this one does not have, and its CSS lives in
@@ -523,6 +551,7 @@
 @media (max-width: 767.98px) {
     .hm-cd { padding-top: calc(94px + 36px); }
     .hm-cd-hero__title { font-size: 24px; }
+    .hm-cd-aud__chip { padding: 7px 14px; font-size: 12.5px; }
     .hm-cd-sec__title { font-size: 21px; }
 
     .hm-cd-feat { flex-basis: 100%; }

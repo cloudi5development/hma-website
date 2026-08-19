@@ -87,6 +87,7 @@ class CourseBulkUploadTest extends TestCase
             'learning_outcomes'         => "Master core concepts\nBuild real-world projects",
             'prerequisites'             => 'None.',
             'certification_details'     => 'Certificate on completion.',
+            'audience'                  => 'Freshers and working professionals.',
             'status'                    => 'Active',
             'order'                     => 1,
             'rating'                    => 4.5,
@@ -1481,6 +1482,80 @@ class CourseBulkUploadTest extends TestCase
      * cope with one. Every surface that draws a course card is checked, because
      * an imported course lands on all of them at once.
      */
+    /**
+     * Audience is a plain optional text column: it imports on a create, updates
+     * on an update, survives a round trip, and its absence changes nothing.
+     */
+    public function test_the_audience_column_imports_on_a_create(): void
+    {
+        $this->import($this->row(['audience' => "Freshers\nWorking professionals"]));
+
+        $this->assertSame(
+            "Freshers\nWorking professionals",
+            Course::firstOrFail()->audience,
+        );
+    }
+
+    public function test_the_audience_column_updates_an_existing_course(): void
+    {
+        $this->seedCourse(['audience' => 'Students only.']);
+
+        $report = $this->importer()->import($this->rows([
+            'course_name' => 'Existing Course',
+            'slug'        => 'existing-course',
+            'audience'    => 'Freshers, graduates and working professionals.',
+        ]));
+
+        $this->assertSame(1, $report['summary']['update']);
+        $this->assertSame(
+            'Freshers, graduates and working professionals.',
+            Course::where('slug', 'existing-course')->firstOrFail()->audience,
+        );
+    }
+
+    /** An older sheet with no audience column must leave the field alone. */
+    public function test_a_sheet_without_the_audience_column_keeps_the_existing_audience(): void
+    {
+        $this->seedCourse(['audience' => 'Set by hand.']);
+
+        $row = $this->row(['course_name' => 'Existing Course', 'slug' => 'existing-course']);
+        unset($row['audience']);
+
+        $report = $this->importer()->import($this->rows($row));
+
+        $this->assertSame(1, $report['summary']['update']);
+        $this->assertSame('Set by hand.', Course::where('slug', 'existing-course')->firstOrFail()->audience);
+    }
+
+    /** A blank cell is simply an empty audience, not an error. */
+    public function test_a_blank_audience_is_allowed(): void
+    {
+        $report = $this->import($this->row(['audience' => '']));
+
+        $this->assertSame(0, $report['summary']['errors']);
+        $this->assertNull(Course::firstOrFail()->audience);
+    }
+
+    public function test_the_template_carries_the_audience_column(): void
+    {
+        $this->assertContains('audience', CourseImportTemplate::headings());
+        $this->assertNotContains('audience', CourseImportTemplate::requiredHeadings());
+    }
+
+    public function test_the_audience_survives_an_export_and_re_import(): void
+    {
+        $this->seedCourse(['slug' => 'alpha', 'name' => 'Alpha', 'audience' => "Freshers\nCareer switchers"]);
+
+        $reader = $this->readWorkbook(\App\Exports\CourseTemplateExport::withData());
+        $report = $this->importer()->import($reader->rows());
+
+        $this->assertSame(1, $report['summary']['update']);
+        $this->assertSame(
+            "Freshers\nCareer switchers",
+            Course::where('slug', 'alpha')->firstOrFail()->audience,
+        );
+    }
+
     public function test_an_imported_course_without_an_image_still_renders_on_the_site(): void
     {
         $this->import($this->row([

@@ -11,6 +11,31 @@
     // original copy so the hero/stat cards stay visually identical.
     // ----------------------------------------------------------------------
     $model = $course;
+
+    // The audience reads as chips, so the stored text is broken into
+    // its parts: one per line, as the admin form invites. A single line of short
+    // comma-separated items ("Freshers, Graduates") splits on the commas too,
+    // while a prose sentence is left whole rather than chopped into fragments —
+    // a chip is a label of a few words, so a clause longer than that is the
+    // tell that the admin wrote a sentence and not a list.
+    $audienceFor = collect(preg_split('/\r\n|\r|\n/', (string) $model->audience))
+        ->map(fn ($line) => trim($line))
+        ->filter()
+        ->values();
+
+    if ($audienceFor->count() === 1 && str_contains($audienceFor[0], ',')) {
+        $commaParts = collect(explode(',', $audienceFor[0]))
+            ->map(fn ($part) => trim($part))
+            ->filter()
+            ->values();
+
+        if ($commaParts->every(fn ($part) => mb_strlen($part) <= 28 && count(preg_split('/\s+/', $part)) <= 4)) {
+            $audienceFor = $commaParts;
+        }
+    }
+
+    $audienceFor = $audienceFor->all();
+
     $course = [
         'slug'        => $model->slug,
         'title'       => $model->name,
@@ -27,6 +52,10 @@
         // Null when no brochure has been uploaded — the button is then not rendered.
         'brochure_url' => $model->has_brochure ? route('frontend.course-brochure', $model->slug) : null,
         'about'       => $model->overview ?: $model->full_description ?: $model->short_description,
+        // Who the course is for (Admin → Courses → Audience) — see $audienceFor
+        // above. Empty on every course that predates the field, and the section
+        // is then skipped entirely.
+        'audience'    => $audienceFor,
     ];
 @endphp
 
@@ -233,6 +262,22 @@
                 <h2 class="hm-cd-sec__title" id="hmCdAbout">About the Course</h2>
                 <p class="hm-cd-sec__desc hm-cd-sec__desc--about">{{ $course['about'] }}</p>
             </section>
+
+            {{-- ============================= AUDIENCE =============================
+                 Its own body section, in the page's section rhythm. The value is
+                 read as chips rather than a paragraph so a short list scans at a
+                 glance. Left out entirely when the course has no audience set, so
+                 a course that predates the field reads exactly as before. --}}
+            @if ($course['audience'])
+                <section class="hm-cd-sec hm-cd-aud" aria-labelledby="hmCdAudience">
+                    <h2 class="hm-cd-sec__title" id="hmCdAudience">Who This Course Is For</h2>
+                    <ul class="hm-cd-aud__list">
+                        @foreach ($course['audience'] as $who)
+                            <li class="hm-cd-aud__chip">{{ $who }}</li>
+                        @endforeach
+                    </ul>
+                </section>
+            @endif
 
             {{-- ========================= UPCOMING BATCHES =========================
                  The batches listed for this course in Admin → Courses →

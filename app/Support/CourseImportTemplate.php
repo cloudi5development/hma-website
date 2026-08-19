@@ -83,6 +83,10 @@ class CourseImportTemplate
             'required' => false,
             'help'     => 'Up to 2000 characters.',
         ],
+        'audience' => [
+            'required' => false,
+            'help'     => 'Who the course is for, e.g. "Freshers, working professionals". ONE PER LINE also works — press Alt+Enter inside the cell. Up to 2000 characters. May be left blank.',
+        ],
         'status' => [
             'required' => false,
             'help'     => 'Active or Inactive. Yes/No and 1/0 also work. Blank means Active.',
@@ -302,6 +306,7 @@ class CourseImportTemplate
             'learning_outcomes'         => "Master core concepts\nBuild real-world projects\nPrepare for interviews\nEarn an industry-recognised certificate",
             'prerequisites'             => 'Comfortable with basic computer use. No prior coding required.',
             'certification_details'     => 'HireMinds Academy certificate on completion of the capstone project.',
+            'audience'                  => 'Final-year students, freshers and working professionals moving into web development.',
             'status'                    => 'Active',
             'order'                     => 1,
             'rating'                    => 4.5,

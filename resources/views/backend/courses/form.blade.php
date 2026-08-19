@@ -174,6 +174,14 @@
                     </div>
                 </div>
 
+                <div class="form-row">
+                    <label class="form-label" for="audience">Audience <span class="form-hint" style="display:inline">(who this course is for)</span></label>
+                    <textarea id="audience" name="audience" rows="2"
+                              class="form-control-hm @error('audience') is-invalid @enderror"
+                              placeholder="e.g. Freshers, working professionals, career switchers…">{{ old('audience', $course->audience) }}</textarea>
+                    @error('audience') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
+
                 <div class="form-row" style="margin-bottom:0">
                     <label class="form-label" for="certification">Certification Details</label>
                     <textarea id="certification" name="certification" rows="2"

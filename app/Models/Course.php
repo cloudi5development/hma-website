@@ -14,7 +14,7 @@ class Course extends Model
         'category_id', 'name', 'slug', 'image', 'brochure', 'batch_start_date', 'duration',
         'training_mode', 'skill_level', 'rating', 'short_description',
         'full_description', 'overview', 'learning_outcomes', 'prerequisites',
-        'certification', 'sort_order', 'is_active', 'is_popular',
+        'certification', 'audience', 'sort_order', 'is_active', 'is_popular',
         'is_continue_learning', 'is_featured',
         'meta_title', 'meta_description', 'meta_keywords',
     ];

@@ -57,6 +57,7 @@ class CourseRequest extends FormRequest
             'learning_outcomes'    => ['nullable', 'string', 'max:5000'],
             'prerequisites'        => ['nullable', 'string', 'max:2000'],
             'certification'        => ['nullable', 'string', 'max:2000'],
+            'audience'             => ['nullable', 'string', 'max:2000'],
 
             'sort_order'           => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_active'            => ['nullable', 'boolean'],

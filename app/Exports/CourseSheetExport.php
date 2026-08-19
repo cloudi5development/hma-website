@@ -99,6 +99,7 @@ class CourseSheetExport implements FromArray, WithHeadings, WithTitle, WithEvent
             'learning_outcomes'         => $course->learning_outcomes,
             'prerequisites'             => $course->prerequisites,
             'certification_details'     => $course->certification,
+            'audience'                  => $course->audience,
             'status'                    => $course->is_active ? 'Active' : 'Inactive',
             'order'                     => $course->sort_order,
             'rating'                    => $course->rating === null ? null : (float) $course->rating,
