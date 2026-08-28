@@ -24,7 +24,7 @@
             <table class="hm-table">
                 <thead>
                     <tr>
-                        <th>Video</th><th>Title</th><th>Plays from</th><th>Instagram Link</th><th>Status</th><th class="text-end">Actions</th>
+                        <th>Video</th><th>Title</th><th>Plays from</th><th>Link</th><th>Status</th><th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -35,9 +35,11 @@
                                     @if ($reel->video_url)
                                         <video src="{{ $reel->video_url }}" muted playsinline style="width:100%;height:100%;object-fit:cover"></video>
                                     @else
-                                        {{-- Link-only: nothing of ours to show a frame of. --}}
-                                        <span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#E1306C;font-size:20px">
-                                            <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+                                        {{-- Link-only: nothing of ours to show a frame of, so the
+                                             provider's mark stands in for the thumbnail. --}}
+                                        @php $via = $reel->embedProvider(); @endphp
+                                        <span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:20px;color:{{ $via === 'youtube' ? '#FF0000' : '#E1306C' }}">
+                                            <i class="fa-brands fa-{{ $via === 'youtube' ? 'youtube' : 'instagram' }}" aria-hidden="true"></i>
                                         </span>
                                     @endif
                                 </span>
@@ -48,17 +50,29 @@
                                  be worked out from the other columns. --}}
                             <td>
                                 @if ($reel->usesEmbed())
-                                    <span class="pill pill--tiny">Instagram</span>
+                                    <span class="pill pill--tiny">{{ $reel->embedProvider() === 'youtube' ? 'YouTube' : 'Instagram' }}</span>
                                     <br><span class="hm-table__sub">Click to play</span>
                                 @else
                                     <span class="pill pill--tiny pill--active">Upload</span>
                                     <br><span class="hm-table__sub">Autoplays</span>
                                 @endif
                             </td>
+                            {{-- Both links, when both were given: the one that plays and the
+                                 one that is only the card's badge. --}}
                             <td>
+                                @if ($reel->youtube_url)
+                                    <a href="{{ $reel->youtube_url }}" target="_blank" rel="noopener" class="hm-table__sub d-block">
+                                        <i class="fa-brands fa-youtube" aria-hidden="true" style="color:#FF0000"></i>
+                                        {{ \Illuminate\Support\Str::limit($reel->youtube_url, 38) }}
+                                    </a>
+                                @endif
                                 @if ($reel->instagram_url)
-                                    <a href="{{ $reel->instagram_url }}" target="_blank" rel="noopener" class="hm-table__sub">{{ \Illuminate\Support\Str::limit($reel->instagram_url, 40) }}</a>
-                                @else
+                                    <a href="{{ $reel->instagram_url }}" target="_blank" rel="noopener" class="hm-table__sub d-block">
+                                        <i class="fa-brands fa-instagram" aria-hidden="true" style="color:#E1306C"></i>
+                                        {{ \Illuminate\Support\Str::limit($reel->instagram_url, 38) }}
+                                    </a>
+                                @endif
+                                @if (! $reel->youtube_url && ! $reel->instagram_url)
                                     <span class="hm-table__sub">—</span>
                                 @endif
                             </td>

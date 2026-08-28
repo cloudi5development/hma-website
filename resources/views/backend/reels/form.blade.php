@@ -59,7 +59,7 @@
                     <h2 class="form-section__title">How this reel plays</h2>
                 </div>
                 <div class="row g-3">
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-4">
                         <div class="reel-mode reel-mode--upload">
                             <p class="reel-mode__title">Upload a video file <span class="pill pill--tiny pill--active">Autoplays</span></p>
                             <p class="reel-mode__text">
@@ -69,7 +69,17 @@
                             </p>
                         </div>
                     </div>
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-4">
+                        <div class="reel-mode reel-mode--youtube">
+                            <p class="reel-mode__title">Paste a YouTube link <span class="pill pill--tiny">Click to play</span></p>
+                            <p class="reel-mode__text">
+                                Nothing to upload — YouTube's own player is shown, click-to-play.
+                                A <strong>Short</strong> fills the card exactly; a normal landscape
+                                video plays with a band above and below it.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
                         <div class="reel-mode reel-mode--link">
                             <p class="reel-mode__title">Paste an Instagram link <span class="pill pill--tiny">Click to play</span></p>
                             <p class="reel-mode__text">
@@ -81,8 +91,9 @@
                     </div>
                 </div>
                 <p class="form-hint">
-                    Fill in <strong>one</strong> of the two below. Do both and the uploaded file wins —
-                    it plays on the card, and the link becomes the "Instagram Reel" badge on it.
+                    Fill in <strong>one</strong> of the three below. Fill in more than one and the
+                    <strong>uploaded file wins, then YouTube</strong> — and the Instagram link becomes
+                    the "Instagram Reel" badge on the card rather than the player.
                 </p>
 
                 {{-- Row 2 — video --}}
@@ -122,23 +133,47 @@
                     @error('video') <p class="form-error">{{ $message }}</p> @enderror
                 </div>
 
-                {{-- Row 3 — instagram link + display order --}}
+                {{-- Row 3 — the two links --}}
                 <div class="row g-3">
                     <div class="col-12 col-md-6">
                         <div class="form-row" style="margin-bottom:0">
-                            <label class="form-label" for="instagram_url">Instagram Link</label>
+                            <label class="form-label" for="youtube_url">
+                                <i class="fa-brands fa-youtube" aria-hidden="true" style="width:16px;color:#FF0000"></i>
+                                YouTube Link
+                            </label>
+                            <input type="url" id="youtube_url" name="youtube_url"
+                                   class="form-control-hm @error('youtube_url') is-invalid @enderror"
+                                   value="{{ old('youtube_url', $reel->youtube_url) }}"
+                                   placeholder="https://www.youtube.com/shorts/XXXXXXXXXXX">
+                            <p class="form-hint">
+                                With <strong>no video uploaded</strong>, the reel is played from here.
+                                Watch links, <strong>youtu.be</strong> share links and
+                                <strong>Shorts</strong> all work — paste whatever YouTube gives you.
+                            </p>
+                            @error('youtube_url') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
+                            <label class="form-label" for="instagram_url">
+                                <i class="fa-brands fa-instagram" aria-hidden="true" style="width:16px;color:#E1306C"></i>
+                                Instagram Link
+                            </label>
                             <input type="url" id="instagram_url" name="instagram_url"
                                    class="form-control-hm @error('instagram_url') is-invalid @enderror"
                                    value="{{ old('instagram_url', $reel->instagram_url) }}"
                                    placeholder="https://www.instagram.com/reel/XXXXXXXXX/">
                             <p class="form-hint">
-                                With <strong>no video uploaded</strong>, the reel is played from here —
-                                paste the link and it appears on the site (click-to-play).
-                                Alongside an upload, it just adds the "Instagram Reel" badge to the card.
+                                Played from here when there is <strong>no upload and no YouTube link</strong>.
+                                Alongside either of those it just adds the "Instagram Reel" badge to the card.
                             </p>
                             @error('instagram_url') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
                     </div>
+                </div>
+
+                {{-- Row 4 — display order --}}
+                <div class="row g-3 mt-1">
                     <div class="col-12 col-md-6">
                         <div class="form-row" style="margin-bottom:0">
                             <label class="form-label" for="sort_order">Display Order</label>
@@ -187,8 +222,9 @@
             border-left: 3px solid var(--line, #E7DED2);
             border-radius: 10px;
         }
-        .reel-mode--upload { border-left-color: #1F7A4D; }
-        .reel-mode--link   { border-left-color: #E1306C; }
+        .reel-mode--upload  { border-left-color: #1F7A4D; }
+        .reel-mode--youtube { border-left-color: #FF0000; }
+        .reel-mode--link    { border-left-color: #E1306C; }
         .reel-mode__title  { margin: 0 0 6px; font-size: 13.5px; font-weight: 700; color: var(--ink, #2E2620); }
         .reel-mode__text   { margin: 0; font-size: 12.5px; line-height: 1.7; color: var(--muted, #8A7E70); }
     </style>

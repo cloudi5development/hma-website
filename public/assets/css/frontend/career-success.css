@@ -477,9 +477,9 @@
 }
 
 /* ==========================================================================
-   Instagram reels — cards added by pasting a link rather than uploading a clip.
-   Instagram's own player is framed here, so it is click-to-play; the uploaded
-   cards above are the ones that autoplay.
+   Linked reels — cards added by pasting a YouTube or Instagram link rather than
+   uploading a clip. Their own player is framed here, so both are click-to-play;
+   the uploaded cards above are the ones that autoplay.
    ========================================================================== */
 .hm-reel--embed {
     cursor: default;
@@ -504,6 +504,14 @@
 .hm-reel--embed {
     --ig-header: 54px;
     --ig-footer: 108px;
+}
+/* YouTube's iframe is the player and nothing else — there are no chrome bands
+   to crop away, so the crop is switched off and it fills the card exactly. A
+   Short is already portrait and fills it edge to edge; a landscape video is
+   letterboxed by YouTube inside that frame, which is the honest result. */
+.hm-reel--embed.hm-reel--youtube {
+    --ig-header: 0px;
+    --ig-footer: 0px;
 }
 .hm-reel__embed {
     position: absolute;

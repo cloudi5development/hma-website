@@ -35,6 +35,9 @@
         $reels = collect($reels ?? [])->map(fn ($r) => [
             'video' => $r->video_url,
             'embed' => $r->usesEmbed() ? $r->embed_url : null,
+            // 'youtube' or 'instagram' — the two are framed differently (see the
+            // embed branch below), so the card has to know whose player it holds.
+            'via'   => $r->usesEmbed() ? $r->embedProvider() : null,
             'url'   => $r->instagram_url,
             'title' => $r->title,
         ])->all();
@@ -77,44 +80,53 @@
                         <div class="swiper-slide hm-reels__slide">
                             <div class="hm-reel-float">
                                 @if ($reel['embed'])
-                                    {{-- ------------------- INSTAGRAM REEL -------------------
-                                         Added by pasting a link, so there is no file to serve and
-                                         Instagram's own player is framed instead.
+                                    {{-- --------------------- LINKED REEL ---------------------
+                                         Added by pasting a YouTube or Instagram link, so there is no
+                                         file to serve and their own player is framed instead.
 
-                                         It does NOT autoplay, and cannot be made to: their embed is
-                                         click-to-play by design. The uploaded-clip card below is the
-                                         one that starts on its own.
+                                         Neither autoplays, and neither can be made to from out here:
+                                         both are click-to-play inside their own iframe. The
+                                         uploaded-clip card below is the one that starts on its own.
 
                                          The iframe src is withheld until the section scrolls into
-                                         view (see attach()), because each embed pulls a few hundred
-                                         KB of Instagram's player — loading five on page load would
-                                         undo the lazy behaviour the uploaded reels already have. --}}
-                                    <div class="hm-reel hm-reel--embed" aria-label="{{ $reel['title'] }}">
+                                         view (see attachCard()), because each embed pulls a few
+                                         hundred KB of their player — loading five on page load would
+                                         undo the lazy behaviour the uploaded reels already have.
+
+                                         The provider class matters: Instagram's embed carries header
+                                         and footer bands that the card crops away, and YouTube's does
+                                         not. See career-success.css. --}}
+                                    <div class="hm-reel hm-reel--embed hm-reel--{{ $reel['via'] }}" aria-label="{{ $reel['title'] }}">
                                         <iframe class="hm-reel__embed"
                                                 data-src="{{ $reel['embed'] }}"
                                                 title="{{ $reel['title'] }}"
                                                 loading="lazy"
                                                 allowtransparency="true"
-                                                allow="encrypted-media; picture-in-picture; web-share"
+                                                allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share"
                                                 referrerpolicy="strict-origin-when-cross-origin"
                                                 scrolling="no"
+                                                allowfullscreen
                                                 frameborder="0"></iframe>
 
                                         {{-- Shown until the embed is attached, so the card is never
                                              an empty box while the visitor scrolls towards it. --}}
                                         <span class="hm-reel__embed-wait" aria-hidden="true">
-                                            <i class="fa-brands fa-instagram"></i>
+                                            <i class="fa-brands fa-{{ $reel['via'] === 'youtube' ? 'youtube' : 'instagram' }}"></i>
                                         </span>
 
                                         {{-- Instagram's own "View more on Instagram" link sits in the
                                              footer band, which the card crops away — so the way out to
                                              the post is put back here, in the same badge the uploaded
-                                             cards use. --}}
-                                        <a class="hm-reel__badge" href="{{ $reel['url'] }}"
-                                           target="_blank" rel="noopener"
-                                           aria-label="Watch {{ $reel['title'] }} on Instagram">
-                                            <i class="fa-brands fa-instagram" aria-hidden="true"></i> Instagram Reel
-                                        </a>
+                                             cards use. A YouTube card keeps YouTube's own title bar,
+                                             which already links out, and only carries this badge when
+                                             an Instagram link was given alongside. --}}
+                                        @if ($reel['url'])
+                                            <a class="hm-reel__badge" href="{{ $reel['url'] }}"
+                                               target="_blank" rel="noopener"
+                                               aria-label="Watch {{ $reel['title'] }} on Instagram">
+                                                <i class="fa-brands fa-instagram" aria-hidden="true"></i> Instagram Reel
+                                            </a>
+                                        @endif
                                     </div>
                                 @else
                                 <div class="hm-reel" aria-label="{{ $reel['title'] }}">

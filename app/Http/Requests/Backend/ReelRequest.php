@@ -27,19 +27,25 @@ class ReelRequest extends FormRequest
             // Capped by what PHP will actually accept, so the rule and the
             // server agree and the admin gets a message that makes sense.
             //
-            // Never unconditionally required now: a reel may be an Instagram
-            // link instead of a file. Which of the two is missing is settled in
-            // withValidator, where both fields can be looked at together.
+            // Never unconditionally required now: a reel may be a link instead
+            // of a file. Which of the three is missing is settled in
+            // withValidator, where they can be looked at together.
             'video'         => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg,video/quicktime', 'max:' . UploadLimit::cap(self::PREFERRED_MAX_KB)],
             'instagram_url' => ['nullable', 'url', 'max:255'],
+            'youtube_url'   => ['nullable', 'url', 'max:255'],
             'sort_order'    => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_active'     => ['nullable', 'boolean'],
         ];
     }
 
     /**
-     * A reel has to be playable: either an uploaded clip or an Instagram link
-     * we can actually embed.
+     * A reel has to be playable: an uploaded clip, a YouTube link, or an
+     * Instagram link we can actually embed.
+     *
+     * Each link is checked whenever it is filled in, not only when it is the one
+     * that will play. An admin who pastes a broken YouTube URL next to a working
+     * upload has still made a mistake, and finding out now beats finding out
+     * when the upload is later removed.
      */
     public function withValidator($validator): void
     {
@@ -47,25 +53,38 @@ class ReelRequest extends FormRequest
             $reel = $this->route('reel');
 
             $hasUpload = $this->hasFile('video') || filled($reel?->video);
-            $link      = trim((string) $this->input('instagram_url'));
+            $instagram = trim((string) $this->input('instagram_url'));
+            $youtube   = trim((string) $this->input('youtube_url'));
 
-            if (! $hasUpload && $link === '') {
+            if (! $hasUpload && $instagram === '' && $youtube === '') {
                 $validator->errors()->add('video',
-                    'Add something to play: either upload a clip, or paste the reel\'s Instagram link.');
+                    'Add something to play: upload a clip, or paste a YouTube or Instagram link.');
 
                 return;
             }
 
-            // A link-only reel is embedded, so the URL has to be one Instagram
-            // can actually frame. Checked here rather than left to fail
-            // silently as an empty card on the site.
-            if (! $hasUpload && $link !== '') {
-                $code = (new \App\Models\Reel(['instagram_url' => $link]))->instagramCode();
+            if ($youtube !== '' && ! (new \App\Models\Reel(['youtube_url' => $youtube]))->youtubeId()) {
+                $validator->errors()->add('youtube_url',
+                    'That does not look like a YouTube video link. It should look like '
+                    . 'https://www.youtube.com/watch?v=XXXXXXXXXXX, https://youtu.be/XXXXXXXXXXX '
+                    . 'or https://www.youtube.com/shorts/XXXXXXXXXXX.');
+            }
 
-                if (! $code) {
+            // An Instagram link that cannot be framed is only fatal when it is
+            // the only thing left to play — alongside an upload or a YouTube
+            // video it is just the card's badge, and a profile link is a
+            // perfectly reasonable badge.
+            if ($instagram !== '') {
+                $playsFromInstagram = ! $hasUpload
+                    && ! (new \App\Models\Reel(['youtube_url' => $youtube]))->youtubeId();
+
+                $code = (new \App\Models\Reel(['instagram_url' => $instagram]))->instagramCode();
+
+                if ($playsFromInstagram && ! $code) {
                     $validator->errors()->add('instagram_url',
                         'That does not look like an Instagram reel link. It should look like '
-                        . 'https://www.instagram.com/reel/XXXXXXXXX/ — or upload a video file instead.');
+                        . 'https://www.instagram.com/reel/XXXXXXXXX/ — or upload a video file '
+                        . 'or paste a YouTube link instead.');
                 }
             }
         });
@@ -96,6 +115,7 @@ class ReelRequest extends FormRequest
             'video.max'         => "The video may not be larger than {$max}.",
             'video.uploaded'    => $refused,
             'instagram_url.url' => 'Enter a full link, e.g. https://www.instagram.com/reel/…',
+            'youtube_url.url'   => 'Enter a full link, e.g. https://www.youtube.com/watch?v=…',
         ];
     }
 }

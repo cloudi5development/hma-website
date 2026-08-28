@@ -61,18 +61,22 @@ return [
         ],
 
         // The only frames allowed: the branch maps on the contact page and in
-        // the admin's branch editor, plus Instagram for reels added as a link
-        // (Sections → Our Journey). This is the line that stops an ad network
-        // dropping an iframe onto the site, so keep it to what is actually used.
+        // the admin's branch editor, plus Instagram and YouTube for reels added
+        // as a link (Sections → Our Journey). This is the line that stops an ad
+        // network dropping an iframe onto the site, so keep it to what is
+        // actually used.
         //
         // Instagram serves the embed from instagram.com and redirects some
         // requests through www.instagram.com — both are listed rather than
-        // wildcarding the domain.
+        // wildcarding the domain. youtube-nocookie is listed alongside
+        // youtube.com because YouTube itself redirects between the two.
         'frames' => [
             'https://www.google.com',
             'https://maps.google.com',
             'https://www.instagram.com',
             'https://instagram.com',
+            'https://www.youtube.com',
+            'https://www.youtube-nocookie.com',
         ],
     ],
 

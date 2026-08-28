@@ -53,16 +53,19 @@ class ContentSecurityPolicyTest extends TestCase
         $this->assertContains("'self'", $frames);
         $this->assertContains('https://www.google.com', $frames);      // the contact page map
         $this->assertContains('https://www.instagram.com', $frames);   // reels added as a link
+        $this->assertContains('https://www.youtube.com', $frames);     // ...and reels added as a YouTube link
 
-        // Nothing beyond the maps and Instagram. This list is the thing standing
-        // between the site and an injected iframe, so it is asserted whole
-        // rather than only checked for the entries we expect to be there.
+        // Nothing beyond the maps, Instagram and YouTube. This list is the thing
+        // standing between the site and an injected iframe, so it is asserted
+        // whole rather than only checked for the entries we expect to be there.
         $this->assertEqualsCanonicalizing([
             "'self'",
             'https://www.google.com',
             'https://maps.google.com',
             'https://www.instagram.com',
             'https://instagram.com',
+            'https://www.youtube.com',
+            'https://www.youtube-nocookie.com',
         ], $frames);
 
         // A wildcard here would let any ad network drop an iframe in.
