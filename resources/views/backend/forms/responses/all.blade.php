@@ -94,7 +94,14 @@
                         <tr>
                             <td>#{{ $response->id }}</td>
                             <td class="hm-table__name">
-                                {{ $response->form?->name ?? '—' }}
+                                @if ($response->form)
+                                    {{ $response->form->name }}
+                                @else
+                                    {{-- The form is gone but its responses were not
+                                         taken with it. Say so, rather than showing a
+                                         bare dash that reads like missing data. --}}
+                                    <span class="hm-table__sub">form deleted</span>
+                                @endif
                             </td>
                             <td>
                                 {{-- Two forms here share no columns, so the cell
@@ -129,24 +136,36 @@
                                             @endforeach
                                         </select>
                                     </form>
+                                @else
+                                    {{-- Read-only once the form is gone. Where the
+                                         foreign key is enforced MySQL refuses to
+                                         update a row whose parent has vanished, and
+                                         tracking a lead for a form that no longer
+                                         exists means nothing anyway. It can still be
+                                         deleted, which is all that is wanted here. --}}
+                                    <span class="pill pill--tiny pill--{{ $response->status_slug }}">{{ $response->status }}</span>
                                 @endif
                             </td>
                             <td class="text-end">
-                                @if ($response->form)
-                                    <div class="d-inline-flex gap-2">
+                                <div class="d-inline-flex gap-2">
+                                    {{-- The detail page is built from the form's own
+                                         questions, so it is the one thing an orphan
+                                         cannot offer. The answers are all in the
+                                         Response column either way. --}}
+                                    @if ($response->form)
                                         <a href="{{ route('backend.forms.responses.show', [$response->form, $response]) }}"
                                            class="btn-ghost btn-icon" aria-label="View">
                                             <span class="act-ico act-ico--view" aria-hidden="true"></span>
                                         </a>
-                                        <form method="POST" action="{{ route('backend.forms.responses.destroy', [$response->form, $response]) }}"
-                                              data-confirm="Delete this response? Any files uploaded with it are deleted too." class="d-inline">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="btn-danger-soft btn-icon" aria-label="Delete">
-                                                <span class="act-ico act-ico--delete" aria-hidden="true"></span>
-                                            </button>
-                                        </form>
-                                    </div>
-                                @endif
+                                    @endif
+                                    <form method="POST" action="{{ route('backend.forms.response-destroy', $response) }}"
+                                          data-confirm="Delete this response? Any files uploaded with it are deleted too." class="d-inline">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn-danger-soft btn-icon" aria-label="Delete">
+                                            <span class="act-ico act-ico--delete" aria-hidden="true"></span>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty

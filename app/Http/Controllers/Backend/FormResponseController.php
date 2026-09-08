@@ -117,6 +117,29 @@ class FormResponseController extends Controller
         return redirect()->route('backend.forms.responses.index', $form)->with('success', 'Response deleted.');
     }
 
+    /**
+     * Delete one response without naming its form.
+     *
+     * A response can outlive its form. It should not — form_responses.form_id
+     * cascades on delete — but it does wherever that constraint is not actually
+     * enforced: a MyISAM table silently ignores foreign keys, and deleting a
+     * form row by hand with FOREIGN_KEY_CHECKS off skips the cascade outright.
+     *
+     * The Responses screen used to hide its delete button on such a row, since
+     * the form-scoped route above has no form to point at. That left the one
+     * row an admin most wants gone as the one row they cannot remove.
+     */
+    public function destroyAny(FormResponse $response): RedirectResponse
+    {
+        FormSubmissionService::deleteUploads($response->load('values'));
+
+        ActivityLog::record('Response Deleted', "Response #{$response->id} deleted");
+
+        $response->delete();
+
+        return back()->with('success', 'Response deleted.');
+    }
+
     /* ================================ CLEAR ================================
        Emptying a form's responses — the thing you need after testing a form and
        before it goes live, when deleting fifty rows one at a time is not a

@@ -4,12 +4,14 @@ namespace Tests\Feature\Frontend;
 
 use App\Models\Form;
 use App\Models\FormResponse;
+use App\Models\FormResponseValue;
 use App\Models\User;
 use App\Services\FormBuilderService;
 use App\Services\FormSubmissionService;
 use App\Support\FormFieldType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -23,6 +25,13 @@ use Tests\TestCase;
 class PublicFormTest extends TestCase
 {
     use RefreshDatabase;
+
+    private function asAdmin(): self
+    {
+        $admin = User::where('is_super_admin', true)->firstOrFail();
+
+        return $this->withSession(['admin_logged_in' => true, 'admin_id' => $admin->id]);
+    }
 
     /** Build a form straight through the builder — the same path the panel uses. */
     private function form(array $fields, array $overrides = []): Form
@@ -626,6 +635,95 @@ class PublicFormTest extends TestCase
         $this->delete(route('backend.forms.clear-responses'))->assertRedirect(route('backend.auth.login'));
 
         $this->assertSame(1, FormResponse::count());
+    }
+
+    /* ============================ ORPHANED ROWS ============================
+       A response whose form is gone. The cascade should make this impossible,
+       and does wherever the foreign key is enforced — but a MyISAM table
+       ignores constraints silently, and deleting a form by hand with the
+       checks off skips the cascade, so live grew rows like this. They used to
+       render with an empty Actions cell: visible, and impossible to remove. */
+
+    /**
+     * Strand a response the way an unenforced cascade does.
+     *
+     * Not by deleting a form: SQLite runs the cascade even with constraints
+     * turned off inside a test's transaction, so that just deletes the row.
+     * Pointing a response at a form id that never existed reaches the same
+     * state — form_id set, no such form — without deleting anything.
+     */
+    private function orphan(string $name = 'Keerthika KT'): FormResponse
+    {
+        match (DB::connection()->getDriverName()) {
+            // Deferred until commit, and the test rolls back, so it never runs.
+            'sqlite' => DB::statement('PRAGMA defer_foreign_keys = ON'),
+            default  => DB::statement('SET FOREIGN_KEY_CHECKS = 0'),
+        };
+
+        $response = FormResponse::create([
+            'form_id'      => 424242,
+            'status'       => FormResponse::STATUSES[0],
+            'submitted_at' => now(),
+        ]);
+
+        FormResponseValue::create([
+            'response_id' => $response->id,
+            'field_id'    => null,
+            'field_key'   => 'name',
+            'field_label' => 'Name',
+            'field_type'  => 'text',
+            'value'       => $name,
+        ]);
+
+        $this->assertNull($response->fresh()->form, 'the response should be orphaned');
+
+        return $response;
+    }
+
+    public function test_a_response_whose_form_is_gone_can_still_be_deleted(): void
+    {
+        $response = $this->orphan();
+
+        $this->asAdmin()
+            ->delete(route('backend.forms.response-destroy', $response))
+            ->assertRedirect();
+
+        $this->assertNull(FormResponse::find($response->id));
+        // Its answers go with it rather than lingering as unreachable rows.
+        $this->assertDatabaseMissing('form_response_values', ['response_id' => $response->id]);
+    }
+
+    public function test_the_responses_screen_shows_an_orphan_with_a_way_to_remove_it(): void
+    {
+        $response = $this->orphan();
+
+        $page = $this->asAdmin()->get(route('backend.forms.all-responses'))->assertOk();
+
+        // The answer is still readable, the state is explained rather than left
+        // as a bare dash, and there is a delete button.
+        $page->assertSee('Keerthika KT')
+            ->assertSee('form deleted')
+            ->assertSee('action="' . route('backend.forms.response-destroy', $response) . '"', false);
+    }
+
+    public function test_clearing_sweeps_orphans_too(): void
+    {
+        $this->orphan('Ghost One');
+        $this->orphan('Ghost Two');
+
+        $this->asAdmin()->delete(route('backend.forms.clear-responses'))->assertRedirect();
+
+        $this->assertSame(0, FormResponse::count());
+    }
+
+    public function test_deleting_a_response_without_its_form_is_behind_the_admin_guard(): void
+    {
+        $response = $this->orphan();
+
+        $this->delete(route('backend.forms.response-destroy', $response))
+            ->assertRedirect(route('backend.auth.login'));
+
+        $this->assertNotNull(FormResponse::find($response->id));
     }
 
     /* ================================ EMBED =============================== */

@@ -142,6 +142,10 @@ Route::prefix('admin')->name('backend.')->group(function () {
         Route::get('form-responses', [FormResponseController::class, 'all'])->name('forms.all-responses');
         // Empties whatever the Responses screen is currently filtered to.
         Route::delete('form-responses', [FormResponseController::class, 'clearAll'])->name('forms.clear-responses');
+        // Deleting one response without naming its form — a response can outlive
+        // its form when the cascade is not enforced, and it must still be
+        // removable. See FormResponseController.
+        Route::delete('form-responses/{response}', [FormResponseController::class, 'destroyAny'])->name('forms.response-destroy');
 
         Route::prefix('forms')->name('forms.')->group(function () {
             // Asked by the builder's "Generate Link" dialog, so the address it
