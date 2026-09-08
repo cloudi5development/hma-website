@@ -521,6 +521,113 @@ class PublicFormTest extends TestCase
         $this->assertStringContainsString('90000', $csv);
     }
 
+    /* ============================ CLEARING DATA =========================== */
+
+    /**
+     * Emptying a form's responses — what you do after testing it and before it
+     * goes live, when deleting them one at a time is not a plan.
+     */
+    public function test_a_form_s_responses_can_be_cleared_in_one_go(): void
+    {
+        Storage::fake('local');
+
+        $form = $this->form([
+            $this->field(['label' => 'Name']),
+            $this->field(['label' => 'Resume', 'field_type' => FormFieldType::FILE, 'file_types' => ['pdf']]),
+        ]);
+
+        foreach (['One', 'Two', 'Three'] as $name) {
+            $this->submit($form, [
+                'name'   => $name,
+                'resume' => UploadedFile::fake()->create($name . '.pdf', 10, 'application/pdf'),
+            ])->assertSessionHasNoErrors();
+        }
+
+        $this->assertSame(3, FormResponse::count());
+
+        $paths = FormResponse::with('values')->get()
+            ->flatMap(fn ($r) => $r->values->flatMap->filePaths())
+            ->all();
+
+        $this->assertCount(3, $paths);
+
+        $admin = User::where('is_super_admin', true)->firstOrFail();
+
+        $this->withSession([
+            'admin_logged_in' => true, 'admin_id' => $admin->id,
+            'admin_name' => $admin->name, 'admin_email' => $admin->email,
+        ])->delete(route('backend.forms.responses.clear', $form))->assertRedirect();
+
+        $this->assertSame(0, FormResponse::count());
+        // The answers go with them...
+        $this->assertSame(0, \App\Models\FormResponseValue::count());
+
+        // ...and so do the files, which live outside the database and would
+        // otherwise sit on the disk forever.
+        foreach ($paths as $path) {
+            Storage::disk('local')->assertMissing($path);
+        }
+    }
+
+    /** The clear must never take more than the screen is showing. */
+    public function test_clearing_respects_the_filter_on_screen(): void
+    {
+        $form = $this->form([$this->field(['label' => 'Name'])]);
+
+        foreach (['Keep me', 'Delete me', 'Delete me too'] as $name) {
+            $this->submit($form, ['name' => $name]);
+        }
+
+        // Mark one Contacted, then clear only the ones still New.
+        $keep = FormResponse::whereHas('values', fn ($q) => $q->where('value', 'Keep me'))->firstOrFail();
+        $keep->update(['status' => 'Contacted']);
+
+        $admin = User::where('is_super_admin', true)->firstOrFail();
+
+        $this->withSession([
+            'admin_logged_in' => true, 'admin_id' => $admin->id,
+            'admin_name' => $admin->name, 'admin_email' => $admin->email,
+        ])->delete(route('backend.forms.responses.clear', [$form, 'status' => 'New']))->assertRedirect();
+
+        $this->assertSame(1, FormResponse::count());
+        $this->assertSame($keep->id, FormResponse::first()->id);
+    }
+
+    /** The Responses screen can empty every form at once. */
+    public function test_responses_can_be_cleared_across_every_form(): void
+    {
+        $first  = $this->form([$this->field(['label' => 'Name'])], ['slug' => 'first', 'name' => 'First']);
+        $second = $this->form([$this->field(['label' => 'Name'])], ['slug' => 'second', 'name' => 'Second']);
+
+        $this->submit($first, ['name' => 'A']);
+        $this->submit($second, ['name' => 'B']);
+
+        $this->assertSame(2, FormResponse::count());
+
+        $admin = User::where('is_super_admin', true)->firstOrFail();
+
+        $this->withSession([
+            'admin_logged_in' => true, 'admin_id' => $admin->id,
+            'admin_name' => $admin->name, 'admin_email' => $admin->email,
+        ])->delete(route('backend.forms.clear-responses'))->assertRedirect();
+
+        $this->assertSame(0, FormResponse::count());
+        // The forms themselves are untouched — this clears data, not structure.
+        $this->assertSame(2, Form::count());
+        $this->assertSame(1, $first->fresh()->fields->count());
+    }
+
+    public function test_clearing_is_behind_the_admin_guard(): void
+    {
+        $form = $this->form([$this->field(['label' => 'Name'])]);
+        $this->submit($form, ['name' => 'Arun']);
+
+        $this->delete(route('backend.forms.responses.clear', $form))->assertRedirect(route('backend.auth.login'));
+        $this->delete(route('backend.forms.clear-responses'))->assertRedirect(route('backend.auth.login'));
+
+        $this->assertSame(1, FormResponse::count());
+    }
+
     /* ================================ EMBED =============================== */
 
     public function test_an_embedded_submission_is_stored_exactly_like_a_direct_one(): void

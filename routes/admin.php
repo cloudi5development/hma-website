@@ -140,6 +140,8 @@ Route::prefix('admin')->name('backend.')->group(function () {
         // rather than "forms/responses", which the {form} parameter below would
         // otherwise try to resolve as a model.
         Route::get('form-responses', [FormResponseController::class, 'all'])->name('forms.all-responses');
+        // Empties whatever the Responses screen is currently filtered to.
+        Route::delete('form-responses', [FormResponseController::class, 'clearAll'])->name('forms.clear-responses');
 
         Route::prefix('forms')->name('forms.')->group(function () {
             // Asked by the builder's "Generate Link" dialog, so the address it
@@ -156,6 +158,9 @@ Route::prefix('admin')->name('backend.')->group(function () {
 
             Route::prefix('{form}/responses')->name('responses.')->group(function () {
                 Route::get('/', [FormResponseController::class, 'index'])->name('index');
+                // Empties this form's responses — declared before {response}
+                // so it is not read as a response id.
+                Route::delete('/', [FormResponseController::class, 'clear'])->name('clear');
                 Route::get('export', [FormResponseController::class, 'export'])->name('export');
                 Route::get('export-excel', [FormResponseController::class, 'exportExcel'])->name('export-excel');
                 // Uploaded files are held on the private disk, so this route is

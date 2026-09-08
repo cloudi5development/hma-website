@@ -46,13 +46,8 @@ class FormResponseController extends Controller
     {
         $formId = $request->integer('form');
 
-        $responses = FormResponse::query()
+        $responses = $this->filteredAcrossForms($request)
             ->with(['form', ...FormResponse::WITH_ANSWERS])
-            ->latest('submitted_at')->latest('id')
-            ->search($request->input('q'))
-            ->status($request->input('status'))
-            ->when($formId, fn ($q) => $q->where('form_id', $formId))
-            ->when($request->filled('date'), fn ($q) => $q->whereDate('submitted_at', $request->input('date')))
             ->paginate($this->perPage())->withQueryString();
 
         return view('backend.forms.responses.all', [
@@ -120,6 +115,64 @@ class FormResponseController extends Controller
         $response->delete();
 
         return redirect()->route('backend.forms.responses.index', $form)->with('success', 'Response deleted.');
+    }
+
+    /* ================================ CLEAR ================================
+       Emptying a form's responses — the thing you need after testing a form and
+       before it goes live, when deleting fifty rows one at a time is not a
+       plan.
+
+       Both entry points delete exactly what the current filter is showing, so
+       the button can never remove more than the admin is looking at. With no
+       filter applied that is everything, which is the usual case. */
+
+    /** Clear one form's responses. */
+    public function clear(Request $request, Form $form): RedirectResponse
+    {
+        $deleted = $this->deleteMatching($this->filtered($request, $form));
+
+        ActivityLog::record('Responses Cleared', "{$deleted} response(s) of form “{$form->name}” deleted");
+
+        return back()->with('success', $deleted === 0
+            ? 'There was nothing to delete.'
+            : $deleted . ' response' . ($deleted === 1 ? '' : 's') . ' deleted.');
+    }
+
+    /** Clear responses across every form, or across the one being filtered to. */
+    public function clearAll(Request $request): RedirectResponse
+    {
+        $deleted = $this->deleteMatching($this->filteredAcrossForms($request));
+
+        ActivityLog::record('Responses Cleared', "{$deleted} response(s) deleted from the Responses screen");
+
+        return back()->with('success', $deleted === 0
+            ? 'There was nothing to delete.'
+            : $deleted . ' response' . ($deleted === 1 ? '' : 's') . ' deleted.');
+    }
+
+    /**
+     * Delete every response a query matches, and the files they carried.
+     *
+     * The uploads live outside the database, so the rows cascading is not
+     * enough — a cleared form would otherwise leave its files on disk forever.
+     * Chunked, because "clear this form" is exactly the moment there are tens of
+     * thousands of rows and loading them all is how the page runs out of memory.
+     */
+    private function deleteMatching(Builder $query): int
+    {
+        $deleted = 0;
+
+        // Ordered by id and re-queried each pass: chunkById pages forward on the
+        // key, so rows disappearing underneath it does not skip any.
+        $query->reorder()->with('values')->chunkById(200, function ($responses) use (&$deleted) {
+            foreach ($responses as $response) {
+                FormSubmissionService::deleteUploads($response);
+            }
+
+            $deleted += FormResponse::whereIn('id', $responses->modelKeys())->delete();
+        });
+
+        return $deleted;
     }
 
     /* =============================== DOWNLOAD ============================== */
@@ -223,6 +276,20 @@ class FormResponseController extends Controller
             ->reject(fn ($field) => $field->isHidden())
             ->take(self::LIST_COLUMNS)
             ->values();
+    }
+
+    /**
+     * The cross-form filter, shared by the Responses listing and the clear
+     * action, so the button can only ever delete what the screen is showing.
+     */
+    private function filteredAcrossForms(Request $request): Builder
+    {
+        return FormResponse::query()
+            ->latest('submitted_at')->latest('id')
+            ->search($request->input('q'))
+            ->status($request->input('status'))
+            ->when($request->integer('form'), fn ($q, $id) => $q->where('form_id', $id))
+            ->when($request->filled('date'), fn ($q) => $q->whereDate('submitted_at', $request->input('date')));
     }
 
     /** Search / status / date, applied identically to the list and the exports. */

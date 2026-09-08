@@ -16,14 +16,39 @@
                 @endif
             </p>
         </div>
-        @if ($formId && $forms->firstWhere('id', $formId))
-            {{-- Exporting needs a form: the columns are its questions, and there
-                 is no shared set of columns across two different forms. --}}
-            <a href="{{ route('backend.forms.responses.export-excel', $formId) }}" class="btn-brand">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-                Export This Form
-            </a>
-        @endif
+        <div class="d-inline-flex gap-2 flex-wrap">
+            @if ($formId && $forms->firstWhere('id', $formId))
+                {{-- Exporting needs a form: the columns are its questions, and
+                     there is no shared set of columns across two different
+                     forms. --}}
+                <a href="{{ route('backend.forms.responses.export-excel', $formId) }}" class="btn-brand">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                    Export This Form
+                </a>
+            @endif
+
+            {{-- Clears exactly what the filters are showing. With no filter set
+                 that is every response of every form, so the confirmation says
+                 so in as many words. --}}
+            @if ($responses->total())
+                @php
+                    $filtered = request()->hasAny(['q', 'status', 'date', 'form']);
+                    $scope    = $filtered
+                        ? 'the ' . number_format($responses->total()) . ' response(s) these filters are showing'
+                        : 'all ' . number_format($responses->total()) . ' response(s), across every form';
+                @endphp
+                <form method="POST" action="{{ route('backend.forms.clear-responses', request()->query()) }}"
+                      class="d-inline"
+                      data-confirm="Delete {{ $scope }}, including any uploaded files? This cannot be undone."
+                      data-confirm-title="Clear responses?"
+                      data-confirm-label="Delete {{ number_format($responses->total()) }}">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn-danger-soft">
+                        {{ $filtered ? 'Delete Filtered' : 'Clear All' }}
+                    </button>
+                </form>
+            @endif
+        </div>
     </div>
 
     {{-- Filters: which form, and which day. Search and status live in the

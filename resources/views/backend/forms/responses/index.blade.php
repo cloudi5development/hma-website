@@ -19,6 +19,24 @@
                 Export Excel
             </a>
             <a href="{{ route('backend.forms.responses.export', [$form] + request()->query()) }}" class="btn-ghost">Export CSV</a>
+
+            {{-- Clears exactly what the filters above are showing, so it can
+                 never take more than is on screen. The count and whether a
+                 filter is on are both spelled out in the confirmation. --}}
+            @if ($responses->total())
+                @php $filtered = request()->hasAny(['q', 'status', 'date']); @endphp
+                <form method="POST" action="{{ route('backend.forms.responses.clear', [$form] + request()->query()) }}"
+                      class="d-inline"
+                      data-confirm="Delete {{ $filtered ? 'the ' . number_format($responses->total()) . ' response(s) these filters are showing' : 'all ' . number_format($responses->total()) . ' response(s) of this form' }}, including any uploaded files? This cannot be undone."
+                      data-confirm-title="Clear responses?"
+                      data-confirm-label="Delete {{ number_format($responses->total()) }}">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn-danger-soft">
+                        {{ $filtered ? 'Delete Filtered' : 'Clear All' }}
+                    </button>
+                </form>
+            @endif
+
             <a href="{{ route('backend.forms.show', $form) }}" class="btn-ghost">Back to Form</a>
         </div>
     </div>
