@@ -39,6 +39,11 @@ class AdminModules
             'course-enquiries'    => 'Course Enquiry',
             'contact-enquiries'   => 'Contact Enquiry',
             'event-registrations' => 'Event Registration',
+            // One key covers the builder and the responses: "backend.forms.*"
+            // is every route in the module, including
+            // "backend.forms.responses.*". Someone trusted to build a form is
+            // trusted to read what it collected.
+            'forms'               => 'Forms',
         ],
         // The written pages (Terms, Privacy). One key covers both, the way
         // 'settings' covers every Settings tab — they are edited together and

@@ -77,6 +77,26 @@ Route::post('/course-enquiry', [CourseEnquiryController::class, 'store'])->name(
 // Event-details "Register for the Event" modal — stores the registration + emails the registrant.
 Route::post('/event-registration', [EventRegistrationController::class, 'store'])->name('frontend.event-registration.store');
 
+/*
+|--------------------------------------------------------------------------
+| Dynamic forms
+|--------------------------------------------------------------------------
+|
+| One route pair serves every form built in Admin → Forms. The slug is the
+| only thing that varies, so a new form is published from the panel and needs
+| no deploy — there is deliberately no route per form.
+|
+| The POST is throttled: a public endpoint that writes a row and can send an
+| email is exactly what a bot looks for. 20 a minute per IP is far above what
+| a person filling in a form does and far below what floods a table.
+|
+*/
+Route::get('/forms/{slug}', [\App\Http\Controllers\Frontend\PublicFormController::class, 'show'])
+    ->name('frontend.form.show');
+Route::post('/forms/{slug}', [\App\Http\Controllers\Frontend\PublicFormController::class, 'submit'])
+    ->middleware('throttle:20,1')
+    ->name('frontend.form.submit');
+
 // Content Management pages. Declared one by one rather than as /{key} so the
 // paths stay reserved and a typo cannot swallow another route.
 Route::get('/terms-conditions', [ContentPageController::class, 'show'])

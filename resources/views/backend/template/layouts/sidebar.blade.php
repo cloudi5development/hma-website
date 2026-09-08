@@ -26,6 +26,9 @@
         'course-enquiry' => '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 10h7M8.5 14h5"/>',
         'contact-enquiry'=> '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.6 7 8.4 6 8.4-6"/>',
         'event-registration' => '<path d="M4 8.5A2 2 0 0 0 6 6.5V5.5h12v1a2 2 0 0 0 0 4v1a2 2 0 0 0 0 4v1H6v-1a2 2 0 0 0-2-2Z"/><path d="M10 9v6" stroke-dasharray="1.6 2.2"/>',
+        'forms'     => '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/>',
+        'form-list' => '<path d="M8 6h12M8 12h12M8 18h12"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
+        'form-new'  => '<path d="M6 3h9l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14.5 3v4.5H19M12 11v6M9 14h6"/>',
         'content-pages' => '<path d="M6 3h9l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14.5 3v4.5H19M8.5 12h7M8.5 15.5h7M8.5 19h4"/>',
         'legal'     => '<path d="M12 3v18M7 7l-4 6a4 4 0 0 0 8 0L7 7ZM17 7l-4 6a4 4 0 0 0 8 0l-4-6Z"/><path d="M5 21h14M7 7l10-2"/>',
         'blog'      => '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
@@ -178,6 +181,39 @@
                 @if ($can('course-enquiries'))<a href="{{ route('backend.course-enquiries.index') }}">Course Enquiry</a>@endif
                 @if ($can('contact-enquiries'))<a href="{{ route('backend.contact-enquiries.index') }}">Contact Enquiry</a>@endif
                 @if ($can('event-registrations'))<a href="{{ route('backend.event-registrations.index') }}">Event Registration</a>@endif
+            </div>
+        </div>
+        @endif
+
+        {{-- Forms — the dynamic form builder. Sits under Leads because that is
+             what its responses are, and it carries the same "N new" badge the
+             Enquiries group does. --}}
+        @if ($can('forms'))
+        @php
+            $formsOpen = request()->routeIs('backend.forms.*');
+            $newResponses = \App\Models\FormResponse::where('status', 'New')->count();
+        @endphp
+        <div class="app-nav__item {{ $formsOpen ? 'is-open' : '' }}" data-group>
+            <a class="app-nav__link" role="button" tabindex="0">
+                {!! $ic('forms') !!}
+                <span class="app-nav__label">Forms</span>
+                @if ($newResponses) <span class="app-nav__badge">{{ $newResponses }}</span> @endif
+                <span class="app-nav__caret">{!! $ic('chevron') !!}</span>
+            </a>
+            {{-- Two entries: the forms themselves, and everything they have
+                 collected. Creating a form is a button above the All Forms
+                 table rather than a menu item — it is something you do to that
+                 list, not a place you go. --}}
+            <ul class="app-nav__sub">
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.forms.index', 'backend.forms.create', 'backend.forms.edit', 'backend.forms.show', 'backend.forms.preview') ? 'is-active' : '' }}"
+                       href="{{ route('backend.forms.index') }}">{!! $ic('form-list') !!}<span>All Forms</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.forms.all-responses') || request()->routeIs('backend.forms.responses.*') ? 'is-active' : '' }}"
+                       href="{{ route('backend.forms.all-responses') }}">{!! $ic('form-new') !!}<span>Responses</span></a></li>
+            </ul>
+            <div class="app-nav__flyout">
+                <div class="app-nav__flyout-title">Forms</div>
+                <a href="{{ route('backend.forms.index') }}">All Forms</a>
+                <a href="{{ route('backend.forms.all-responses') }}">Responses</a>
             </div>
         </div>
         @endif

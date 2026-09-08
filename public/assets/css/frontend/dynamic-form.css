@@ -1,0 +1,671 @@
+/* ==========================================================================
+   Hire Minds Academy — dynamic forms (Admin → Forms)
+   Markup: resources/views/frontend/form.blade.php
+           resources/views/frontend/partials/form-fields.blade.php
+
+   One stylesheet serves every form the admin builds, so nothing here may
+   assume a particular field, order or count. Controls are styled by TYPE.
+
+   The palette matches the site's other form surfaces (contact-form.css,
+   enquiry-modal.css): terracotta on cream, #843D21 as the accent.
+   ========================================================================== */
+
+/* The shared layout centres #main-content with flex, centres its text and
+   constrains its height — a scaffold rule from style.css that every page which
+   needs the full canvas resets for itself (see blog.css and about.css). Without
+   this the card shrank to fit and every label came out centred. */
+#main-content {
+    display: block;
+    min-height: auto;
+    padding: 0;
+    text-align: left;
+}
+
+.hmf {
+    position: relative;
+    padding: 56px 0 72px;
+    background: linear-gradient(180deg, #FDF8F3 0%, #FFFFFF 46%);
+}
+
+/* Inside an iframe the host page supplies the surroundings, so the band and
+   its padding come off and the form sits flush. */
+.hmf--embed {
+    padding: 24px 0;
+    background: transparent;
+}
+
+/* ------------------------------ Breadcrumb ------------------------------ */
+.hmf__crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 22px;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+    color: #8A7E70;
+}
+.hmf__crumbs a { color: #843D21; text-decoration: none; }
+.hmf__crumbs a:hover { text-decoration: underline; }
+.hmf__crumb-sep { color: #C9BCAE; }
+
+/* -------------------------------- Paper ---------------------------------
+   The sheet the form sits on. Padding lives on .hmf__body rather than here, so
+   the banner can run edge to edge across the top. */
+.hmf__paper {
+    position: relative;
+    /* Room for two questions to a row without either becoming a slot. */
+    max-width: 1080px;
+    margin: 0 auto;
+    border: 1px solid #F2EAE1;
+    border-radius: 20px;
+    background: #FFFFFF;
+    box-shadow: 0 18px 50px rgba(42, 29, 20, .07);
+    overflow: hidden;
+}
+.hmf__body { padding: 36px 48px 44px; }
+
+.hmf--embed .hmf__paper {
+    max-width: none;
+    border-radius: 14px;
+    box-shadow: none;
+}
+.hmf--embed .hmf__body { padding: 26px 22px 30px; }
+
+/* -------------------------------- Banner --------------------------------
+   The same terracotta gradient and off-centre gold glow the Terms / Privacy
+   pages use (content-page.css), so a form reads as part of Hire Minds rather
+   than as a bare box that happens to be hosted here. */
+.hmf__banner {
+    position: relative;
+    padding: 34px 48px 36px;
+    isolation: isolate;
+    overflow: hidden;
+    text-align: center;
+    background: linear-gradient(128deg, #6E2F17 0%, #A85A2E 58%, #C24A22 100%);
+}
+.hmf__banner-glow {
+    position: absolute;
+    top: -60%;
+    right: -8%;
+    z-index: -1;
+    width: 58%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(233, 163, 32, .32) 0%, rgba(233, 163, 32, 0) 68%);
+    pointer-events: none;
+}
+.hmf__banner-inner { position: relative; z-index: 1; }
+
+/* The logo is drawn for a light background — the site header puts it on white
+   — so it gets its own white chip rather than being washed out on the band. */
+.hmf__brand {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 18px;
+    padding: 9px 16px;
+    border-radius: 12px;
+    background: #FFFFFF;
+    box-shadow: 0 6px 18px rgba(42, 29, 20, .16);
+}
+.hmf__brand img {
+    display: block;
+    height: 38px;
+    width: auto;
+}
+
+.hmf__title {
+    margin: 0 0 8px;
+    font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-size: 29px;
+    font-weight: 700;
+    line-height: 1.22;
+    letter-spacing: -.01em;
+    color: #FFFFFF;
+}
+.hmf__desc {
+    max-width: 58ch;
+    margin: 0 auto;
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, .86);
+    white-space: pre-line;
+}
+
+/* -------------------------------- Notes --------------------------------- */
+.hmf__note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 0 0 26px;
+    padding: 16px 18px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    font-size: 14.5px;
+    line-height: 1.65;
+}
+.hmf__note p { margin: 0; }
+.hmf__note svg { flex-shrink: 0; width: 22px; height: 22px; margin-top: 1px; }
+
+.hmf__note--ok   { background: #EEF8F1; border-color: #C9E7D3; color: #1F7A4D; }
+.hmf__note--warn { background: #FDF1EC; border-color: #F3D6C7; color: #A6421F; }
+
+/* ------------------------------- Submitted ------------------------------
+   The whole screen after a successful submission. It replaces the form, the
+   notes and the closed state, so there is one outcome on the page. */
+.hmf__done {
+    padding: 34px 20px 44px;
+    text-align: center;
+}
+.hmf__done-gif {
+    display: block;
+    width: 220px;
+    max-width: 62vw;
+    height: auto;
+    margin: 0 auto 6px;
+}
+/* Swapped in for the GIF under prefers-reduced-motion — see below. */
+.hmf__done-static { display: none; }
+.hmf__done-static svg { width: 66px; height: 66px; color: #2FA35F; }
+
+.hmf__done-title {
+    max-width: 34ch;
+    margin: 0 auto;
+    font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-size: 23px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: #23180F;
+}
+.hmf__done-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 26px;
+    padding: 12px 26px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #A85A2E, #843D21);
+    font-size: 14.5px;
+    font-weight: 600;
+    color: #FFFFFF;
+    text-decoration: none;
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+.hmf__done-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(132, 61, 33, .26);
+    color: #FFFFFF;
+}
+.hmf__done-btn i { font-size: 12px; transition: transform .18s ease; }
+.hmf__done-btn:hover i { transform: translateX(3px); }
+
+/* An animated GIF cannot be paused with CSS, so for anyone who has asked their
+   system not to play animation it is removed and a static tick takes its place
+   rather than looping regardless. */
+@media (prefers-reduced-motion: reduce) {
+    .hmf__done-gif { display: none; }
+    .hmf__done-static { display: inline-flex; margin-bottom: 14px; }
+    .hmf__done-btn { transition: none; }
+    .hmf__done-btn:hover { transform: none; }
+}
+
+/* The state a closed / draft / full form shows instead of its controls. */
+.hmf__closed {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 48px 24px;
+    text-align: center;
+    color: #6D6357;
+}
+.hmf__closed svg { width: 40px; height: 40px; color: #C9BCAE; }
+.hmf__closed p { margin: 0; font-size: 16px; line-height: 1.7; }
+
+/* ------------------------------- Honeypot -------------------------------
+   Moved off-screen rather than display:none — some bots skip anything that is
+   explicitly not displayed, and this only works if it looks fillable. */
+.hmf__hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+/* -------------------------------- Layout --------------------------------
+   Two questions to a row. A grid rather than floats or flex percentages, so
+   both cells of a row are the same height however tall their contents are, and
+   a full-width question is one property rather than a wrapper element.
+
+   Auto-flow stays the default `row`: `dense` would backfill gaps by pulling a
+   later question up into an earlier one, and a form must be answered in the
+   order it was written. A half-width question followed by a full-width one
+   therefore leaves the rest of its row empty, which is correct. */
+.hmf__form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 22px;
+    align-items: start;
+}
+
+/* Anything that is not a question spans the row: the honeypot, the actions. */
+.hmf__hp,
+.hmf__actions,
+.hmf-field--wide {
+    grid-column: 1 / -1;
+}
+
+/* -------------------------------- Fields --------------------------------
+   Left-aligned, and closer together than they were: a form reads as a list of
+   questions, not as a series of separate cards. */
+.hmf-field {
+    min-width: 0;   /* lets a long value shrink instead of stretching its column */
+    text-align: left;
+}
+.hmf-field[hidden] { display: none; }
+
+.hmf-label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+    color: #2E2620;
+}
+/* The asterisk is a mark, not a word, so it is small and quiet — the colour
+   already carries the meaning for anyone who can see it, and the control's own
+   `required` carries it for anyone who cannot. */
+.hmf-req {
+    margin-left: 3px;
+    font-size: 13px;
+    color: #C0392B;
+}
+
+.hmf-control {
+    display: block;
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid #E4DACE;
+    border-radius: 10px;
+    background: #FEFCFA;
+    font: inherit;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #23180F;
+    transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+.hmf-control::placeholder { color: #B9ADA1; }
+.hmf-control:hover { border-color: #D8C4B2; }
+.hmf-control:focus {
+    outline: none;
+    border-color: #A85A2E;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(168, 90, 46, .13);
+}
+textarea.hmf-control { min-height: 104px; resize: vertical; line-height: 1.65; }
+
+/* A date/time picker's own indicator, tinted to match rather than left blue. */
+.hmf-control::-webkit-calendar-picker-indicator {
+    opacity: .55;
+    cursor: pointer;
+}
+.hmf-control::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+
+/* A native select needs its own arrow once the default appearance is dropped. */
+.hmf-select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 42px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A7E70' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 18px;
+    cursor: pointer;
+}
+
+/* -------------------------- Radio / checkbox ----------------------------
+   The options flow along the row and wrap, rather than always stacking. Three
+   short choices — Male / Female / Other — took three rows of height next to a
+   single-line input beside them; now they take one. A long option still gets
+   its own line, because it simply will not fit beside another. */
+.hmf-choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 2px;
+}
+.hmf-choice {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    border: 1px solid #E4DACE;
+    border-radius: 999px;
+    background: #FEFCFA;
+    font-size: 14.5px;
+    line-height: 1.4;
+    color: #3B322A;
+    cursor: pointer;
+    transition: border-color .16s ease, background .16s ease, color .16s ease;
+}
+.hmf-choice:hover { border-color: #D8C4B2; background: #FBF3EC; }
+.hmf-choice input {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    accent-color: #A85A2E;
+    cursor: pointer;
+}
+.hmf-choice:has(input:checked) {
+    border-color: #A85A2E;
+    background: #FDF4EE;
+    color: #843D21;
+    font-weight: 600;
+}
+/* Keyboard focus has to be visible on the chip, not just on the hidden dot. */
+.hmf-choice:has(input:focus-visible) {
+    outline: 2px solid rgba(168, 90, 46, .5);
+    outline-offset: 2px;
+}
+
+/* ---------------------------------- File -------------------------------- */
+.hmf-file {
+    padding: 11px 14px;
+    cursor: pointer;
+}
+.hmf-file::file-selector-button {
+    margin-right: 14px;
+    padding: 8px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: #F3E7DD;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: #843D21;
+    cursor: pointer;
+}
+.hmf-file::file-selector-button:hover { background: #EBD9CB; }
+
+/* ------------------------------ Linear scale ----------------------------
+   One choice out of a configured range. The steps are laid out with flex so a
+   0-10 scale fits the same track a 1-5 one does. */
+.hmf-scale {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+.hmf-scale__end {
+    font-size: 13.5px;
+    color: #6D6357;
+    flex-shrink: 0;
+}
+.hmf-scale__steps {
+    display: flex;
+    gap: 8px;
+    flex: 1 1 220px;
+    flex-wrap: wrap;
+}
+.hmf-scale__step {
+    flex: 1 1 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 4px;
+    border: 1px solid #E7DED2;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color .18s ease, background .18s ease;
+}
+.hmf-scale__step:hover { border-color: #D8C4B2; background: #FEFAF7; }
+.hmf-scale__num { font-size: 14.5px; font-weight: 600; color: #3B322A; }
+.hmf-scale__step input { accent-color: #A85A2E; cursor: pointer; margin: 0; }
+.hmf-scale__step:has(input:checked) { border-color: #A85A2E; background: #FDF4EE; }
+
+/* -------------------------------- Rating --------------------------------
+   The radio inputs stay in the DOM (keyboard, no-JS submit) but are visually
+   replaced by the icons. The fill runs left-to-right using a sibling selector,
+   so hovering the third star fills the first three. */
+.hmf-rating {
+    display: inline-flex;
+    gap: 6px;
+    margin-top: 4px;
+    /* Laid out in reverse so ~ can reach the icons BEFORE the hovered one. */
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+.hmf-rating__item { cursor: pointer; line-height: 0; }
+.hmf-rating__item input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+.hmf-rating__item svg {
+    width: 34px;
+    height: 34px;
+    fill: #EDE4DA;
+    stroke: #D8C4B2;
+    stroke-width: 1.2;
+    transition: fill .15s ease, stroke .15s ease, transform .15s ease;
+}
+.hmf-rating__item:hover svg,
+.hmf-rating__item:hover ~ .hmf-rating__item svg,
+.hmf-rating__item:has(input:checked) svg,
+.hmf-rating__item:has(input:checked) ~ .hmf-rating__item svg {
+    fill: #E9A320;
+    stroke: #C9860E;
+}
+.hmf-rating__item:hover svg { transform: scale(1.08); }
+.hmf-rating__item:has(input:focus-visible) svg { stroke: #843D21; stroke-width: 2; }
+.hmf-rating--heart .hmf-rating__item:hover svg,
+.hmf-rating--heart .hmf-rating__item:hover ~ .hmf-rating__item svg,
+.hmf-rating--heart .hmf-rating__item:has(input:checked) svg,
+.hmf-rating--heart .hmf-rating__item:has(input:checked) ~ .hmf-rating__item svg {
+    fill: #D2544F;
+    stroke: #A83B37;
+}
+
+/* --------------------------------- Grids --------------------------------
+   A real <table>, so a screen reader announces the row and column a control
+   belongs to. Wide grids scroll inside their own box rather than pushing the
+   page sideways. */
+.hmf-grid__scroll {
+    margin-top: 6px;
+    overflow-x: auto;
+    border: 1px solid #E7DED2;
+    border-radius: 12px;
+}
+.hmf-grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+}
+.hmf-grid th,
+.hmf-grid td {
+    padding: 12px 14px;
+    text-align: center;
+    border-bottom: 1px solid #F2ECE4;
+}
+.hmf-grid thead th {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #6D6357;
+    background: #FDF8F3;
+    white-space: nowrap;
+}
+.hmf-grid tbody th {
+    text-align: left;
+    font-weight: 600;
+    color: #3B322A;
+    background: #FDFAF7;
+    white-space: nowrap;
+}
+.hmf-grid tbody tr:last-child th,
+.hmf-grid tbody tr:last-child td { border-bottom: 0; }
+.hmf-grid__corner { background: #FDF8F3; }
+.hmf-grid__cell {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.hmf-grid__cell input {
+    width: 19px;
+    height: 19px;
+    accent-color: #A85A2E;
+    cursor: pointer;
+}
+/* The column heading repeats inside each cell only once the table restacks. */
+.hmf-grid__cell-label { display: none; }
+
+/* ---------------------------- Help and errors --------------------------- */
+.hmf-help {
+    margin: 6px 0 0;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #8A7E70;
+}
+/* The error carries a mark as well as the colour, so it is not the only signal
+   for a visitor who cannot tell red from grey. */
+.hmf-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    margin: 6px 0 0;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #C0392B;
+}
+.hmf-error::before {
+    content: "!";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    margin-top: 1px;
+    border-radius: 50%;
+    background: #C0392B;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+}
+.hmf-field.is-invalid .hmf-control,
+.hmf-field.is-invalid .hmf-choice {
+    border-color: #E0A99C;
+    background: #FEF8F7;
+}
+
+/* -------------------------------- Submit -------------------------------- */
+.hmf__actions {
+    margin-top: 8px;
+    padding-top: 24px;
+    border-top: 1px solid #F2EAE1;
+}
+.hmf__submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-width: 180px;
+    padding: 13px 28px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #A85A2E, #843D21);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+.hmf__submit:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+    box-shadow: 0 10px 24px rgba(132, 61, 33, .26);
+}
+.hmf__submit:active { transform: translateY(0); }
+.hmf__submit:focus-visible {
+    outline: 3px solid rgba(168, 90, 46, .4);
+    outline-offset: 3px;
+}
+.hmf__submit i { font-size: 13px; transition: transform .18s ease; }
+.hmf__submit:hover i { transform: translateX(3px); }
+
+/* ------------------------------- Responsive ----------------------------- */
+/* Two columns need room. Below this the pair would be two cramped slots, so
+   the form falls back to one question per row. */
+@media (max-width: 860px) {
+    .hmf__form { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+    .hmf__body { padding: 30px 30px 36px; }
+    .hmf__banner { padding: 28px 30px 30px; }
+}
+
+@media (max-width: 767.98px) {
+    .hmf { padding: 24px 0 48px; }
+    .hmf__paper { border-radius: 16px; }
+    .hmf__body { padding: 24px 18px 30px; }
+    .hmf__banner { padding: 24px 20px 26px; }
+    .hmf__title { font-size: 22px; }
+    .hmf__brand { margin-bottom: 14px; padding: 7px 13px; }
+    .hmf__brand img { height: 32px; }
+    /* 16px stops iOS zooming the page in when a field takes focus. */
+    .hmf-control { font-size: 16px; }
+
+    /* A full-width control and a full-width button are far easier to hit on a
+       phone than a centred pair, and the form is mostly filled in on one. */
+    .hmf__submit { width: 100%; }
+    .hmf-choice { padding: 13px 15px; }
+
+    /* A grid cannot stay a grid on a phone — four columns of radio buttons at
+       320px is unusable however it scrolls. Each row becomes its own block with
+       its choices listed under it, which is the same question asked legibly. */
+    .hmf-grid__scroll { border: 0; overflow: visible; }
+    .hmf-grid,
+    .hmf-grid tbody,
+    .hmf-grid tr,
+    .hmf-grid td { display: block; width: 100%; }
+    .hmf-grid thead { display: none; }
+    .hmf-grid tr {
+        margin-bottom: 12px;
+        border: 1px solid #E7DED2;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .hmf-grid tbody th {
+        display: block;
+        width: 100%;
+        text-align: left;
+        border-bottom: 1px solid #F2ECE4;
+    }
+    .hmf-grid td {
+        text-align: left;
+        padding: 0;
+        border-bottom: 1px solid #F6F1EB;
+    }
+    .hmf-grid td:last-child { border-bottom: 0; }
+    .hmf-grid__cell {
+        justify-content: flex-start;
+        gap: 11px;
+        width: 100%;
+        padding: 12px 14px;
+    }
+    .hmf-grid__cell-label { display: inline; font-size: 14.5px; color: #3B322A; }
+
+    .hmf-scale__steps { gap: 6px; }
+    .hmf-scale__step { flex: 1 1 38px; padding: 9px 2px; }
+    .hmf-rating__item svg { width: 30px; height: 30px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hmf__submit { transition: none; }
+    .hmf__submit:hover { transform: none; }
+}

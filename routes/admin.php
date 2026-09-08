@@ -15,6 +15,8 @@ use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\DepartmentController;
 use App\Http\Controllers\Backend\EventController;
 use App\Http\Controllers\Backend\FaqController;
+use App\Http\Controllers\Backend\FormController;
+use App\Http\Controllers\Backend\FormResponseController;
 use App\Http\Controllers\Backend\HeroController;
 use App\Http\Controllers\Backend\NotificationController;
 use App\Http\Controllers\Backend\PartnerController;
@@ -125,6 +127,47 @@ Route::prefix('admin')->name('backend.')->group(function () {
 
         // Blog posts (listing + details + home Latest Blog)
         Route::resource('blogs', BlogController::class)->except(['show']);
+
+        /*
+         * Forms — the dynamic form builder.
+         *
+         * Everything is named "forms.*" so admin.module resolves the whole
+         * module, responses included, to the one "forms" permission. The extra
+         * verbs are declared BEFORE the resource so a literal segment like
+         * "forms/export" can never be swallowed by the {form} parameter.
+         */
+        // Forms → Responses: every response across every form. Its own path
+        // rather than "forms/responses", which the {form} parameter below would
+        // otherwise try to resolve as a model.
+        Route::get('form-responses', [FormResponseController::class, 'all'])->name('forms.all-responses');
+
+        Route::prefix('forms')->name('forms.')->group(function () {
+            // Asked by the builder's "Generate Link" dialog, so the address it
+            // shows is the one the form will really be created with.
+            Route::post('slug-preview', [FormController::class, 'slugPreview'])->name('slug-preview');
+
+            Route::post('{form}/toggle', [FormController::class, 'toggle'])->name('toggle');
+            // Settings live on the form's own page, not on the builder — see
+            // FormController::updateSettings.
+            Route::put('{form}/settings', [FormController::class, 'updateSettings'])->name('settings');
+            Route::post('{form}/duplicate', [FormController::class, 'duplicate'])->name('duplicate');
+            Route::get('{form}/preview', [FormController::class, 'preview'])->name('preview');
+            Route::post('{form}/preview', [FormController::class, 'previewSubmit'])->name('preview.submit');
+
+            Route::prefix('{form}/responses')->name('responses.')->group(function () {
+                Route::get('/', [FormResponseController::class, 'index'])->name('index');
+                Route::get('export', [FormResponseController::class, 'export'])->name('export');
+                Route::get('export-excel', [FormResponseController::class, 'exportExcel'])->name('export-excel');
+                // Uploaded files are held on the private disk, so this route is
+                // the only way to them — and it is inside the admin guard.
+                Route::get('{response}/file/{value}/{index?}', [FormResponseController::class, 'download'])->name('file');
+                Route::get('{response}', [FormResponseController::class, 'show'])->name('show');
+                Route::patch('{response}/status', [FormResponseController::class, 'updateStatus'])->name('status');
+                Route::delete('{response}', [FormResponseController::class, 'destroy'])->name('destroy');
+            });
+        });
+
+        Route::resource('forms', FormController::class);
 
         // System → Users (admin logins). Listed in AdminModules::SUPER_ADMIN_ONLY,
         // so admin.module lets only the main admin through — creating accounts and

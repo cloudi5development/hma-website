@@ -11,8 +11,14 @@ use Illuminate\Database\Eloquent\Builder;
  */
 trait HandlesTableQuery
 {
-    /** Apply the toolbar's search box and status filter to a list query. */
-    protected function applyTableFilters(Builder $query, array $searchable = [], string $statusColumn = 'is_active'): Builder
+    /**
+     * Apply the toolbar's search box and status filter to a list query.
+     *
+     * $statusColumn may be null for a list whose status is not the usual
+     * is_active boolean — Forms has a three-way string status it filters itself.
+     * The body already skipped on a falsy value; the signature now says so.
+     */
+    protected function applyTableFilters(Builder $query, array $searchable = [], ?string $statusColumn = 'is_active'): Builder
     {
         $term = trim((string) request('q'));
 

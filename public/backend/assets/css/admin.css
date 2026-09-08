@@ -1253,6 +1253,13 @@ body * {
     background: var(--lavender);
 }
 
+/* Added for the Forms module's response workflow, which extends the enquiry
+   statuses with one more step between "Contacted" and "Converted". */
+.pill--in-progress {
+    color: #3B7BB8;
+    background: #E6F0F9;
+}
+
 .pill--converted {
     color: #2FA35F;
     background: #E4F7EC;
