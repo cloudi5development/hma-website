@@ -160,10 +160,10 @@
 }
 .hmf__done-gif {
     display: block;
-    width: 220px;
-    max-width: 62vw;
+    width: 120px;
+    max-width: 40vw;
     height: auto;
-    margin: 0 auto 6px;
+    margin: 0 auto 10px;
 }
 /* Swapped in for the GIF under prefers-reduced-motion — see below. */
 .hmf__done-static { display: none; }

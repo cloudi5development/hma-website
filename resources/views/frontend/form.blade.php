@@ -58,8 +58,10 @@
                         {{-- Decorative: the message below carries the meaning,
                              so this is hidden from screen readers rather than
                              described. --}}
+                        {{-- The width/height attributes match the CSS so the
+                             page does not jump as the GIF loads. --}}
                         <img class="hmf__done-gif" src="{{ asset('assets/images/forms/Success.gif') }}"
-                             alt="" aria-hidden="true" width="220" height="220">
+                             alt="" aria-hidden="true" width="120" height="120">
 
                         {{-- Stand-in for anyone who has asked their system not
                              to play animation — a GIF cannot be paused by CSS,
