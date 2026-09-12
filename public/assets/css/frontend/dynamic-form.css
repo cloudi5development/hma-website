@@ -243,7 +243,16 @@
    later question up into an earlier one, and a form must be answered in the
    order it was written. A half-width question followed by a full-width one
    therefore leaves the rest of its row empty, which is correct. */
+/* The form itself is a plain column now: steps, section headings and the grids
+   of questions stack down it. The two-column grid moved onto .hmf-qs, one per
+   section, so a group of questions can never start half-way along a row left
+   over from the group before it. */
 .hmf__form {
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+}
+.hmf-qs {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px 22px;
@@ -604,7 +613,7 @@ textarea.hmf-control { min-height: 104px; resize: vertical; line-height: 1.65; }
 /* Two columns need room. Below this the pair would be two cramped slots, so
    the form falls back to one question per row. */
 @media (max-width: 860px) {
-    .hmf__form { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+    .hmf-qs { grid-template-columns: minmax(0, 1fr); gap: 18px; }
     .hmf__body { padding: 30px 30px 36px; }
     .hmf__banner { padding: 28px 30px 30px; }
 }
@@ -668,4 +677,224 @@ textarea.hmf-control { min-height: 104px; resize: vertical; line-height: 1.65; }
 @media (prefers-reduced-motion: reduce) {
     .hmf__submit { transition: none; }
     .hmf__submit:hover { transform: none; }
+}
+
+/* =========================================================================
+   STEPS AND SECTIONS
+   -------------------------------------------------------------------------
+   The chrome around a form that has more shape than one list of questions.
+   Everything here is additive: a plain form draws none of it, and its
+   markup is what it always was.
+   ========================================================================= */
+
+/* -------------------------------- Sections -------------------------------
+   A named section is drawn as its own container, so a long form reads as a
+   few groups rather than one unbroken run of questions. An UNNAMED one is not
+   — that is a plain form's single implicit group, and a box around every
+   question on it would be a box inside a box saying nothing. */
+.hmf-sec--card {
+    padding: 24px 26px 26px;
+    border: 1px solid #EFE5DA;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(42, 29, 20, .04);
+}
+
+/* The ground the cards sit on, tinted only on a form that has any — otherwise
+   a plain form would gain a grey sheet for no reason. */
+.hmf__body--grouped { background: #FBF7F2; }
+
+/* ------------------------------ Section heads ---------------------------
+   A heading over a group of questions. Quiet on purpose — it is a signpost
+   between questions, not a second page title competing with the banner. */
+.hmf-sec__head {
+    margin: 0 0 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #F2EAE1;
+}
+.hmf-sec__title {
+    margin: 0;
+    font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: #843D21;
+    letter-spacing: -.01em;
+}
+.hmf-sec__sub {
+    margin: 5px 0 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #7A6C5E;
+}
+
+/* -------------------------------- Steps --------------------------------- */
+.hmf-steps { display: flex; flex-direction: column; gap: 26px; }
+.hmf-step  { display: flex; flex-direction: column; gap: 22px; }
+
+/* A step's description only. Its NAME lives on the stepper above and is not
+   repeated here — see form-structure.blade.php. */
+.hmf-step__head { margin-bottom: -4px; }
+.hmf-step__sub {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: #7A6C5E;
+}
+
+/* ------------------------------ The progress ---------------------------- */
+.hmf-steps__head { margin-bottom: 30px; }
+
+/* The named steps. Scrolls sideways rather than wrapping into a block of
+   text: on a narrow screen a four-step form should still read as a line you
+   are moving along. */
+.hmf-steps__crumbs {
+    display: flex;
+    gap: 10px;
+    margin: 0 0 16px;
+    padding: 0 0 4px;
+    list-style: none;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+.hmf-steps__crumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    padding: 7px 14px 7px 8px;
+    border: 1px solid #EFE5DA;
+    border-radius: 999px;
+    background: #fff;
+    transition: border-color .2s ease, background .2s ease;
+}
+.hmf-steps__dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #F2EAE1;
+    font-size: 12px;
+    font-weight: 700;
+    color: #8A7E70;
+    transition: background .2s ease, color .2s ease;
+}
+.hmf-steps__name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #8A7E70;
+    white-space: nowrap;
+}
+
+/* Where the visitor is now. */
+.hmf-steps__crumb.is-current { border-color: #C9723F; background: #FDF4EE; }
+.hmf-steps__crumb.is-current .hmf-steps__dot { background: linear-gradient(135deg, #C9723F, #A85A2E); color: #fff; }
+.hmf-steps__crumb.is-current .hmf-steps__name { color: #843D21; }
+
+/* Steps already filled in — a tick rather than a number, because the number
+   has stopped being the useful thing about them. */
+.hmf-steps__crumb.is-done .hmf-steps__dot {
+    background: #E8F3EC;
+    color: #1F7A4D;
+    font-size: 0;
+}
+.hmf-steps__crumb.is-done .hmf-steps__dot::after {
+    content: '✓';
+    font-size: 13px;
+    line-height: 1;
+}
+
+.hmf-steps__meter { display: flex; align-items: center; gap: 14px; }
+
+/* One segment per step. A sliding bar shows how far along you are; segments
+   show that AND how many steps there are, which is the question someone
+   actually has on step one of something. */
+.hmf-steps__segs { display: flex; gap: 6px; flex: 1; min-width: 0; }
+.hmf-steps__seg {
+    flex: 1;
+    height: 5px;
+    border-radius: 999px;
+    background: #EDE3D8;
+    transition: background .28s ease;
+}
+.hmf-steps__seg.is-on { background: #A85A2E; }
+.hmf-steps__count {
+    margin: 0;
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #8A7E70;
+    white-space: nowrap;
+}
+
+/* ------------------------------ Back / Next ----------------------------- */
+.hmf-steps__nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 8px;
+    padding-top: 24px;
+    border-top: 1px solid #F2EAE1;
+}
+.hmf-step__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-width: 132px;
+    padding: 12px 24px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.hmf-step__btn i { font-size: 13px; transition: transform .18s ease; }
+
+.hmf-step__btn--back { border-color: #E7DED2; background: #fff; color: #7A6C5E; }
+.hmf-step__btn--back:hover { border-color: #C9723F; color: #843D21; }
+.hmf-step__btn--back:hover i { transform: translateX(-3px); }
+
+/* The submit row, once the script has moved it in here. It brings its own
+   top border and spacing from .hmf__actions, which would draw a second rule
+   across a bar that already has one. */
+.hmf-steps__nav .hmf__actions {
+    margin: 0 0 0 auto;
+    padding: 0;
+    border-top: 0;
+}
+
+.hmf-step__btn--next {
+    /* Next carries the eye forward, so it is the same weight the submit
+       button has — it is the only thing to do on the step. */
+    margin-left: auto;
+    background: linear-gradient(135deg, #C9723F, #843D21);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(132, 61, 33, .22);
+}
+.hmf-step__btn--next:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(132, 61, 33, .28); }
+.hmf-step__btn--next:hover i { transform: translateX(3px); }
+.hmf-step__btn:focus-visible { outline: 2px solid #843D21; outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+    .hmf-steps__seg,
+    .hmf-step__btn,
+    .hmf-step__btn i { transition: none; }
+    .hmf-step__btn--next:hover { transform: none; }
+}
+
+@media (max-width: 560px) {
+    .hmf-steps__meter { flex-wrap: wrap; }
+    /* Stacked with the action that moves the form on at the top: reversed, so
+       Next or Submit leads and Back sits underneath it. */
+    .hmf-steps__nav { flex-direction: column-reverse; align-items: stretch; }
+    .hmf-step__btn { width: 100%; }
+    .hmf-step__btn--next { margin-left: 0; }
+    .hmf-steps__nav .hmf__actions { margin: 0; }
+    .hmf-steps__nav .hmf__submit { width: 100%; }
 }

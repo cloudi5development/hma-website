@@ -33,6 +33,15 @@
              already filed against it — see FormBuilderService. --}}
         <input type="hidden" name="fields[{{ $r }}][id]" value="{{ $row['id'] ?? '' }}" data-row-id>
 
+        {{-- Where this question sits. Written from the DOM by the builder script
+             just before the form is submitted, rather than kept in step on every
+             drag: dragging a question into another section would otherwise mean
+             rewriting every input name on it. Rendered here as well so the
+             values are right even if the script never runs — a question with no
+             refs is not lost, it simply lands on the first page. --}}
+        <input type="hidden" name="fields[{{ $r }}][page_ref]" value="{{ $pageRef ?? '' }}" data-row-page>
+        <input type="hidden" name="fields[{{ $r }}][section_ref]" value="{{ $sectionRef ?? '' }}" data-row-section>
+
         {{-- Label on the left, type on the right. --}}
         <div class="fb-field__label">
             <input type="text" name="fields[{{ $r }}][label]" data-row-label

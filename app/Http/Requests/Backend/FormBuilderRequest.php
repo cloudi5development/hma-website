@@ -73,7 +73,30 @@ class FormBuilderRequest extends FormRequest
             ],
             'status'      => ['nullable', Rule::in(array_keys(Form::STATUSES))],
 
+            // Which of the four shapes. Absent on an older payload, and the
+            // service reads that as "leave the form's shape alone".
+            'structure_type' => ['nullable', Rule::in(array_keys(Form::STRUCTURES))],
+
+            /* ---------------------------- pages, sections -------------------------
+               Titles are optional throughout: a page that only exists to break a
+               long form in half needs no name, and the renderer numbers it. The
+               refs are the builder's own keys for rows it has not saved yet —
+               opaque strings that let a question name the page it is sitting in
+               before that page has an id. */
+            'pages'                   => ['nullable', 'array', 'max:' . FormBuilderService::MAX_PAGES],
+            'pages.*.id'              => ['nullable', 'integer'],
+            'pages.*.title'           => ['nullable', 'string', 'max:190'],
+            'pages.*.description'     => ['nullable', 'string', 'max:1000'],
+
+            'sections'                => ['nullable', 'array', 'max:' . FormBuilderService::MAX_SECTIONS],
+            'sections.*.id'           => ['nullable', 'integer'],
+            'sections.*.page_ref'     => ['nullable', 'string', 'max:40'],
+            'sections.*.title'        => ['nullable', 'string', 'max:190'],
+            'sections.*.description'  => ['nullable', 'string', 'max:1000'],
+
             /* ------------------------------- fields ------------------------------- */
+            'fields.*.page_ref'          => ['nullable', 'string', 'max:40'],
+            'fields.*.section_ref'       => ['nullable', 'string', 'max:40'],
             'fields'                     => ['nullable', 'array', 'max:' . FormBuilderService::MAX_FIELDS],
             'fields.*.id'                => ['nullable', 'integer'],
             'fields.*.field_type'        => ['required', Rule::in(FormFieldType::keys())],

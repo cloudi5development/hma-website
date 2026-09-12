@@ -60,7 +60,7 @@
                          really is a preview of that page. --}}
                     @include('frontend.partials.form-header', ['form' => $form])
 
-                    <div class="hmf__body">
+                    <div class="hmf__body @if ($form->hasSections()) hmf__body--grouped @endif">
 
                     @if ($form->fields->isEmpty())
                         <div class="hmf__closed">
@@ -80,10 +80,11 @@
 
                             {{-- The same renderer the public page uses, so a
                                  difference between preview and live is not
-                                 possible by construction. --}}
-                            @include('frontend.partials.form-fields', ['fields' => $form->fields])
+                                 possible by construction — the steps and
+                                 section headings of a multi-page form included. --}}
+                            @include('frontend.partials.form-structure', ['form' => $form])
 
-                            <div class="hmf__actions">
+                            <div class="hmf__actions" data-submit-row>
                                 <button type="submit" class="hmf__submit">
                                     <span>{{ $form->submit_label }}</span>
                                 </button>
@@ -100,44 +101,5 @@
 @endsection
 
 @push('scripts')
-    <script>
-        /* Conditional visibility, as on the public page — a preview in which the
-           conditions do not work is not a preview of this form. Kept in step with
-           the script in frontend/form.blade.php. */
-        (function () {
-            'use strict';
-
-            var form = document.querySelector('.hmf__form');
-            if (!form) return;
-
-            var conditional = Array.prototype.slice.call(form.querySelectorAll('[data-cond-field]'));
-            if (!conditional.length) return;
-
-            function values(key) {
-                var found = [];
-                form.querySelectorAll('[name="' + key + '"], [name="' + key + '[]"]').forEach(function (input) {
-                    if (input.type === 'checkbox' || input.type === 'radio') {
-                        if (input.checked) found.push(input.value);
-                    } else if (input.value !== '') {
-                        found.push(input.value);
-                    }
-                });
-                return found;
-            }
-
-            function refresh() {
-                conditional.forEach(function (field) {
-                    var matches = values(field.getAttribute('data-cond-field')).indexOf(field.getAttribute('data-cond-value')) !== -1,
-                        show    = field.getAttribute('data-cond-op') === 'not_equals' ? !matches : matches;
-
-                    field.hidden = !show;
-                    field.querySelectorAll('input, select, textarea').forEach(function (input) { input.disabled = !show; });
-                });
-            }
-
-            form.addEventListener('change', refresh);
-            form.addEventListener('input', refresh);
-            refresh();
-        })();
-    </script>
+    @include('frontend.partials.form-scripts')
 @endpush

@@ -27,6 +27,39 @@ class Form extends Model
         self::DISABLED  => 'Disabled',
     ];
 
+    /* ============================== STRUCTURE ==============================
+       What shape this form is. Four shapes, one set of tables: a question's
+       page and section are both nullable, and which of them is filled in is the
+       whole difference between them. See the structure migration.
+
+       A form built before pages existed reads as PLAIN by the column default,
+       which is exactly what it is. */
+
+    public const PLAIN          = 'plain';
+    public const SECTIONS       = 'sections';
+    public const PAGES          = 'pages';
+    public const PAGES_SECTIONS = 'pages_sections';
+
+    /** Label and one line of explanation for each, as the builder's cards show them. */
+    public const STRUCTURES = [
+        self::PLAIN => [
+            'label' => 'Plain Form',
+            'hint'  => 'One page, one list of questions.',
+        ],
+        self::SECTIONS => [
+            'label' => 'Sections',
+            'hint'  => 'One page, questions grouped under headings.',
+        ],
+        self::PAGES => [
+            'label' => 'Multi-Page',
+            'hint'  => 'A step at a time, with Next and Back.',
+        ],
+        self::PAGES_SECTIONS => [
+            'label' => 'Multi-Page + Sections',
+            'hint'  => 'Steps, each grouped under headings.',
+        ],
+    ];
+
     /**
      * The settings JSON, and what each key means when the admin has not set it.
      *
@@ -46,7 +79,7 @@ class Form extends Model
         'notify_subject'   => null,
     ];
 
-    protected $fillable = ['name', 'title', 'description', 'slug', 'status', 'settings'];
+    protected $fillable = ['name', 'title', 'description', 'slug', 'structure_type', 'status', 'settings'];
 
     protected $casts = [
         'settings' => 'array',
@@ -81,6 +114,24 @@ class Form extends Model
     public function responses(): HasMany
     {
         return $this->hasMany(FormResponse::class)->latest('submitted_at')->latest('id');
+    }
+
+    /** The form's steps, in order. Empty on a single-page form. */
+    public function pages(): HasMany
+    {
+        return $this->hasMany(FormPage::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /**
+     * Every section on the form, whichever page it belongs to.
+     *
+     * Loaded flat and filtered per page by FormLayout rather than through
+     * pages.sections, so a single-page section form (whose sections hang off no
+     * page at all) and a multi-page one are the same one query.
+     */
+    public function sections(): HasMany
+    {
+        return $this->hasMany(FormSection::class)->orderBy('sort_order')->orderBy('id');
     }
 
     /* ================================ SCOPES =============================== */
@@ -164,6 +215,37 @@ class Form extends Model
     public function isPublished(): bool
     {
         return $this->status === self::PUBLISHED;
+    }
+
+    /* ============================== STRUCTURE ============================== */
+
+    /** Anything unrecognised reads as plain, which is the shape that always works. */
+    public function structure(): string
+    {
+        return array_key_exists((string) $this->structure_type, self::STRUCTURES)
+            ? $this->structure_type
+            : self::PLAIN;
+    }
+
+    public function hasPages(): bool
+    {
+        return in_array($this->structure(), [self::PAGES, self::PAGES_SECTIONS], true);
+    }
+
+    public function hasSections(): bool
+    {
+        return in_array($this->structure(), [self::SECTIONS, self::PAGES_SECTIONS], true);
+    }
+
+    public function getStructureLabelAttribute(): string
+    {
+        return self::STRUCTURES[$this->structure()]['label'];
+    }
+
+    /** The form arranged as pages → sections → questions. See FormLayout. */
+    public function layout(): array
+    {
+        return \App\Support\FormLayout::for($this);
     }
 
     /** How many more submissions the cap allows, or null when uncapped. */

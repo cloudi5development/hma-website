@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Form;
 use App\Models\FormField;
 use App\Models\FormFieldOption;
+use App\Models\FormPage;
+use App\Models\FormSection;
 use App\Support\FormFieldType;
 use App\Services\FormSubmissionService;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +35,11 @@ class FormBuilderService
     /** Ceiling on choices under one field. */
     public const MAX_OPTIONS = 60;
 
+    /** Ceilings on the containers. A form needing more than this is two forms. */
+    public const MAX_PAGES = 20;
+
+    public const MAX_SECTIONS = 40;
+
     /**
      * Keys a field may not take, because the submitted request already uses
      * them. A question labelled "Token" would otherwise generate `_token` and
@@ -51,9 +58,20 @@ class FormBuilderService
         return DB::transaction(function () use ($data, $form) {
             $form = $this->saveForm($data, $form);
 
-            $this->syncFields($form, $data['fields'] ?? []);
+            // Containers before questions, always. A question is placed by the
+            // id of the page or section it lands in, and a page created in this
+            // same save has no id until it is written — so the order here is not
+            // stylistic, it is what makes placing a question into a brand new
+            // page possible at all.
+            //
+            // It also means a page the admin deleted is gone by the time the
+            // questions are placed, so nothing can be filed into it.
+            $pages    = $this->syncPages($form, $data['pages'] ?? []);
+            $sections = $this->syncSections($form, $data['sections'] ?? [], $pages);
 
-            return $form->fresh(['fields.options']);
+            $this->syncFields($form, $data['fields'] ?? [], $pages, $sections);
+
+            return $form->fresh(['fields.options', 'pages', 'sections']);
         });
     }
 
@@ -72,6 +90,15 @@ class FormBuilderService
             'description' => trim((string) ($data['description'] ?? '')) ?: null,
             'status'      => $data['status'] ?? Form::DRAFT,
         ];
+
+        // Anything unrecognised becomes a plain form — the shape that works with
+        // no pages and no sections, so a bad value degrades to something usable
+        // rather than to a form that renders nothing.
+        if (array_key_exists('structure_type', $data)) {
+            $attributes['structure_type'] = array_key_exists((string) $data['structure_type'], Form::STRUCTURES)
+                ? $data['structure_type']
+                : Form::PLAIN;
+        }
 
         // Settings are only editable once a form exists, so a create must not
         // wipe them and an edit that does not post them must not either.
@@ -134,16 +161,143 @@ class FormBuilderService
         return $settings;
     }
 
+    /* ========================= PAGES AND SECTIONS ==========================
+       The containers a question can sit in. Both are reconciled the way fields
+       are — matched by id and updated in place — rather than deleted and
+       rewritten, because a question points at them: recreating a page would
+       hand every question on it a stale id, and the questions would come loose
+       from the very page the admin had just renamed.
+
+       Both return a map of the key the builder posted under → the saved model,
+       which is how a question lands in a page created in this same save. */
+
+    /**
+     * @return array<string, FormPage>
+     */
+    private function syncPages(Form $form, array $rows): array
+    {
+        // The structure is authoritative. A form the admin has switched back to
+        // plain keeps no pages, whatever the browser posted — otherwise pages
+        // linger invisibly and reappear on the next switch.
+        if (! $form->hasPages()) {
+            $this->wipePages($form);
+
+            return [];
+        }
+
+        $existing = $form->pages()->get()->keyBy('id');
+        $map      = [];
+        $seen     = [];
+        $order    = 0;
+
+        foreach (array_slice($rows, 0, self::MAX_PAGES, true) as $ref => $row) {
+            // Only a page this form owns may be updated by id; an id from
+            // anywhere else creates a new page rather than hijacking one.
+            $page = isset($row['id']) ? $existing->get((int) $row['id']) : null;
+
+            $attributes = [
+                // A page needs no title. "Page 2" is a fine answer when the
+                // admin only wanted to break a long form in half, and
+                // FormPage::heading supplies it at read time.
+                'title'       => trim((string) ($row['title'] ?? '')) ?: null,
+                'description' => trim((string) ($row['description'] ?? '')) ?: null,
+                'sort_order'  => $order++,
+            ];
+
+            $page ? $page->update($attributes) : $page = $form->pages()->create($attributes);
+
+            $seen[]            = $page->id;
+            $map[(string) $ref] = $page;
+        }
+
+        $this->wipePages($form, $seen);
+
+        return $map;
+    }
+
+    /**
+     * @param  array<string, FormPage>  $pages
+     * @return array<string, FormSection>
+     */
+    private function syncSections(Form $form, array $rows, array $pages): array
+    {
+        if (! $form->hasSections()) {
+            FormSection::where('form_id', $form->id)->delete();
+
+            return [];
+        }
+
+        $existing = $form->sections()->get()->keyBy('id');
+        $map      = [];
+        $seen     = [];
+        $order    = 0;
+
+        foreach (array_slice($rows, 0, self::MAX_SECTIONS, true) as $ref => $row) {
+            // On a paged form a section belongs to a page; on a single-page one
+            // it hangs off the form itself. A section whose page did not survive
+            // this save belongs nowhere, and is dropped with it.
+            $page = $form->hasPages() ? ($pages[(string) ($row['page_ref'] ?? '')] ?? null) : null;
+
+            if ($form->hasPages() && ! $page) {
+                continue;
+            }
+
+            $section = isset($row['id']) ? $existing->get((int) $row['id']) : null;
+
+            $attributes = [
+                'form_page_id' => $page?->id,
+                'title'        => trim((string) ($row['title'] ?? '')) ?: null,
+                'description'  => trim((string) ($row['description'] ?? '')) ?: null,
+                'sort_order'   => $order++,
+            ];
+
+            $section ? $section->update($attributes) : $section = $form->sections()->create($attributes);
+
+            $seen[]             = $section->id;
+            $map[(string) $ref] = $section;
+        }
+
+        FormSection::where('form_id', $form->id)
+            ->whereNotIn('id', $seen ?: [0])
+            ->delete();
+
+        return $map;
+    }
+
+    /**
+     * Delete the form's pages, or everything but the ones just saved.
+     *
+     * Sections on a deleted page go with it, and questions on it are NOT
+     * deleted — their page id is nulled, and the ones the builder still lists
+     * are re-placed moments later. Questions are what responses point at, so
+     * removing one is a decision only syncFields is allowed to make.
+     *
+     * Written as a plain query rather than through $form->pages(), whose ORDER
+     * BY would ride along into the DELETE — which SQLite refuses outright.
+     */
+    private function wipePages(Form $form, array $keep = []): void
+    {
+        FormPage::where('form_id', $form->id)
+            ->when($keep, fn ($q) => $q->whereNotIn('id', $keep))
+            ->delete();
+    }
+
     /* =============================== FIELDS ================================ */
 
     /**
      * Reconcile the posted rows against the fields already on the form.
      *
      * Display order is the order the rows arrived in — a form posts its inputs
-     * in document order, so the builder's drag handle and its ▲/▼ buttons are
-     * the whole of the reordering story and no order field is submitted.
+     * in document order, so the builder's drag handle is the whole of the
+     * reordering story and no order field is submitted. That holds across pages
+     * and sections too: the rows are nested inside them in the DOM, so one flat
+     * pass over the posted list is already in reading order.
+     *
+     * WHERE a question sits is not read from the DOM, though — it is posted
+     * explicitly as page_ref / section_ref by each row. Dragging a question into
+     * another section would otherwise mean rewriting every input name on it.
      */
-    private function syncFields(Form $form, array $rows): void
+    private function syncFields(Form $form, array $rows, array $pages = [], array $sections = []): void
     {
         $existing = $form->fields()->get()->keyBy('id');
         $seen     = [];
@@ -167,7 +321,11 @@ class FormBuilderService
             // id from anywhere else creates a new field instead of hijacking one.
             $field = isset($row['id']) ? $existing->get((int) $row['id']) : null;
 
+            [$pageId, $sectionId] = $this->placement($form, $row, $pages, $sections);
+
             $attributes = [
+                'form_page_id'     => $pageId,
+                'form_section_id'  => $sectionId,
                 'field_type'       => $type,
                 'label'            => $label,
                 'field_key'        => $this->uniqueKey($row, $label, $keys),
@@ -192,6 +350,39 @@ class FormBuilderService
         }
 
         $this->removeMissing($existing, $seen);
+    }
+
+    /**
+     * Which page and section one posted question lands in.
+     *
+     * The form's structure decides which of the two can be set at all, so a form
+     * switched from multi-page to plain has its questions released from their
+     * pages in the same save — rather than keeping ids that nothing renders and
+     * that would resurface the moment it was switched back.
+     *
+     * On a form with both, the page is taken from the SECTION rather than from
+     * the row's own page_ref: a question is in a section, and that section is on
+     * exactly one page. Reading both independently would let the two disagree.
+     *
+     * @param  array<string, FormPage>     $pages
+     * @param  array<string, FormSection>  $sections
+     * @return array{0: ?int, 1: ?int}
+     */
+    private function placement(Form $form, array $row, array $pages, array $sections): array
+    {
+        $section = $form->hasSections()
+            ? ($sections[(string) ($row['section_ref'] ?? '')] ?? null)
+            : null;
+
+        if (! $form->hasPages()) {
+            return [null, $section?->id];
+        }
+
+        $page = $section
+            ? $section->form_page_id
+            : ($pages[(string) ($row['page_ref'] ?? '')]->id ?? null);
+
+        return [$page, $section?->id];
     }
 
     /**
@@ -383,16 +574,40 @@ class FormBuilderService
     {
         return DB::transaction(function () use ($form) {
             $copy = Form::create([
-                'name'        => Str::limit($form->name . ' - Copy', 255, ''),
-                'title'       => $form->title,
-                'description' => $form->description,
-                'slug'        => Form::uniqueSlug($form->slug . '-copy'),
-                'status'      => Form::DRAFT,
-                'settings'    => $form->settings,
+                'name'           => Str::limit($form->name . ' - Copy', 255, ''),
+                'title'          => $form->title,
+                'description'    => $form->description,
+                'slug'           => Form::uniqueSlug($form->slug . '-copy'),
+                'structure_type' => $form->structure(),
+                'status'         => Form::DRAFT,
+                'settings'       => $form->settings,
             ]);
 
+            // The copy gets its own pages and sections, so the two forms can be
+            // edited apart. Old id → new id, because everything below is placed
+            // by id and pointing the copy's questions at the original's pages
+            // would tie the two together for good.
+            $pages = [];
+
+            foreach ($form->pages as $page) {
+                $pages[$page->id] = $copy->pages()->create(
+                    $page->only(['title', 'description', 'sort_order']),
+                )->id;
+            }
+
+            $sections = [];
+
+            foreach ($form->sections as $section) {
+                $sections[$section->id] = $copy->sections()->create([
+                    'form_page_id' => $pages[$section->form_page_id] ?? null,
+                ] + $section->only(['title', 'description', 'sort_order']))->id;
+            }
+
             foreach ($form->fields()->with('allOptions')->get() as $field) {
-                $new = $copy->fields()->create($field->only([
+                $new = $copy->fields()->create([
+                    'form_page_id'    => $pages[$field->form_page_id] ?? null,
+                    'form_section_id' => $sections[$field->form_section_id] ?? null,
+                ] + $field->only([
                     'field_type', 'label', 'field_key', 'placeholder', 'help_text',
                     'is_required', 'default_value', 'validation_rules', 'settings', 'sort_order',
                 ]));

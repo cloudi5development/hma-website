@@ -27,8 +27,9 @@ class FormField extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'form_id', 'field_type', 'label', 'field_key', 'placeholder', 'help_text',
-        'is_required', 'default_value', 'validation_rules', 'settings', 'sort_order',
+        'form_id', 'form_page_id', 'form_section_id', 'field_type', 'label', 'field_key',
+        'placeholder', 'help_text', 'is_required', 'default_value', 'validation_rules',
+        'settings', 'sort_order',
     ];
 
     protected $casts = [
@@ -41,6 +42,21 @@ class FormField extends Model
     public function form(): BelongsTo
     {
         return $this->belongsTo(Form::class);
+    }
+
+    /**
+     * Where this question sits. Both are null on a plain form, and either may be
+     * null on any form — see the structure migration for why that is deliberate
+     * and how FormLayout draws a question that has come loose.
+     */
+    public function page(): BelongsTo
+    {
+        return $this->belongsTo(FormPage::class, 'form_page_id');
+    }
+
+    public function section(): BelongsTo
+    {
+        return $this->belongsTo(FormSection::class, 'form_section_id');
     }
 
     /** The plain choices under a dropdown / radio / checkbox. */

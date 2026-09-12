@@ -4,37 +4,29 @@
     $editing = $form->exists;
 
     /*
-     * The field rows to render.
+     * The form as pages → sections → question rows.
      *
-     * old() first, so a failed save gives the admin their work back rather than
-     * throwing away a form they spent ten minutes building. Otherwise the saved
-     * fields, flattened out of their model/relation shape into the plain arrays
-     * the row partial reads — one shape, whichever the source.
+     * Always that nesting, whatever structure the form is: a plain form is one
+     * page holding one section, with the chrome of both hidden. It is what lets
+     * the four structures be one builder rather than three — see
+     * App\Support\FormBuilderTree.
+     *
+     * old() is handled in there too, so a failed save gives the admin back the
+     * pages and sections they had added as well as the questions.
      */
-    $rows = old('fields');
+    $tree = \App\Support\FormBuilderTree::for($form);
 
-    if ($rows === null) {
-        $rows = $fields->map(fn ($field) => array_merge(
-            $field->only(['id', 'field_type', 'label', 'field_key', 'placeholder', 'help_text', 'is_required', 'default_value']),
-            (array) $field->validation_rules,
-            [
-                'multiple'       => $field->setting('multiple'),
-                'cond_field_key' => $field->condition()['field_key'] ?? '',
-                'cond_operator'  => $field->condition()['operator'] ?? 'equals',
-                'cond_value'     => $field->condition()['value'] ?? '',
-                'options'        => $field->options->map->only(['label', 'value'])->all(),
-                // A grid's two lists. Empty for every other type, and the
-                // panels holding them are hidden then anyway.
-                'rows'           => $field->rows->map->only(['label', 'value'])->all(),
-                'columns'        => $field->columns->map->only(['label', 'value'])->all(),
-            ],
-        ))->all();
+    $structure = old('structure_type', $editing ? $form->structure() : \App\Models\Form::PLAIN);
 
-        // Keys the JS counter will not collide with.
-        $rows = collect($rows)->mapWithKeys(fn ($row, $i) => ['f' . $i => $row])->all();
-    }
-
-    $setting = fn ($key) => old($key, $form->exists ? ($form->settings[$key] ?? null) : \App\Models\Form::SETTING_DEFAULTS[$key]);
+    // A small line drawing for each structure, so the cards can be told apart
+    // at a glance rather than read. Kept here rather than on the model: it is
+    // the only place they are drawn.
+    $structureIcons = [
+        \App\Models\Form::PLAIN          => '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/>',
+        \App\Models\Form::SECTIONS       => '<rect x="4" y="3" width="16" height="7" rx="1.5"/><rect x="4" y="14" width="16" height="7" rx="1.5"/><path d="M7 6.5h6M7 17.5h6"/>',
+        \App\Models\Form::PAGES          => '<rect x="3" y="6" width="11" height="13" rx="1.5"/><path d="M17 8h4M17 12h4M17 16h2"/>',
+        \App\Models\Form::PAGES_SECTIONS => '<rect x="3" y="5" width="10" height="6" rx="1.5"/><rect x="3" y="14" width="10" height="5" rx="1.5"/><path d="M17 7h4M17 12h4M17 17h3"/>',
+    ];
 @endphp
 
 @section('title', $editing ? 'Edit ' . $form->name : 'Create Form')
@@ -110,39 +102,68 @@
             </div>
         </div>
 
-        {{-- ============================== FIELDS ============================= --}}
+        {{-- ============================ STRUCTURE ============================
+             What shape this form is. Chosen first because it decides what the
+             rest of the screen offers — but never what it can hold: the four
+             structures share one set of questions, and moving between them
+             keeps every one of them. --}}
         <div class="hm-card mb-3">
             <div class="hm-card__head">
-                <h2 class="hm-card__title">Text fields</h2>
-
-                {{-- The + that adds a question. Sits at the right of the heading
-                     because that is where the eye goes looking for it. --}}
-                <button type="button" class="fb-plus" data-field-add
-                        aria-label="Add a question" title="Add a question">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                </button>
+                <h2 class="hm-card__title">Form Structure</h2>
             </div>
             <div class="hm-card__body">
-
-                @error('fields') <p class="form-error mb-2">{{ $message }}</p> @enderror
-
-                <div data-fields>
-                    @foreach ($rows as $r => $row)
-                        @include('backend.forms.partials.field-row', ['r' => $r, 'row' => $row])
+                <div class="fb-structs" role="radiogroup" aria-label="Form structure">
+                    @foreach (\App\Models\Form::STRUCTURES as $value => $spec)
+                        <label class="fb-struct">
+                            <input type="radio" name="structure_type" value="{{ $value }}"
+                                   @checked($structure === $value) data-structure>
+                            <span class="fb-struct__box">
+                                <svg class="fb-struct__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+                                     aria-hidden="true">{!! $structureIcons[$value] !!}</svg>
+                                <span class="fb-struct__name">{{ $spec['label'] }}</span>
+                                <span class="fb-struct__hint">{{ $spec['hint'] }}</span>
+                            </span>
+                        </label>
                     @endforeach
                 </div>
 
-                {{-- A new form starts genuinely empty — no sample questions are
-                     inserted, because every question on every form built here is
-                     the admin's to decide. There is no empty-state panel: the
-                     Add Question button below is right there and says the same
-                     thing without a placeholder taking up the space. --}}
+                {{-- Said plainly, because the alternative is an admin who is
+                     afraid to try the other three. --}}
+                <p class="form-hint mt-2">
+                    You can change this at any time. Your questions are kept whichever you pick —
+                    switching to a simpler structure only drops the page and section headings.
+                </p>
+            </div>
+        </div>
 
-                <button type="button" class="btn-soft" data-field-add>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                    Add Question
+        {{-- ============================== QUESTIONS ==========================
+             One shell for all four structures. The page → section → questions
+             nesting is always here; the structure only decides which headings
+             are shown. See App\Support\FormBuilderTree. --}}
+        @error('fields') <p class="form-error mb-2">{{ $message }}</p> @enderror
+
+        <div class="fb-shell" data-shell>
+
+            {{-- The steps, and the button that adds one — on the same line,
+                 above the page it is showing. Adding a page belongs beside the
+                 pages rather than under the questions, which is a long way from
+                 anything it has to do with. --}}
+            <div class="fb-bar" data-needs="pages" hidden>
+                {{-- Built from the pages below by the builder script so the two
+                     cannot drift, and draggable to reorder. --}}
+                <nav class="fb-tabs" data-page-tabs aria-label="Pages"></nav>
+
+                <button type="button" class="fb-addbtn" data-page-add>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                    Add Page
                 </button>
+            </div>
 
+            <div data-pages>
+                @foreach ($tree as $page)
+                    @include('backend.forms.partials.page-card', ['page' => $page])
+                @endforeach
             </div>
         </div>
 
@@ -201,12 +222,27 @@
     @endunless
 
     {{-- Templates cloned by the builder script. __I__ becomes a field row key,
-         __O__ an option key. Kept out of the form so their inputs never post. --}}
+         __O__ an option key, __P__ a page key and __S__ a section key. Kept out
+         of the form so their inputs never post. --}}
     <template id="fieldTemplate">
-        @include('backend.forms.partials.field-row', ['r' => '__I__', 'row' => []])
+        @include('backend.forms.partials.field-row', ['r' => '__I__', 'row' => [], 'pageRef' => '__P__', 'sectionRef' => '__S__'])
     </template>
     <template id="optionTemplate">
         @include('backend.forms.partials.option-row', ['r' => '__I__', 'o' => '__O__', 'option' => []])
+    </template>
+    <template id="sectionTemplate">
+        @include('backend.forms.partials.section-card', [
+            'section' => ['ref' => '__S__', 'id' => null, 'title' => '', 'description' => '', 'fields' => []],
+            'pageRef' => '__P__',
+        ])
+    </template>
+    <template id="pageTemplate">
+        @include('backend.forms.partials.page-card', [
+            'page' => [
+                'ref' => '__P__', 'id' => null, 'title' => '', 'description' => '',
+                'sections' => [['ref' => '__S__', 'id' => null, 'title' => '', 'description' => '', 'fields' => []]],
+            ],
+        ])
     </template>
 
 @endsection
@@ -216,17 +252,29 @@
         /* =====================================================================
            Form builder
            ---------------------------------------------------------------------
-           Everything the admin does to the field list happens here: add, edit,
-           duplicate, delete, reorder, and switching a field's type.
+           Everything the admin does to the form's shape happens here: pages,
+           sections, questions — adding, deleting, reordering, collapsing, and
+           switching a question's type.
 
-           Two things are worth knowing before changing any of it:
+           Four things are worth knowing before changing any of it:
 
-           1. A row's position in the DOM IS its display order. A form posts its
-              inputs in document order, so moving a row is all it takes — there
-              is no order field to keep in step. Same trick as the event
-              repeaters in this panel.
+           1. THE NESTING IS ALWAYS THERE. Every form on this screen is
+              pages → sections → questions, whatever structure it is. A plain
+              form is one page holding one section with the chrome of both
+              hidden. Choosing a structure only decides which headings the admin
+              can see; it never moves a question. That is what makes switching
+              between the four safe — see App\Support\FormBuilderTree.
 
-           2. Which settings a field shows is read from the type registry
+           2. A row's position in the DOM IS its display order. A form posts its
+              inputs in document order, so moving an element is the whole of
+              reordering — there is no order field to keep in step.
+
+           3. WHERE a question sits is posted explicitly, not inferred. Each row
+              carries page_ref / section_ref, stamped from the DOM just before
+              the form submits. Dragging a question into another section would
+              otherwise mean rewriting every input name on it.
+
+           4. Which settings a field shows is read from the type registry
               (App\Support\FormFieldType), passed in below. Adding a field type
               in PHP makes it appear here with the right panels and no change to
               this script.
@@ -236,23 +284,171 @@
 
             var TYPES = @json(\App\Support\FormFieldType::forJavascript());
 
-            var form     = document.getElementById('formBuilder'),
-                box      = document.querySelector('[data-fields]'),
-                fieldTpl = document.getElementById('fieldTemplate'),
-                optionTpl = document.getElementById('optionTemplate'),
-                nextRow  = 0,
-                MAX      = {{ \App\Services\FormBuilderService::MAX_FIELDS }};
+            var form       = document.getElementById('formBuilder'),
+                shell      = document.querySelector('[data-shell]'),
+                pagesBox   = shell && shell.querySelector('[data-pages]'),
+                tabsBox    = shell && shell.querySelector('[data-page-tabs]'),
+                fieldTpl   = document.getElementById('fieldTemplate'),
+                optionTpl  = document.getElementById('optionTemplate'),
+                sectionTpl = document.getElementById('sectionTemplate'),
+                pageTpl    = document.getElementById('pageTemplate'),
+                MAX          = {{ \App\Services\FormBuilderService::MAX_FIELDS }},
+                MAX_PAGES    = {{ \App\Services\FormBuilderService::MAX_PAGES }},
+                MAX_SECTIONS = {{ \App\Services\FormBuilderService::MAX_SECTIONS }},
+                active       = 0;
 
-            if (!form || !box) return;
+            if (!form || !shell || !pagesBox) return;
 
-            function rows() { return Array.prototype.slice.call(box.querySelectorAll('[data-row]')); }
+            /* ---- Keys for rows this browser has added -------------------------
+               Salted per page load. A failed save hands back the refs the last
+               attempt posted ("np1", "ns2"); a counter starting from zero again
+               would mint those same keys for new rows and two pages would
+               collide in the payload. */
+            var salt = Math.random().toString(36).slice(2, 6),
+                seq  = 0;
 
-            /* ---- The key a row's inputs are named under ---------------------- */
-            function rowKey(row) {
-                var input = row.querySelector('[name^="fields["]');
-                var match = input && input.name.match(/^fields\[([^\]]+)\]/);
-                return match ? match[1] : null;
+            function ref(kind) { return 'n' + kind + salt + (++seq); }
+
+            /* ---- What shape the admin has chosen ------------------------------ */
+            function structure() {
+                var picked = form.querySelector('[data-structure]:checked');
+                return picked ? picked.value : 'plain';
             }
+
+            function hasPages(s)    { return s === 'pages' || s === 'pages_sections'; }
+            function hasSections(s) { return s === 'sections' || s === 'pages_sections'; }
+
+            function pageCards()    { return Array.prototype.slice.call(pagesBox.querySelectorAll('[data-page]')); }
+            function sectionsOf(p)  { return Array.prototype.slice.call(p.querySelectorAll('[data-section]')); }
+            function allRows()      { return Array.prototype.slice.call(shell.querySelectorAll('[data-row]')); }
+
+            /* ---- Showing the structure the admin picked ------------------------
+               Nothing is moved and nothing is thrown away: this only decides
+               which headings are on screen. A form switched from multi-page to
+               plain still holds every question, all of its pages still shown
+               one under another with their headings hidden, and the save is
+               what finally drops the pages. */
+            function applyStructure() {
+                var s = structure(), paged = hasPages(s), sectioned = hasSections(s);
+
+                shell.querySelectorAll('[data-needs]').forEach(function (el) {
+                    var need = el.getAttribute('data-needs');
+
+                    el.hidden = need === 'pages'    ? !paged
+                              : need === 'sections' ? !sectioned
+                              /* "flat": the plain Questions bar */ : sectioned;
+                });
+
+                shell.classList.toggle('is-paged', paged);
+                shell.classList.toggle('is-sectioned', sectioned);
+
+                // A sectioned form needs somewhere to put a question on every
+                // page, even one the admin has only just added.
+                if (sectioned) {
+                    pageCards().forEach(function (page) {
+                        if (sectionsOf(page).length === 0) addSection(page, true);
+                    });
+                }
+
+                showPages();
+                renderTabs();
+                refresh();
+            }
+
+            /* One page at a time when the form is paged; all of them, stacked,
+               when it is not — otherwise questions on page 2 of a form just
+               switched to plain would be on screen nowhere. */
+            function showPages() {
+                var paged = hasPages(structure()),
+                    list  = pageCards();
+
+                if (active >= list.length) active = Math.max(0, list.length - 1);
+
+                list.forEach(function (page, i) {
+                    page.hidden = paged ? i !== active : false;
+                });
+            }
+
+            /* ---- The step tabs ------------------------------------------------
+               Built from the pages rather than kept alongside them, so the two
+               cannot drift out of step. */
+            function renderTabs() {
+                if (!tabsBox) return;
+
+                tabsBox.innerHTML = '';
+
+                if (!hasPages(structure())) return;
+
+                pageCards().forEach(function (page, i) {
+                    var input = page.querySelector('[data-page-title]'),
+                        title = input ? input.value.trim() : '',
+                        tab   = document.createElement('button');
+
+                    tab.type      = 'button';
+                    tab.className = 'fb-tab' + (i === active ? ' is-active' : '');
+                    tab.setAttribute('data-page-tab', i);
+                    tab.setAttribute('draggable', 'false');
+                    tab.innerHTML = '<span class="fb-tab__n"></span><span class="fb-tab__t"></span>';
+
+                    // textContent, not innerHTML: the title is whatever the
+                    // admin typed, and it is not markup.
+                    tab.querySelector('.fb-tab__n').textContent = 'Page ' + (i + 1);
+                    tab.querySelector('.fb-tab__t').textContent = title || 'Untitled';
+
+                    tabsBox.appendChild(tab);
+                });
+            }
+
+            /* ---- Numbering and counts ----------------------------------------
+               Questions are numbered straight through the whole form rather than
+               restarting on each page, because that is the order the person
+               filling it in will meet them. */
+            function refresh() {
+                pageCards().forEach(function (page, i) {
+                    var badge = page.querySelector('[data-page-number]');
+                    if (badge) badge.textContent = (i + 1);
+
+                    sectionsOf(page).forEach(function (section) {
+                        var count = section.querySelectorAll('[data-row]').length,
+                            label = section.querySelector('[data-section-count]');
+
+                        if (label) label.textContent = count + (count === 1 ? ' question' : ' questions');
+                    });
+                });
+
+                allRows().forEach(function (row, i) {
+                    var index = row.querySelector('[data-row-index]');
+                    if (index) index.textContent = (i + 1);
+                });
+            }
+
+            /* ---- Where every question ended up --------------------------------
+               Read off the DOM and written into each row just before the form is
+               posted. Doing it here rather than on every drag is what lets a
+               question be dragged between sections without renaming a single
+               input. */
+            function stamp() {
+                pageCards().forEach(function (page) {
+                    var pageRef = page.getAttribute('data-page-ref');
+
+                    sectionsOf(page).forEach(function (section) {
+                        var sectionRef = section.getAttribute('data-section-ref'),
+                            owner      = section.querySelector('[data-section-page]');
+
+                        if (owner) owner.value = pageRef;
+
+                        section.querySelectorAll('[data-row]').forEach(function (row) {
+                            var p = row.querySelector('[data-row-page]'),
+                                s = row.querySelector('[data-row-section]');
+
+                            if (p) p.value = pageRef;
+                            if (s) s.value = sectionRef;
+                        });
+                    });
+                });
+            }
+
+            form.addEventListener('submit', stamp);
 
             /* ---- Per-row: which panels this field type shows -----------------
                Driven entirely off the registry passed in as TYPES, so a field
@@ -325,9 +521,9 @@
             /* ---- The field-type dropdown ------------------------------------
                A listbox rather than a <select>, because the menu carries an icon
                per type and headings that cannot be selected. Delegated from the
-               container, so a cloned row needs nothing re-bound. */
+               shell, so a cloned row needs nothing re-bound. */
             function closeTypeMenus(except) {
-                box.querySelectorAll('[data-type-menu]').forEach(function (menu) {
+                shell.querySelectorAll('[data-type-menu]').forEach(function (menu) {
                     if (menu === except) return;
                     menu.hidden = true;
                     var button = menu.parentNode.querySelector('[data-type-toggle]');
@@ -342,6 +538,13 @@
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') closeTypeMenus(null);
             });
+
+            /* ---- The key a row's inputs are named under ---------------------- */
+            function rowKey(row) {
+                var input = row.querySelector('[name^="fields["]');
+                var match = input && input.name.match(/^fields\[([^\]]+)\]/);
+                return match ? match[1] : null;
+            }
 
             /* ---- Options, grid rows and grid columns -------------------------
                One set of helpers for all three lists: they are the same shape
@@ -365,10 +568,10 @@
                 if (!host) return;
 
                 var key  = rowKey(row),
-                    seq  = 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+                    seed = 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
                     html = optionTpl.innerHTML
                         .replace(/__I__/g, key)
-                        .replace(/__O__/g, seq)
+                        .replace(/__O__/g, seed)
                         // The template renders as an "options" row; this is what
                         // makes the same markup post as rows[] or columns[].
                         .replace(/\]\[options\]\[/g, '][' + list + '][')
@@ -407,31 +610,29 @@
                 }
             }
 
-            /* ---- Row numbering ------------------------------------------------ */
-            function refresh() {
-                var list = rows();
-
-                list.forEach(function (row, i) {
-                    var index = row.querySelector('[data-row-index]');
-                    if (index) index.textContent = (i + 1);
-                });
-            }
-
             function slugKey(label) {
                 return (label || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
             }
 
-            /* ---- Add / duplicate --------------------------------------------- */
-            function addField(type) {
-                if (rows().length >= MAX) {
-                    window.alert('A form may hold at most ' + MAX + ' fields.');
+            /* ---- Adding questions, sections and pages ------------------------ */
+            function addField(section, type) {
+                if (allRows().length >= MAX) {
+                    window.alert('A form may hold at most ' + MAX + ' questions.');
                     return null;
                 }
 
-                var key = 'n' + (nextRow++);
-                box.insertAdjacentHTML('beforeend', fieldTpl.innerHTML.replace(/__I__/g, key));
+                var host = section.querySelector('[data-fields]');
+                if (!host) return null;
 
-                var row = box.lastElementChild;
+                // The refs are left blank: stamp() fills them from the DOM the
+                // moment before the form is posted, which is the only time they
+                // are guaranteed to be right.
+                host.insertAdjacentHTML('beforeend', fieldTpl.innerHTML
+                    .replace(/__I__/g, ref('f'))
+                    .replace(/__P__/g, '')
+                    .replace(/__S__/g, ''));
+
+                var row = host.lastElementChild;
                 row.querySelector('[data-row-type]').value = type;
                 closeTypeMenus(null);
                 applyType(row);
@@ -441,17 +642,107 @@
                 return row;
             }
 
+            function addSection(page, quiet) {
+                var host = page.querySelector('[data-sections]');
+                if (!host) return null;
 
-            /* ---- Events ------------------------------------------------------
-               Both + buttons — the one in the card heading and the one under the
-               list — add a question. Short answer is where a new one starts; its
-               own type dropdown changes it from there. */
-            document.querySelectorAll('[data-field-add]').forEach(function (button) {
-                button.addEventListener('click', function () { addField('short_text'); });
-            });
+                if (sectionsOf(page).length >= MAX_SECTIONS) {
+                    window.alert('A page may hold at most ' + MAX_SECTIONS + ' sections.');
+                    return null;
+                }
 
-            box.addEventListener('click', function (e) {
-                var row = e.target.closest('[data-row]');
+                host.insertAdjacentHTML('beforeend', sectionTpl.innerHTML
+                    .replace(/__S__/g, ref('s'))
+                    .replace(/__P__/g, page.getAttribute('data-page-ref')));
+
+                var section = host.lastElementChild;
+
+                // applyStructure calls this back when a page has no section at
+                // all, so a quiet add must not call it again.
+                if (!quiet) {
+                    applyStructure();
+                    section.querySelector('[data-section-title]').focus();
+                }
+
+                return section;
+            }
+
+            function addPage() {
+                if (pageCards().length >= MAX_PAGES) {
+                    window.alert('A form may hold at most ' + MAX_PAGES + ' pages.');
+                    return;
+                }
+
+                pagesBox.insertAdjacentHTML('beforeend', pageTpl.innerHTML
+                    .replace(/__P__/g, ref('p'))
+                    .replace(/__S__/g, ref('s')));
+
+                // Land on what was just made, rather than leaving the admin on
+                // the page they were already looking at.
+                active = pageCards().length - 1;
+                applyStructure();
+
+                var title = pageCards()[active].querySelector('[data-page-title]');
+                if (title) title.focus();
+            }
+
+            /* ---- Clicks, everywhere in the shell ----------------------------- */
+            shell.addEventListener('click', function (e) {
+                var page    = e.target.closest('[data-page]'),
+                    section = e.target.closest('[data-section]'),
+                    row     = e.target.closest('[data-row]');
+
+                /* ---- Pages ---- */
+                if (e.target.closest('[data-page-add]')) { addPage(); return; }
+
+                if (e.target.closest('[data-page-remove]') && page) {
+                    var onPage = page.querySelectorAll('[data-row]').length;
+
+                    if (pageCards().length === 1) {
+                        window.alert('A form needs at least one page.');
+                        return;
+                    }
+
+                    if (window.confirm(onPage
+                        ? 'Delete this page and the ' + onPage + ' question(s) on it? Answers already collected are kept and stay visible on each response.'
+                        : 'Delete this page?')) {
+                        var index = pageCards().indexOf(page);
+                        page.remove();
+                        active = Math.max(0, index - 1);
+                        applyStructure();
+                    }
+                    return;
+                }
+
+                /* ---- Sections ---- */
+                if (e.target.closest('[data-section-add]') && page) { addSection(page); return; }
+
+                if (e.target.closest('[data-section-remove]') && section) {
+                    var inSection = section.querySelectorAll('[data-row]').length;
+
+                    if (window.confirm(inSection
+                        ? 'Delete this section and the ' + inSection + ' question(s) in it? Answers already collected are kept and stay visible on each response.'
+                        : 'Delete this section?')) {
+                        section.remove();
+                        applyStructure();
+                    }
+                    return;
+                }
+
+                if (e.target.closest('[data-section-toggle]') && section) {
+                    var body = section.querySelector('[data-section-body]'),
+                        shut = section.classList.toggle('is-collapsed');
+
+                    if (body) body.hidden = shut;
+                    e.target.closest('[data-section-toggle]').setAttribute(
+                        'aria-label', shut ? 'Expand section' : 'Collapse section',
+                    );
+                    return;
+                }
+
+                /* ---- Questions ---- */
+                if (e.target.closest('[data-field-add]') && section) { addField(section, 'short_text'); return; }
+
                 if (!row) return;
 
                 if (e.target.closest('[data-row-remove]')) {
@@ -496,47 +787,143 @@
                     refreshOptionCount(row);
                     return;
                 }
-
             });
 
-            box.addEventListener('change', function (e) {
-                var row = e.target.closest('[data-row]');
-                if (!row) return;
-
+            shell.addEventListener('change', function (e) {
                 if (e.target.matches('[data-row-required]')) refresh();
             });
 
-            box.addEventListener('input', function (e) {
-                var row = e.target.closest('[data-row]');
-                if (!row) return;
-
+            shell.addEventListener('input', function (e) {
+                if (e.target.matches('[data-page-title]')) { renderTabs(); return; }
                 if (e.target.matches('[data-row-label]')) refresh();
             });
 
+            /* ---- Switching structure ------------------------------------------ */
+            form.querySelectorAll('[data-structure]').forEach(function (radio) {
+                radio.addEventListener('change', applyStructure);
+            });
+
+            /* ---- The step tabs: switch page, and drag to reorder --------------- */
+            if (tabsBox) {
+                tabsBox.addEventListener('click', function (e) {
+                    var tab = e.target.closest('[data-page-tab]');
+                    if (!tab) return;
+
+                    active = parseInt(tab.getAttribute('data-page-tab'), 10) || 0;
+                    showPages();
+                    renderTabs();
+                });
+
+                // The tabs are what reorder the pages. Dragging the page cards
+                // themselves would mean dragging a panel the height of the
+                // screen past the one next to it.
+                var tabFrom = null;
+
+                tabsBox.addEventListener('mousedown', function (e) {
+                    var tab = e.target.closest('[data-page-tab]');
+                    if (tab) tab.setAttribute('draggable', 'true');
+                });
+
+                tabsBox.addEventListener('dragstart', function (e) {
+                    var tab = e.target.closest('[data-page-tab]');
+                    if (!tab) return;
+
+                    tabFrom = parseInt(tab.getAttribute('data-page-tab'), 10);
+                    tab.classList.add('is-dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', '');
+                });
+
+                tabsBox.addEventListener('dragover', function (e) {
+                    // Either a tab being reordered, or a question being carried
+                    // onto another page.
+                    if (tabFrom === null && !(dragging && mode === 'row')) return;
+
+                    var tab = e.target.closest('[data-page-tab]');
+                    if (tab) tab.classList.add('is-target');
+
+                    e.preventDefault();
+                });
+
+                tabsBox.addEventListener('dragleave', function (e) {
+                    var tab = e.target.closest('[data-page-tab]');
+                    if (tab) tab.classList.remove('is-target');
+                });
+
+                tabsBox.addEventListener('drop', function (e) {
+                    var tab = e.target.closest('[data-page-tab]');
+                    if (!tab) return;
+
+                    e.preventDefault();
+                    tab.classList.remove('is-target');
+
+                    var to   = parseInt(tab.getAttribute('data-page-tab'), 10),
+                        list = pageCards();
+
+                    /* A question dropped on a tab moves to that page.
+                       Only one page is on screen at a time, so there is no way
+                       to drag a question from page one to page three — and
+                       without this there would be no way to move it at all,
+                       which is a poor answer on a form the admin is still
+                       working out the shape of. The tabs are already there and
+                       already say which page is which. */
+                    if (dragging && mode === 'row') {
+                        var into = list[to] && list[to].querySelector('[data-fields]');
+
+                        if (into && !into.contains(dragging)) {
+                            into.appendChild(dragging);
+                            active = to;
+                            applyStructure();
+                        }
+
+                        return;
+                    }
+
+                    if (tabFrom === null) return;
+
+                    var moved = list[tabFrom];
+
+                    if (moved && to !== tabFrom) {
+                        to > tabFrom ? list[to].after(moved) : list[to].before(moved);
+                        active = to;
+                    }
+
+                    tabFrom = null;
+                    applyStructure();
+                });
+
+                tabsBox.addEventListener('dragend', function () {
+                    tabFrom = null;
+                    tabsBox.querySelectorAll('[data-page-tab]').forEach(function (tab) {
+                        tab.classList.remove('is-dragging');
+                        tab.setAttribute('draggable', 'false');
+                    });
+                });
+            }
+
             /* ---- Drag and drop ------------------------------------------------
-               Two things reorder by dragging: a question, and a choice within a
-               question (its options, or a grid's rows and columns). Both work
-               the same way, and both use the DOM order as the stored order — a
-               form posts its inputs in document order, so moving an element is
-               the whole of it.
+               Three things reorder by dragging: a section, a question, and a
+               choice within a question. All three use DOM order as the stored
+               order — a form posts its inputs in document order, so moving an
+               element is the whole of it.
 
                A grip makes its element draggable only while it is held. Without
-               that the row would be draggable all the time and text inside its
-               inputs could not be selected.
+               that, everything would be draggable all the time and text inside
+               the inputs could not be selected.
 
-               The option grip is checked FIRST: an option lives inside a
-               question, so a grip inside one would otherwise pick up the
-               question and drag the lot. */
+               The grips are checked innermost FIRST: an option lives inside a
+               question which lives inside a section, so a grip inside one of
+               them would otherwise pick up its container and drag the lot. */
             var dragging = null,
-                draggingOption = false;
+                mode     = null;   // 'option' | 'row' | 'section'
 
             function clearDraggable() {
-                box.querySelectorAll('[data-row], [data-option]').forEach(function (el) {
+                shell.querySelectorAll('[data-row], [data-option], [data-section]').forEach(function (el) {
                     el.setAttribute('draggable', 'false');
                 });
             }
 
-            box.addEventListener('mousedown', function (e) {
+            shell.addEventListener('mousedown', function (e) {
                 var optionGrip = e.target.closest('[data-option-grip]');
 
                 if (optionGrip) {
@@ -544,17 +931,30 @@
                     return;
                 }
 
-                var grip = e.target.closest('[data-row-grip]');
-                if (grip) grip.closest('[data-row]').setAttribute('draggable', 'true');
+                var rowGrip = e.target.closest('[data-row-grip]');
+
+                if (rowGrip) {
+                    rowGrip.closest('[data-row]').setAttribute('draggable', 'true');
+                    return;
+                }
+
+                var sectionGrip = e.target.closest('[data-section-grip]');
+                if (sectionGrip) sectionGrip.closest('[data-section]').setAttribute('draggable', 'true');
             });
 
-            box.addEventListener('mouseup', clearDraggable);
+            shell.addEventListener('mouseup', clearDraggable);
 
-            box.addEventListener('dragstart', function (e) {
-                var option = e.target.closest('[data-option]');
+            shell.addEventListener('dragstart', function (e) {
+                var held = function (selector) {
+                    var el = e.target.closest(selector);
+                    return el && el.getAttribute('draggable') === 'true' ? el : null;
+                };
 
-                draggingOption = !!(option && option.getAttribute('draggable') === 'true');
-                dragging = draggingOption ? option : e.target.closest('[data-row]');
+                dragging = held('[data-option]');
+                mode     = dragging ? 'option' : null;
+
+                if (!dragging) { dragging = held('[data-row]'); mode = dragging ? 'row' : null; }
+                if (!dragging) { dragging = held('[data-section]'); mode = dragging ? 'section' : null; }
 
                 if (dragging) {
                     dragging.classList.add('is-dragging');
@@ -564,20 +964,32 @@
                 }
             });
 
-            box.addEventListener('dragover', function (e) {
+            shell.addEventListener('dragover', function (e) {
                 if (!dragging) return;
                 e.preventDefault();
 
-                var over = draggingOption
-                    ? e.target.closest('[data-option]')
-                    : e.target.closest('[data-row]');
+                var selector = mode === 'option' ? '[data-option]' : mode === 'section' ? '[data-section]' : '[data-row]',
+                    over     = e.target.closest(selector);
 
-                if (!over || over === dragging) return;
+                if (!over || over === dragging) {
+                    // Dropping a question into a section that has none yet:
+                    // there is no sibling row to aim at, so anywhere in that
+                    // section counts. Without this a new section could never be
+                    // filled by dragging into it.
+                    if (mode === 'row') {
+                        var target  = e.target.closest('[data-section]'),
+                            host    = target && target.querySelector('[data-fields]');
+
+                        if (host && !host.contains(dragging)) host.appendChild(dragging);
+                    }
+                    return;
+                }
 
                 // A choice may only move within its own list: an option cannot
                 // become a grid column, and a row of one question cannot end up
-                // under another.
-                if (draggingOption && over.parentNode !== dragging.parentNode) return;
+                // under another. A section may not be dropped inside itself.
+                if (mode === 'option' && over.parentNode !== dragging.parentNode) return;
+                if (mode === 'section' && dragging.contains(over)) return;
 
                 var rect  = over.getBoundingClientRect(),
                     after = e.clientY > rect.top + rect.height / 2;
@@ -585,10 +997,10 @@
                 after ? over.after(dragging) : over.before(dragging);
             });
 
-            box.addEventListener('dragend', function () {
+            shell.addEventListener('dragend', function () {
                 if (dragging) dragging.classList.remove('is-dragging');
                 dragging = null;
-                draggingOption = false;
+                mode     = null;
                 clearDraggable();
                 refresh();
             });
@@ -646,7 +1058,7 @@
                         return;
                     }
 
-                    if (rows().length === 0) {
+                    if (allRows().length === 0) {
                         if (window.hmToast) window.hmToast('Add at least one question first.', 'warning');
                         return;
                     }
@@ -679,6 +1091,12 @@
                 createBtn.addEventListener('click', function () {
                     createBtn.disabled = true;
                     createBtn.textContent = 'Creating…';
+
+                    // form.submit() does not fire the submit event, so the refs
+                    // have to be written here by hand. Without this every
+                    // question on a form created through this dialog would land
+                    // on page one with no section.
+                    stamp();
                     form.submit();
                 });
 
@@ -721,8 +1139,8 @@
             });
 
             /* ---- Start-up ---------------------------------------------------- */
-            rows().forEach(applyType);
-            refresh();
+            allRows().forEach(applyType);
+            applyStructure();
         })();
     </script>
 @endpush
@@ -1025,6 +1443,271 @@
             .fb-field__grip { display: none; }
             .fb-option { flex-wrap: wrap; }
             .fb-linkbox { flex-wrap: wrap; }
+        }
+
+        /* =================================================================
+           STRUCTURE, PAGES AND SECTIONS
+           -----------------------------------------------------------------
+           Same palette, radii and spacing as the rest of the panel — the
+           builder gained a hierarchy, not a second visual language. Nothing
+           below restyles an existing class.
+           ================================================================= */
+
+        /* ---- Picking the shape ---- */
+        .fb-structs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
+            gap: 12px;
+        }
+        .fb-struct { margin: 0; cursor: pointer; }
+        /* Off-screen rather than display:none, so the radio stays focusable and
+           arrow keys still move through the group. */
+        .fb-struct input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .fb-struct__box {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            height: 100%;
+            padding: 15px 14px;
+            border: 1.5px solid var(--line, #E7DED2);
+            border-radius: 14px;
+            background: #fff;
+            transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+        }
+        .fb-struct:hover .fb-struct__box { border-color: #D8C4B2; }
+        .fb-struct__icon { width: 26px; height: 26px; margin-bottom: 7px; color: #B3A69A; }
+        .fb-struct__name { font-size: 14.5px; font-weight: 700; color: var(--ink, #2E2620); }
+        .fb-struct__hint { font-size: 12.5px; line-height: 1.45; color: var(--muted, #8A7E70); }
+
+        .fb-struct input:checked + .fb-struct__box {
+            border-color: #A85A2E;
+            background: #FDF4EE;
+            box-shadow: 0 0 0 3px rgba(168, 90, 46, .12);
+        }
+        .fb-struct input:checked + .fb-struct__box .fb-struct__icon { color: #A85A2E; }
+        .fb-struct input:checked + .fb-struct__box .fb-struct__name { color: #843D21; }
+        .fb-struct input:focus-visible + .fb-struct__box { outline: 2px solid #A85A2E; outline-offset: 2px; }
+
+        /* ---- Step tabs ---- */
+        /* ---- The bar above the pages: the steps, and Add Page ----
+           One row. The tabs take the space and scroll inside it; the button
+           keeps its place at the right however many pages there are. */
+        .fb-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .fb-tabs {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+            padding-bottom: 4px;
+            overflow-x: auto;
+        }
+
+        /* Add Section sits in the same place on the page it belongs to, so the
+           two controls that give a form its shape read as a pair. */
+        .fb-secbar { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+
+        /* ---- Add Page / Add Section ----
+           Filled and dark against a screen that is otherwise white on cream:
+           these two are what the admin came to this bar to do. Same gradient
+           as the round + and the panel's primary buttons. */
+        .fb-addbtn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-shrink: 0;
+            padding: 11px 18px;
+            border: 0;
+            border-radius: 11px;
+            background: linear-gradient(135deg, #A85A2E, #843D21);
+            font: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .fb-addbtn svg { width: 17px; height: 17px; }
+        .fb-addbtn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(132, 61, 33, .28); }
+        .fb-addbtn:focus-visible { outline: 2px solid #843D21; outline-offset: 2px; }
+        .fb-tab {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            flex-shrink: 0;
+            min-width: 128px;
+            max-width: 210px;
+            padding: 9px 14px;
+            border: 1px solid var(--line, #E7DED2);
+            border-radius: 11px;
+            background: #fff;
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+            transition: border-color .15s ease, background .15s ease;
+        }
+        .fb-tab:hover { border-color: #D8C4B2; }
+        .fb-tab__n {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+            color: var(--muted, #8A7E70);
+        }
+        .fb-tab__t {
+            overflow: hidden;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--ink, #2E2620);
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .fb-tab.is-active { border-color: #A85A2E; background: #FDF4EE; }
+        .fb-tab.is-active .fb-tab__n { color: #A85A2E; }
+        .fb-tab.is-active .fb-tab__t { color: #843D21; }
+        .fb-tab.is-dragging { opacity: .45; }
+        /* A question being carried onto another page. */
+        .fb-tab.is-target {
+            border-color: #A85A2E;
+            background: #FDF4EE;
+            box-shadow: 0 0 0 3px rgba(168, 90, 46, .16);
+        }
+
+        /* ---- A page ----
+           Only drawn as a panel when the form actually has pages; on a plain or
+           sectioned form the page is just a container and must leave no trace. */
+        .fb-page { margin-bottom: 14px; }
+        .fb-shell.is-paged .fb-page {
+            padding: 14px;
+            border: 1px solid var(--line, #E7DED2);
+            border-radius: 16px;
+            background: #FFFDFB;
+        }
+        .fb-page__head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+        .fb-page__badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 30px;
+            height: 30px;
+            margin-top: 4px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #A85A2E, #843D21);
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .fb-page__titles, .fb-sec__titles { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+
+        /* Borderless until touched. A builder is mostly reading, and a screen of
+           boxed inputs reads as a form to fill in rather than a form to edit. */
+        .fb-page__title, .fb-page__desc, .fb-sec__title, .fb-sec__desc {
+            width: 100%;
+            padding: 6px 9px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            background: transparent;
+            font: inherit;
+            color: var(--ink, #2E2620);
+        }
+        .fb-page__title, .fb-sec__title { font-size: 15.5px; font-weight: 700; }
+        .fb-page__desc, .fb-sec__desc { font-size: 13px; color: var(--muted, #8A7E70); }
+        .fb-page__title:hover, .fb-page__desc:hover,
+        .fb-sec__title:hover, .fb-sec__desc:hover { border-color: #EDE4DA; }
+        .fb-page__title:focus, .fb-page__desc:focus,
+        .fb-sec__title:focus, .fb-sec__desc:focus {
+            border-color: #A85A2E;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(168, 90, 46, .12);
+            outline: none;
+        }
+        .fb-page__title::placeholder, .fb-sec__title::placeholder { font-weight: 600; color: #C4B6A8; }
+
+        /* ---- A section ----
+           Also the plain form's question card: on a form with no sections its
+           head holds nothing but the "Questions" title and the + button, which
+           is what the builder looked like before any of this existed. */
+        .fb-sec {
+            margin-bottom: 14px;
+            border: 1px solid var(--line, #E7DED2);
+            border-radius: 16px;
+            background: #fff;
+        }
+        .fb-sec:last-child { margin-bottom: 0; }
+        .fb-sec.is-dragging { opacity: .45; }
+        .fb-sec__head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-bottom: 1px solid #F1E9DF;
+        }
+        .fb-shell.is-sectioned .fb-sec__head { align-items: flex-start; }
+        .fb-sec.is-collapsed .fb-sec__head { border-bottom: 0; }
+        .fb-sec__grip { display: flex; padding-top: 8px; color: #B3A69A; cursor: grab; }
+        .fb-sec__grip svg { width: 18px; height: 18px; }
+        .fb-sec__plain { flex: 1; margin: 0; }
+        .fb-sec__count {
+            flex-shrink: 0;
+            padding-top: 8px;
+            font-size: 12px;
+            color: var(--muted, #8A7E70);
+            white-space: nowrap;
+        }
+        .fb-sec__body { padding: 14px; }
+        .fb-sec.is-collapsed [data-section-toggle] svg { transform: rotate(-90deg); }
+
+        /* ---- The small square buttons on a page or section head ---- */
+        .fb-ico {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            border: 0;
+            border-radius: 9px;
+            background: none;
+            color: var(--muted, #8A7E70);
+            cursor: pointer;
+            transition: color .15s ease, background .15s ease;
+        }
+        .fb-ico svg { width: 18px; height: 18px; transition: transform .15s ease; }
+        .fb-ico:hover { background: #F6EFE8; color: var(--ink, #2E2620); }
+        .fb-ico:focus-visible { outline: 2px solid #A85A2E; outline-offset: 1px; }
+        .fb-ico--danger { color: #C08A80; }
+        .fb-ico--danger:hover { background: #FBEDEA; color: #C0392B; }
+
+
+
+        /* A question list with nothing in it still has to be a drop target, or a
+           section just added could never be filled by dragging. */
+        .fb-sec__body [data-fields]:empty { min-height: 10px; }
+
+        @media (max-width: 640px) {
+            /* Stacked, button first — it stays above the content either way,
+               and the tabs keep a full row to scroll in. */
+            .fb-bar { flex-direction: column-reverse; align-items: stretch; }
+            .fb-addbtn { width: 100%; }
+            .fb-sec__head { flex-wrap: wrap; }
+            .fb-sec__titles { order: 3; flex-basis: 100%; }
+            .fb-sec__plain { flex: 1 1 auto; }
+            .fb-page__head { flex-wrap: wrap; }
+            .fb-page__titles { order: 3; flex-basis: 100%; }
         }
     </style>
 @endpush

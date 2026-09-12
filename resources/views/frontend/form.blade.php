@@ -45,7 +45,10 @@
                 {{-- Everything below the banner sits on the white sheet. The
                      padding lives here rather than on the card, so the banner
                      can run edge to edge. --}}
-                <div class="hmf__body">
+                {{-- Tinted only when the form has sections, so their cards
+                     have something to sit on. A plain form keeps the plain
+                     white sheet it has always had. --}}
+                <div class="hmf__body @if ($form->hasSections()) hmf__body--grouped @endif">
 
                 {{-- The thank-you, after a submission that did not redirect.
                      It REPLACES everything else rather than sitting above it:
@@ -134,9 +137,15 @@
                                    tabindex="-1" autocomplete="off">
                         </div>
 
-                        @include('frontend.partials.form-fields', ['fields' => $form->fields])
+                        {{-- Whatever shape the admin built: one list, groups, or
+                             steps. One request carries the whole form in every
+                             case, so nothing below this line knows or cares. --}}
+                        @include('frontend.partials.form-structure', ['form' => $form])
 
-                        <div class="hmf__actions">
+                        {{-- On a stepped form the script reveals this on the
+                             last step. It starts visible so that a form with no
+                             JavaScript can still be submitted. --}}
+                        <div class="hmf__actions" data-submit-row>
                             <button type="submit" class="hmf__submit">
                                 <span>{{ $form->submit_label }}</span>
                                 <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
@@ -155,61 +164,5 @@
 @endsection
 
 @push('scripts')
-    <script>
-        /* Conditional visibility.
-           A field carrying data-cond-* is shown only while the field it names
-           holds the value it names. Every such field starts `hidden` in the
-           markup, so the rule holds even before this runs and a field is never
-           flashed on screen before being taken away.
-
-           This is presentation only: FormField::isVisibleFor() applies the same
-           rule on the server, so a hidden field is not held to its "required"
-           rule and a forged value for one is not stored. */
-        (function () {
-            'use strict';
-
-            var form = document.querySelector('.hmf__form');
-            if (!form) return;
-
-            var conditional = Array.prototype.slice.call(form.querySelectorAll('[data-cond-field]'));
-            if (!conditional.length) return;
-
-            function currentValue(key) {
-                var inputs = form.querySelectorAll('[name="' + key + '"], [name="' + key + '[]"]');
-                var values = [];
-
-                Array.prototype.forEach.call(inputs, function (input) {
-                    if (input.type === 'checkbox' || input.type === 'radio') {
-                        if (input.checked) values.push(input.value);
-                    } else if (input.value !== '') {
-                        values.push(input.value);
-                    }
-                });
-
-                return values;
-            }
-
-            function refresh() {
-                conditional.forEach(function (field) {
-                    var values  = currentValue(field.getAttribute('data-cond-field')),
-                        wanted  = field.getAttribute('data-cond-value'),
-                        matches = values.indexOf(wanted) !== -1,
-                        show    = field.getAttribute('data-cond-op') === 'not_equals' ? !matches : matches;
-
-                    field.hidden = !show;
-
-                    // A hidden control must not block submission on its own
-                    // `required`, and must not post a value the server would
-                    // then have to ignore.
-                    Array.prototype.forEach.call(field.querySelectorAll('input, select, textarea'), function (input) {
-                        input.disabled = !show;
-                    });
-                });
-            }
-
-            form.addEventListener('change', refresh);
-            form.addEventListener('input', refresh);
-            refresh();
-        })();
-    </script>
+    @include('frontend.partials.form-scripts')
 @endpush

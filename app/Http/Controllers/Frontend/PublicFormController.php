@@ -34,7 +34,12 @@ class PublicFormController extends Controller
      */
     public function show(Request $request, string $slug): View
     {
-        $form = Form::where('slug', $slug)->with(['fields.options'])->firstOrFail();
+        // Pages and sections ride along because the page is drawn from them —
+        // two small queries against however many questions the form has, rather
+        // than one per question while FormLayout buckets them.
+        $form = Form::where('slug', $slug)
+            ->with(['fields.options', 'pages', 'sections'])
+            ->firstOrFail();
 
         [$accepting, $closedReason] = $form->submissionState();
 

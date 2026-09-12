@@ -56,9 +56,15 @@ class FormController extends Controller
         //
         // Published, not draft: the create flow hands the admin the form's link
         // and tells them to share it, so it has to work the moment they do.
+        // Plain, because that is what most forms are and because it is the one
+        // structure that asks the admin to configure nothing at all. The other
+        // three are one click away and keep whatever has been built so far.
         return view('backend.forms.builder', [
-            'form'   => new Form(['status' => Form::PUBLISHED, 'settings' => Form::SETTING_DEFAULTS]),
-            'fields' => collect(),
+            'form' => new Form([
+                'status'         => Form::PUBLISHED,
+                'structure_type' => Form::PLAIN,
+                'settings'       => Form::SETTING_DEFAULTS,
+            ]),
         ]);
     }
 
@@ -99,7 +105,8 @@ class FormController extends Controller
     /** The form's own page: what it asks, where it lives, how it is doing. */
     public function show(Form $form): View
     {
-        $form->load(['fields.options', 'fields.rows', 'fields.columns'])->loadCount('responses');
+        $form->load(['fields.options', 'fields.rows', 'fields.columns', 'pages', 'sections'])
+            ->loadCount('responses');
 
         return view('backend.forms.show', [
             'form'  => $form,
@@ -109,12 +116,13 @@ class FormController extends Controller
 
     public function edit(Form $form): View
     {
-        return view('backend.forms.builder', [
-            'form'   => $form,
-            // Options plus a grid's rows and columns — the builder renders all
-            // three managers and needs each list loaded.
-            'fields' => $form->fields()->with(['options', 'rows', 'columns'])->get(),
-        ]);
+        // The containers the questions hang off. The fields themselves — with
+        // their options and a grid's rows and columns — are loaded by
+        // FormBuilderTree, which is also what decides whether they come from
+        // here or from old input after a failed save.
+        $form->load(['pages', 'sections']);
+
+        return view('backend.forms.builder', ['form' => $form]);
     }
 
     public function update(FormBuilderRequest $request, Form $form): RedirectResponse
@@ -204,7 +212,7 @@ class FormController extends Controller
      */
     public function preview(Form $form): View
     {
-        $form->load(['fields.options', 'fields.rows', 'fields.columns']);
+        $form->load(['fields.options', 'fields.rows', 'fields.columns', 'pages', 'sections']);
 
         return view('backend.forms.preview', ['form' => $form]);
     }
