@@ -29,8 +29,17 @@ use Illuminate\Support\Str;
  */
 class FormBuilderService
 {
-    /** Ceiling on questions per form. Matches the max: rule in FormBuilderRequest. */
-    public const MAX_FIELDS = 60;
+    /**
+     * Ceiling on questions per form. Matches the max: rule in FormBuilderRequest.
+     *
+     * Was 60 while every question travelled as a dozen-odd separate POST inputs:
+     * PHP stops reading a request at max_input_vars (1000 here, and on most
+     * hosts) and silently drops the rest, so a 50-question quiz with four
+     * options each lost its last questions on save. The builder now posts its
+     * rows as one JSON payload — see FormBuilderRequest::unpackPayload — so the
+     * number of inputs no longer caps the number of questions.
+     */
+    public const MAX_FIELDS = 200;
 
     /** Ceiling on choices under one field. */
     public const MAX_OPTIONS = 60;
@@ -98,6 +107,13 @@ class FormBuilderService
             $attributes['structure_type'] = array_key_exists((string) $data['structure_type'], Form::STRUCTURES)
                 ? $data['structure_type']
                 : Form::PLAIN;
+        }
+
+        // Same rule: absent leaves the form alone, unrecognised is standard.
+        if (array_key_exists('form_type', $data)) {
+            $attributes['form_type'] = array_key_exists((string) $data['form_type'], Form::FORM_TYPES)
+                ? $data['form_type']
+                : Form::STANDARD;
         }
 
         // Settings are only editable once a form exists, so a create must not
@@ -478,6 +494,15 @@ class FormBuilderService
             $settings['multiple'] = (bool) ($row['multiple'] ?? false);
         }
 
+        // A Multiple choice question's right answer, stored as the option's
+        // VALUE — the thing a response stores — so the two can be compared
+        // directly later. Kept only when it really is one of the options posted
+        // alongside it: FormBuilderRequest refuses a mismatch, and this is the
+        // second line for any caller that skipped the request.
+        if ($type === FormFieldType::RADIO && ($answer = $this->correctAnswer($row)) !== null) {
+            $settings['correct_answer'] = $answer;
+        }
+
         // Stored against the controlling field's KEY, not its id: duplicating a
         // form mints new ids, and a condition pointing at an id would then point
         // at the original form's field.
@@ -492,6 +517,44 @@ class FormBuilderService
         }
 
         return $settings;
+    }
+
+    /** The posted correct answer, resolved to an option's stored value, or null. */
+    private function correctAnswer(array $row): ?string
+    {
+        $answer = trim((string) ($row['correct_answer'] ?? ''));
+
+        return $answer === '' ? null : self::matchOption((array) ($row['options'] ?? []), $answer);
+    }
+
+    /**
+     * The stored value of the option an answer names, or null when it names none.
+     *
+     * Matched against each option's value AND its label, exactly (after
+     * trimming): the builder's picker posts values, a spreadsheet has only the
+     * wording to give, and an option left without a value stores its label
+     * anyway. Shared with FormBuilderRequest so the two cannot disagree about
+     * what counts as a match.
+     */
+    public static function matchOption(array $options, string $answer): ?string
+    {
+        $answer = trim($answer);
+
+        foreach ($options as $option) {
+            $label = trim((string) ($option['label'] ?? ''));
+
+            if ($label === '') {
+                continue;
+            }
+
+            $value = trim((string) ($option['value'] ?? '')) ?: $label;
+
+            if ($answer === $value || $answer === $label) {
+                return $value;
+            }
+        }
+
+        return null;
     }
 
     /* =============================== OPTIONS =============================== */
@@ -579,6 +642,7 @@ class FormBuilderService
                 'description'    => $form->description,
                 'slug'           => Form::uniqueSlug($form->slug . '-copy'),
                 'structure_type' => $form->structure(),
+                'form_type'      => $form->isQuiz() ? Form::QUIZ : Form::STANDARD,
                 'status'         => Form::DRAFT,
                 'settings'       => $form->settings,
             ]);

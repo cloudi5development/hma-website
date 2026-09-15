@@ -74,6 +74,10 @@ class FormController extends Controller
 
         ActivityLog::record('Form Created', "Form “{$form->name}” created with {$form->fields()->count()} field(s)");
 
+        if ($next = $this->afterSave($request)) {
+            return redirect()->to($next)->with('success', "Form “{$form->name}” created.");
+        }
+
         return redirect()->route('backend.forms.edit', $form)
             ->with('success', 'Form created. Add or adjust fields, then publish it when you are ready.');
     }
@@ -131,7 +135,36 @@ class FormController extends Controller
 
         ActivityLog::record('Form Updated', "Form “{$form->name}” updated");
 
+        if ($next = $this->afterSave($request)) {
+            return redirect()->to($next)->with('success', "Changes to “{$form->name}” saved.");
+        }
+
         return redirect()->route('backend.forms.edit', $form)->with('success', 'Form saved.');
+    }
+
+    /**
+     * Where to go once the save has worked, when it was asked for on the way out.
+     *
+     * The builder's "unsaved changes" dialog saves the form and carries on to
+     * the page the admin was heading for, so the link they clicked still takes
+     * them there. That address comes from the browser, so it is taken only when
+     * it is on THIS site — a posted `after_save` of https://elsewhere.example or
+     * //elsewhere.example is ignored, and the save lands on the builder as usual.
+     * Anything else would be an open redirect riding on an admin's session.
+     *
+     * Not consulted when validation fails: the admin is sent back to the builder
+     * to see what went wrong, with their work intact.
+     */
+    private function afterSave(Request $request): ?string
+    {
+        $next = trim((string) $request->input('after_save'));
+        $home = rtrim(url('/'), '/');
+
+        if ($next === '' || preg_match('/[\x00-\x1F\x7F]/', $next)) {
+            return null;
+        }
+
+        return $next === $home || str_starts_with($next, $home . '/') ? $next : null;
     }
 
     /**

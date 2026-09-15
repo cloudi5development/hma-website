@@ -40,6 +40,25 @@ class Form extends Model
     public const PAGES          = 'pages';
     public const PAGES_SECTIONS = 'pages_sections';
 
+    /* ============================== FORM TYPE ==============================
+       A quiz is a standard form whose Multiple choice questions may carry a
+       correct answer. Nothing is scored — the answer is stored so a response
+       can later be compared against it. See the form_type migration. */
+
+    public const STANDARD = 'standard';
+    public const QUIZ     = 'quiz';
+
+    public const FORM_TYPES = [
+        self::STANDARD => [
+            'label' => 'Standard Form',
+            'hint'  => 'Collect answers. Nothing is right or wrong.',
+        ],
+        self::QUIZ => [
+            'label' => 'Quiz / MCQ',
+            'hint'  => 'Multiple choice questions can have a correct answer.',
+        ],
+    ];
+
     /** Label and one line of explanation for each, as the builder's cards show them. */
     public const STRUCTURES = [
         self::PLAIN => [
@@ -79,7 +98,7 @@ class Form extends Model
         'notify_subject'   => null,
     ];
 
-    protected $fillable = ['name', 'title', 'description', 'slug', 'structure_type', 'status', 'settings'];
+    protected $fillable = ['name', 'title', 'description', 'slug', 'structure_type', 'form_type', 'status', 'settings'];
 
     protected $casts = [
         'settings' => 'array',
@@ -235,6 +254,12 @@ class Form extends Model
     public function hasSections(): bool
     {
         return in_array($this->structure(), [self::SECTIONS, self::PAGES_SECTIONS], true);
+    }
+
+    /** Anything unrecognised reads as standard, which asks nothing extra of anyone. */
+    public function isQuiz(): bool
+    {
+        return $this->form_type === self::QUIZ;
     }
 
     public function getStructureLabelAttribute(): string

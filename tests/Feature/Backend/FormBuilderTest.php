@@ -176,11 +176,22 @@ class FormBuilderTest extends TestCase
             $this->assertStringNotContainsString('name="' . $setting . '"', $html, "{$setting} should not be on the create screen.");
         }
 
-        // Per question: the label, the type, and Required. Nothing else.
+        // Per question: the label, the type, and Required. Nothing else is ASKED.
         $this->assertStringContainsString('Generate Link', $html);
-        $this->assertStringNotContainsString('[placeholder]', $html);
-        $this->assertStringNotContainsString('[help_text]', $html);
         $this->assertStringNotContainsString('[field_key]', $html);
+
+        // Placeholder and help text are carried, not asked: hidden inputs only.
+        // They have to be on the row — the service writes whatever a row posts,
+        // so a row without them saved them blank, which went unnoticed only while
+        // nothing could set them. Bulk upload can.
+        preg_match_all('/<(input|textarea|select)\b[^>]*name="fields\[[^"]*\]\[(placeholder|help_text)\]"[^>]*>/', $html, $controls);
+
+        $this->assertNotEmpty($controls[0], 'the row should carry placeholder and help text');
+
+        foreach ($controls[0] as $i => $control) {
+            $this->assertSame('input', $controls[1][$i], 'placeholder and help text must not be editable on this screen');
+            $this->assertStringContainsString('type="hidden"', $control, 'placeholder and help text must not be editable on this screen');
+        }
     }
 
     public function test_the_form_name_becomes_the_title_and_the_link(): void
@@ -784,5 +795,100 @@ class FormBuilderTest extends TestCase
             ->get(route('backend.forms.index'))
             ->assertRedirect(route('backend.dashboard'))
             ->assertSessionHas('error');
+    }
+
+    /* ======================== LEAVING WITH UNSAVED CHANGES ==================
+       The builder's "unsaved changes" dialog saves and then carries on to the
+       page that was clicked. That address arrives from the browser, so it may
+       only ever be a page of this site. */
+
+    public function test_saving_on_the_way_out_carries_on_to_the_page_that_was_clicked(): void
+    {
+        $form = app(\App\Services\FormBuilderService::class)->save([
+            'name' => 'Enquiry', 'status' => Form::PUBLISHED, 'fields' => [$this->field()],
+        ]);
+
+        $next = route('backend.forms.all-responses');
+
+        $this->signedIn()->put(route('backend.forms.update', $form), [
+            'name'       => 'Enquiry (renamed)',
+            'status'     => Form::PUBLISHED,
+            'fields'     => [['id' => $form->fields->first()->id] + $this->field()],
+            'after_save' => $next,
+        ])->assertRedirect($next)->assertSessionHas('success');
+
+        $this->assertSame('Enquiry (renamed)', $form->fresh()->name);
+    }
+
+    public function test_creating_on_the_way_out_carries_on_too(): void
+    {
+        $next = route('backend.forms.index');
+
+        $this->signedIn()->post(route('backend.forms.store'), [
+            'name'       => 'Made On The Way Out',
+            'fields'     => ['f0' => $this->field()],
+            'after_save' => $next,
+        ])->assertRedirect($next);
+
+        $this->assertSame(1, Form::where('name', 'Made On The Way Out')->count());
+    }
+
+    /** Never an open redirect: anything off this site lands back on the builder. */
+    public function test_an_address_off_this_site_is_ignored_after_saving(): void
+    {
+        $form = app(\App\Services\FormBuilderService::class)->save([
+            'name' => 'Enquiry', 'status' => Form::PUBLISHED, 'fields' => [$this->field()],
+        ]);
+
+        $home = rtrim(url('/'), '/');
+
+        foreach ([
+            'https://evil.example/admin',
+            '//evil.example/admin',
+            'javascript:alert(1)',
+            $home . '.evil.example/admin',     // looks like the site, is not
+            $home . '@evil.example/admin',     // credentials trick
+            $home . "/admin\r\nLocation: https://evil.example",
+        ] as $next) {
+            $this->signedIn()->put(route('backend.forms.update', $form), [
+                'name'       => 'Enquiry',
+                'status'     => Form::PUBLISHED,
+                'fields'     => [['id' => $form->fields->first()->id] + $this->field()],
+                'after_save' => $next,
+            ])->assertRedirect(route('backend.forms.edit', $form));
+        }
+    }
+
+    public function test_a_failed_save_on_the_way_out_stays_on_the_builder_with_the_work(): void
+    {
+        $this->signedIn()
+            ->from(route('backend.forms.create'))
+            ->post(route('backend.forms.store'), [
+                'name'       => '',
+                'fields'     => ['f0' => $this->field(['label' => 'Kept after the error'])],
+                'after_save' => route('backend.forms.index'),
+            ])
+            ->assertRedirect(route('backend.forms.create'))
+            ->assertSessionHasErrors('name')
+            ->assertSessionHasInput('fields.f0.label', 'Kept after the error');
+
+        $this->assertSame(0, Form::count());
+    }
+
+    public function test_the_builder_carries_the_unsaved_changes_dialog(): void
+    {
+        $this->signedIn()->get(route('backend.forms.create'))->assertOk()
+            ->assertSee('id="leaveDialog"', false)
+            ->assertSee('Create this form before leaving?')
+            ->assertSee('name="after_save"', false);
+
+        $form = app(\App\Services\FormBuilderService::class)->save([
+            'name' => 'Enquiry', 'status' => Form::PUBLISHED, 'fields' => [$this->field()],
+        ]);
+
+        $this->signedIn()->get(route('backend.forms.edit', $form))->assertOk()
+            ->assertSee('Save your changes?')
+            ->assertSee('Leave without saving')
+            ->assertSee('Stay on this page');
     }
 }

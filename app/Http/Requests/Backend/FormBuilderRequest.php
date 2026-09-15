@@ -76,6 +76,7 @@ class FormBuilderRequest extends FormRequest
             // Which of the four shapes. Absent on an older payload, and the
             // service reads that as "leave the form's shape alone".
             'structure_type' => ['nullable', Rule::in(array_keys(Form::STRUCTURES))],
+            'form_type'      => ['nullable', Rule::in(array_keys(Form::FORM_TYPES))],
 
             /* ---------------------------- pages, sections -------------------------
                Titles are optional throughout: a page that only exists to break a
@@ -97,6 +98,8 @@ class FormBuilderRequest extends FormRequest
             /* ------------------------------- fields ------------------------------- */
             'fields.*.page_ref'          => ['nullable', 'string', 'max:40'],
             'fields.*.section_ref'       => ['nullable', 'string', 'max:40'],
+            // Checked against the question's own options in withValidator.
+            'fields.*.correct_answer'    => ['nullable', 'string', 'max:190'],
             'fields'                     => ['nullable', 'array', 'max:' . FormBuilderService::MAX_FIELDS],
             'fields.*.id'                => ['nullable', 'integer'],
             'fields.*.field_type'        => ['required', Rule::in(FormFieldType::keys())],
@@ -160,6 +163,15 @@ class FormBuilderRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            if ($this->payloadUnreadable) {
+                $validator->errors()->add(
+                    'fields',
+                    'Your questions could not be read from the page. Nothing was saved — reload the page and try again.',
+                );
+
+                return;
+            }
+
             foreach ((array) $this->input('fields', []) as $key => $row) {
                 $type  = $row['field_type'] ?? null;
                 $label = trim((string) ($row['label'] ?? ''));
@@ -204,16 +216,135 @@ class FormBuilderRequest extends FormRequest
                         );
                     }
                 }
+
+                // A correct answer that is not one of the question's own options
+                // would mark every response wrong. Not REQUIRED here, even on a
+                // quiz: an admin building one adds the answers as they go, and
+                // refusing to save a half-built quiz would lose the half.
+                $answer = trim((string) ($row['correct_answer'] ?? ''));
+
+                if ($type === FormFieldType::RADIO && $answer !== ''
+                    && FormBuilderService::matchOption((array) ($row['options'] ?? []), $answer) === null) {
+                    $validator->errors()->add(
+                        "fields.{$key}.correct_answer",
+                        "“{$label}”: the correct answer “{$answer}” is not one of its options.",
+                    );
+                }
             }
         });
     }
 
     protected function prepareForValidation(): void
     {
+        $this->unpackPayload();
+
         $this->merge([
             'allow_multiple' => $this->boolean('allow_multiple'),
             'notify_enabled' => $this->boolean('notify_enabled'),
         ]);
+    }
+
+    /* ============================ THE PAYLOAD ==============================
+       Why the builder's questions arrive as one JSON string.
+
+       PHP stops reading a request after max_input_vars inputs — 1000 here and
+       on most hosts — and DROPS THE REST WITHOUT AN ERROR. A question row is a
+       dozen-odd inputs plus two per option, so a 50-question quiz with four
+       options each is ~1,050 inputs, and its last questions simply never reached
+       this class. Nothing failed; they were just gone after Save. Bulk upload is
+       precisely what makes a form that size a minute's work.
+
+       So the builder script packs every fields[…] / pages[…] / sections[…]
+       input into a single `builder_payload` — one input, however large the form
+       — as the list of [name, value] pairs the browser would have sent, in the
+       order it would have sent them. This rebuilds the nested arrays from that
+       list, applying the same rules PHP's own parser does: `[]` appends, a
+       repeated name overwrites (so a hidden "0" followed by a ticked "1" is 1),
+       and insertion order is display order — which is how the builder stores
+       order, so it must survive exactly.
+
+       A plain POST without the payload (the tests, any older client) is read
+       exactly as before. */
+
+    /** Kept out of the flashed old input: it duplicates what is unpacked from it. */
+    protected $dontFlash = ['builder_payload'];
+
+    /** Upper bound on pairs, so a hostile payload cannot build an unbounded array. */
+    private const MAX_PAYLOAD_PAIRS = 50000;
+
+    /** Only these top-level names may be written from the payload. */
+    private const PAYLOAD_ROOTS = ['fields', 'pages', 'sections'];
+
+    private bool $payloadUnreadable = false;
+
+    private function unpackPayload(): void
+    {
+        if (! $this->has('builder_payload')) {
+            return;
+        }
+
+        $pairs = json_decode((string) $this->input('builder_payload'), true);
+
+        $this->request->remove('builder_payload');
+
+        if (! is_array($pairs) || count($pairs) > self::MAX_PAYLOAD_PAIRS) {
+            $this->payloadUnreadable = true;
+
+            return;
+        }
+
+        $data = [];
+
+        foreach ($pairs as $pair) {
+            if (! is_array($pair) || count($pair) !== 2 || ! is_string($pair[0]) || ! is_scalar($pair[1] ?? '')) {
+                continue;
+            }
+
+            self::assign($data, $pair[0], (string) ($pair[1] ?? ''));
+        }
+
+        // Replaced wholesale rather than merged key by key: the payload is the
+        // complete list, and a stale input of the same name must not survive
+        // inside it.
+        foreach (self::PAYLOAD_ROOTS as $root) {
+            $this->request->set($root, $data[$root] ?? []);
+        }
+    }
+
+    /**
+     * Write one "a[b][c]" / "a[b][]" name into a nested array, the way PHP's
+     * request parser would. Names outside PAYLOAD_ROOTS are ignored.
+     */
+    private static function assign(array &$data, string $name, string $value): void
+    {
+        if (! preg_match('/^([a-z_]+)((?:\[[^\[\]]*\])*)$/i', $name, $m) || ! in_array($m[1], self::PAYLOAD_ROOTS, true)) {
+            return;
+        }
+
+        preg_match_all('/\[([^\[\]]*)\]/', $m[2], $segments);
+
+        $keys = array_merge([$m[1]], $segments[1]);
+        $node = &$data;
+        $last = count($keys) - 1;
+
+        foreach ($keys as $i => $key) {
+            if ($i === $last) {
+                $key === '' ? $node[] = $value : $node[$key] = $value;
+
+                break;
+            }
+
+            if ($key === '') {
+                $node[] = [];
+                $key    = array_key_last($node);
+            }
+
+            if (! isset($node[$key]) || ! is_array($node[$key])) {
+                $node[$key] = [];
+            }
+
+            $node = &$node[$key];
+        }
     }
 
     public function messages(): array

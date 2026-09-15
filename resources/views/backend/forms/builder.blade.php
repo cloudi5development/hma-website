@@ -61,6 +61,11 @@
         <input type="hidden" name="status" id="formStatus"
                value="{{ old('status', $editing ? $form->status : \App\Models\Form::PUBLISHED) }}">
 
+        {{-- Set only by the "unsaved changes" dialog: where to go once the save
+             has worked, so the link that was clicked still takes the admin
+             there. FormController::afterSave accepts only this site's addresses. --}}
+        <input type="hidden" name="after_save" value="" data-after-save>
+
         {{-- ============================= DETAILS =============================
              Two boxes. The form's name is its heading and its link as well, so
              there is nothing else here to fill in. --}}
@@ -137,6 +142,39 @@
             </div>
         </div>
 
+        {{-- ============================= FORM TYPE ===========================
+             Standard or quiz. A quiz only adds a Correct answer picker to its
+             Multiple choice questions — nothing is scored — so a standard form
+             is exactly what every form was before this existed. --}}
+        <div class="hm-card mb-3">
+            <div class="hm-card__head">
+                <h2 class="hm-card__title">Form Type</h2>
+            </div>
+            <div class="hm-card__body">
+                <div class="fb-structs fb-structs--two" role="radiogroup" aria-label="Form type">
+                    @foreach (\App\Models\Form::FORM_TYPES as $value => $spec)
+                        <label class="fb-struct">
+                            <input type="radio" name="form_type" value="{{ $value }}"
+                                   @checked(old('form_type', $editing && $form->isQuiz() ? \App\Models\Form::QUIZ : \App\Models\Form::STANDARD) === $value)
+                                   data-form-type>
+                            <span class="fb-struct__box">
+                                <svg class="fb-struct__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    @if ($value === \App\Models\Form::QUIZ)
+                                        <circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/>
+                                    @else
+                                        <rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>
+                                    @endif
+                                </svg>
+                                <span class="fb-struct__name">{{ $spec['label'] }}</span>
+                                <span class="fb-struct__hint">{{ $spec['hint'] }}</span>
+                            </span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
         {{-- ============================== QUESTIONS ==========================
              One shell for all four structures. The page → section → questions
              nesting is always here; the structure only decides which headings
@@ -176,6 +214,15 @@
 
              Editing: the link already exists and has been shared, so this is
              just a save. --}}
+        {{-- Shown after a bulk upload. The imported questions are on screen but
+             not saved until the form is — the same as questions typed in — and
+             an admin who has just watched fifty questions appear could easily
+             believe otherwise and close the tab. --}}
+        <p class="fb-unsaved" data-unsaved hidden role="status">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/></svg>
+            <span data-unsaved-text></span>
+        </p>
+
         <div class="fb-actions">
             @if ($editing)
                 <button type="submit" class="btn-brand">
@@ -220,6 +267,145 @@
             </div>
         </div>
     @endunless
+
+    {{-- =========================== UNSAVED CHANGES ==========================
+         Asked when the admin clicks their way off this screen — a menu link,
+         Back, Cancel, sign out — with changes that are not saved. The admin
+         dialog's own look; three answers rather than two, because "save first"
+         is the answer most people want and the confirm dialog cannot offer it.
+
+         Closing the tab, reloading or the browser's Back button cannot show
+         this: browsers allow only their own built-in warning there, and that is
+         what those get. --}}
+    <div class="hm-dialog" id="leaveDialog" role="alertdialog" aria-modal="true"
+         aria-labelledby="leaveTitle" aria-describedby="leaveText">
+        <div class="hm-dialog__panel fb-leave">
+            <span class="hm-dialog__icon hm-dialog__icon--brand" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+            </span>
+            <h2 class="hm-dialog__title" id="leaveTitle">
+                {{ $editing ? 'Save your changes?' : 'Create this form before leaving?' }}
+            </h2>
+            <p class="hm-dialog__text" id="leaveText">
+                {{ $editing
+                    ? 'You have changes to this form that are not saved yet. If you leave now, they will be lost.'
+                    : 'This form has not been created yet. If you leave now, everything you have added will be lost.' }}
+            </p>
+
+            <div class="fb-leave__actions">
+                <button type="button" class="btn-brand" data-leave-save>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    {{ $editing ? 'Save Changes' : 'Create Form' }}
+                </button>
+                <button type="button" class="btn-ghost fb-leave__discard" data-leave-discard>Leave without saving</button>
+                <button type="button" class="btn-ghost" data-leave-stay>Stay on this page</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ============================ BULK UPLOAD ============================
+         Outside the builder's <form>, so the file input can never be posted
+         with a save. The panel reuses the admin dialog's backdrop and motion;
+         .fb-bulk only widens it, because a preview table does not fit in the
+         confirm dialog's 400px.
+
+         Two stages in one panel: choosing a file, and reviewing what it holds.
+         Nothing is written by either — see FormImportService. --}}
+    <div class="hm-dialog" id="bulkDialog" role="dialog" aria-modal="true" aria-labelledby="bulkTitle">
+        <div class="hm-dialog__panel fb-bulk">
+
+            <header class="fb-bulk__head">
+                <span class="hm-dialog__icon hm-dialog__icon--brand fb-bulk__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+                </span>
+                <div class="fb-bulk__heading">
+                    <h2 class="hm-dialog__title" id="bulkTitle">Bulk Upload Fields</h2>
+                    <p class="fb-bulk__sub">Upload an Excel file to create multiple form fields at once.</p>
+                </div>
+                <button type="button" class="fb-ico" data-bulk-close aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+            </header>
+
+            {{-- ---------------------------- CHOOSE ---------------------------- --}}
+            <div class="fb-bulk__body" data-bulk-stage="choose">
+                <p class="fb-bulk__target" data-bulk-target></p>
+
+                <section class="fb-bulk__step">
+                    <span class="fb-bulk__num" aria-hidden="true">1</span>
+                    <div class="fb-bulk__stepbody">
+                        <h3 class="fb-bulk__steptitle">Download Template</h3>
+                        {{-- A quiz has its own template — Question and Correct
+                             Answer, no Placeholder — so the link and this line
+                             are set for the form type picked above each time the
+                             dialog opens. --}}
+                        <p class="form-hint" data-bulk-template-hint>Download the template, fill in your questions and field details, then upload it here.</p>
+                        <a href="{{ route('backend.forms.bulk-template') }}" class="btn-soft" data-bulk-template download
+                           data-standard="{{ route('backend.forms.bulk-template') }}"
+                           data-quiz="{{ route('backend.forms.bulk-template', ['type' => \App\Models\Form::QUIZ]) }}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12m0 0-4-4m4 4 4-4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+                            Download Excel Template
+                        </a>
+                    </div>
+                </section>
+
+                <section class="fb-bulk__step">
+                    <span class="fb-bulk__num" aria-hidden="true">2</span>
+                    <div class="fb-bulk__stepbody">
+                        <h3 class="fb-bulk__steptitle">Upload Excel File</h3>
+
+                        {{-- A label wrapping the input, so the whole zone opens the
+                             picker with no script, and a keyboard reaches it. --}}
+                        <label class="fb-drop" data-bulk-drop>
+                            <input type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                                   data-bulk-file class="fb-drop__input">
+                            <svg class="fb-drop__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13l2 2 4-4"/></svg>
+                            <span class="fb-drop__title">Drag and drop your Excel file here</span>
+                            <span class="fb-drop__or">or</span>
+                            <span class="btn-brand fb-drop__btn">Choose Excel File</span>
+                            <span class="fb-drop__hint">Supported formats: .xlsx, .xls · up to {{ \App\Support\FormImportSheet::MAX_KB / 1024 }} MB · {{ \App\Support\FormImportSheet::MAX_ROWS }} questions</span>
+                        </label>
+
+                        <div class="fb-file" data-bulk-chip hidden>
+                            <svg class="fb-file__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+                            <div class="fb-file__meta">
+                                <span class="fb-file__name" data-bulk-name></span>
+                                <span class="fb-file__size" data-bulk-size></span>
+                            </div>
+                            <span class="fb-file__status" data-bulk-status></span>
+                            <button type="button" class="btn-ghost fb-file__change" data-bulk-change>Change file</button>
+                        </div>
+
+                        <p class="fb-bulk__error" data-bulk-error role="alert" hidden></p>
+                    </div>
+                </section>
+            </div>
+
+            {{-- ---------------------------- REVIEW ---------------------------- --}}
+            <div class="fb-bulk__body" data-bulk-stage="review" hidden>
+                <div class="fb-bulk__summary" data-bulk-summary></div>
+                <ul class="fb-bulk__problems" data-bulk-problems hidden></ul>
+
+                <div class="fb-bulk__tablewrap">
+                    <table class="fb-bulk__table">
+                        <thead>
+                            <tr>
+                                <th>Row</th><th>Order</th><th data-bulk-labelcol>Label</th><th>Type</th><th>Required</th>
+                                <th>Options</th><th data-bulk-correctcol>Correct Answer</th><th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody data-bulk-rows></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <footer class="fb-bulk__foot">
+                <button type="button" class="btn-ghost" data-bulk-close>Cancel</button>
+                <button type="button" class="btn-ghost" data-bulk-back hidden>Choose another file</button>
+                <button type="button" class="btn-brand" data-bulk-import disabled hidden>Import Fields</button>
+            </footer>
+        </div>
+    </div>
 
     {{-- Templates cloned by the builder script. __I__ becomes a field row key,
          __O__ an option key, __P__ a page key and __S__ a section key. Kept out
@@ -306,6 +492,11 @@
                collide in the payload. */
             var salt = Math.random().toString(36).slice(2, 6),
                 seq  = 0;
+
+            // True while a bulk upload is being laid into the builder. The add
+            // functions skip focusing and renumbering then, and it is settled
+            // once at the end.
+            var importing = false;
 
             function ref(kind) { return 'n' + kind + salt + (++seq); }
 
@@ -448,7 +639,68 @@
                 });
             }
 
-            form.addEventListener('submit', stamp);
+            /* ---- One input for every question ---------------------------------
+               PHP reads at most max_input_vars inputs from a request — 1000 here
+               and on most hosts — and silently drops the rest. A question row is
+               a dozen-odd inputs plus two per option, so a 50-question quiz lost
+               its last questions on save with no error at all.
+
+               So just before the form goes, every fields[…] / pages[…] /
+               sections[…] input is written into ONE hidden input as the list of
+               [name, value] pairs the browser would have sent, in the order it
+               would have sent them, and the originals are switched off so they
+               are not sent as well. FormBuilderRequest rebuilds the arrays from
+               the list by the same rules PHP uses. Order matters: it is how the
+               builder stores order.
+
+               Checkboxes and radios only count when ticked, and disabled inputs
+               not at all — exactly as a real submission. */
+            var packed = form.querySelector('[name="builder_payload"]');
+
+            function pack() {
+                var pairs  = [],
+                    inputs = form.querySelectorAll('[name^="fields["], [name^="pages["], [name^="sections["]');
+
+                Array.prototype.forEach.call(inputs, function (input) {
+                    if (input.disabled) return;
+                    if ((input.type === 'checkbox' || input.type === 'radio') && !input.checked) return;
+
+                    pairs.push([input.name, input.value]);
+                });
+
+                if (!packed) {
+                    packed = document.createElement('input');
+                    packed.type = 'hidden';
+                    packed.name = 'builder_payload';
+                    form.appendChild(packed);
+                }
+
+                packed.value = JSON.stringify(pairs);
+
+                Array.prototype.forEach.call(inputs, function (input) {
+                    if (!input.disabled) {
+                        input.disabled = true;
+                        input.setAttribute('data-packed', '');
+                    }
+                });
+            }
+
+            // Coming back to this page with the browser's Back button can restore
+            // it exactly as it was left — with every input still switched off.
+            window.addEventListener('pageshow', function () {
+                form.querySelectorAll('[data-packed]').forEach(function (input) {
+                    input.disabled = false;
+                    input.removeAttribute('data-packed');
+                });
+            });
+
+            var submitting = false;
+
+            form.addEventListener('submit', function () {
+                submitting = true;
+                stamp();
+                pack();
+            });
 
             /* ---- Per-row: which panels this field type shows -----------------
                Driven entirely off the registry passed in as TYPES, so a field
@@ -515,7 +767,86 @@
                     addOption(row, 'options', 'No', 'No');
                 }
 
+                show('correct', type === CORRECT_TYPE && isQuiz());
+                refreshCorrect(row);
                 refreshOptionCount(row);
+            }
+
+            /* ---- Quiz: the correct answer ------------------------------------
+               Only a Multiple choice question on a Quiz shows the picker, but
+               every one posts it — switching a quiz to a standard form and back
+               must not lose the answers in between. */
+            var CORRECT_TYPE = @json(\App\Support\FormFieldType::RADIO);
+
+            function isQuiz() {
+                var picked = form.querySelector('[data-form-type]:checked');
+                return !!picked && picked.value === 'quiz';
+            }
+
+            /* The picker lists this question's own options, rebuilt whenever they
+               change, so it can never name one that does not exist. Its value is
+               an option's stored value — the thing a response stores — falling
+               back to the label for an option left without one, as the server
+               does.
+
+               The answer is remembered as WHICH OPTION it is (the option row's
+               own key), not as its wording. Matched by text, correcting a typo
+               in the right option cleared the answer, because the old spelling
+               no longer existed. Deleting that option does clear it — there is
+               then genuinely nothing to point at, and guessing would be wrong.
+               The wording is used only on first build, when all there is to go
+               on is the value the server stored. */
+            function optionKey(option) {
+                var input = option.querySelector('[data-option-label]'),
+                    match = input && input.name.match(/\[options\]\[([^\]]+)\]\[label\]$/);
+
+                return match ? match[1] : '';
+            }
+
+            function refreshCorrect(row) {
+                var select = row.querySelector('[data-correct]');
+                if (!select) return;
+
+                var key    = select.getAttribute('data-selected-key') || '',
+                    wanted = select.getAttribute('data-selected') || '',
+                    found  = null;
+
+                while (select.options.length > 1) select.remove(1);
+
+                optionsOf(row).forEach(function (option) {
+                    var inputs = option.querySelectorAll('input[type="text"]'),
+                        label  = (inputs[0] ? inputs[0].value : '').trim(),
+                        value  = (inputs[1] ? inputs[1].value : '').trim() || label,
+                        own    = optionKey(option);
+
+                    if (!label) return;
+
+                    var item = new Option(label, value);
+                    item.setAttribute('data-key', own);
+
+                    if (!found && (key ? own === key : (wanted !== '' && (value === wanted || label === wanted)))) {
+                        item.selected = true;
+                        found = item;
+                    }
+
+                    select.add(item);
+                });
+
+                if (!found) select.value = '';
+                rememberCorrect(select);
+            }
+
+            /* Record the picked option by key and by value, after any change. */
+            function rememberCorrect(select) {
+                var picked = select.selectedIndex > 0 ? select.options[select.selectedIndex] : null;
+
+                if (picked) {
+                    select.setAttribute('data-selected-key', picked.getAttribute('data-key') || '');
+                    select.setAttribute('data-selected', picked.value);
+                } else {
+                    select.removeAttribute('data-selected-key');
+                    select.setAttribute('data-selected', '');
+                }
             }
 
             /* ---- The field-type dropdown ------------------------------------
@@ -583,7 +914,11 @@
                 if (label) added.querySelector('[data-option-label]').value = label;
                 if (value) added.querySelectorAll('input[type="text"]')[1].value = value;
 
-                added.querySelector('[data-option-label]').focus();
+                // Not while importing: focusing each new option scrolls the page
+                // to it, which across fifty questions is the page jumping fifty
+                // times.
+                if (!importing) added.querySelector('[data-option-label]').focus();
+                refreshCorrect(row);
                 refreshOptionCount(row);
             }
 
@@ -636,8 +971,12 @@
                 row.querySelector('[data-row-type]').value = type;
                 closeTypeMenus(null);
                 applyType(row);
-                refresh();
-                row.querySelector('[data-row-label]').focus();
+
+                // An import adds many and renumbers once at the end.
+                if (!importing) {
+                    refresh();
+                    row.querySelector('[data-row-label]').focus();
+                }
 
                 return row;
             }
@@ -670,20 +1009,27 @@
             function addPage() {
                 if (pageCards().length >= MAX_PAGES) {
                     window.alert('A form may hold at most ' + MAX_PAGES + ' pages.');
-                    return;
+                    return null;
                 }
 
                 pagesBox.insertAdjacentHTML('beforeend', pageTpl.innerHTML
                     .replace(/__P__/g, ref('p'))
                     .replace(/__S__/g, ref('s')));
 
+                var page = pagesBox.lastElementChild;
+
+                // An import builds its pages and then settles the screen once.
+                if (importing) return page;
+
                 // Land on what was just made, rather than leaving the admin on
                 // the page they were already looking at.
                 active = pageCards().length - 1;
                 applyStructure();
 
-                var title = pageCards()[active].querySelector('[data-page-title]');
+                var title = page.querySelector('[data-page-title]');
                 if (title) title.focus();
+
+                return page;
             }
 
             /* ---- Clicks, everywhere in the shell ----------------------------- */
@@ -784,6 +1130,7 @@
 
                 if (e.target.closest('[data-option-remove]')) {
                     e.target.closest('[data-option]').remove();
+                    refreshCorrect(row);
                     refreshOptionCount(row);
                     return;
                 }
@@ -795,12 +1142,34 @@
 
             shell.addEventListener('input', function (e) {
                 if (e.target.matches('[data-page-title]')) { renderTabs(); return; }
-                if (e.target.matches('[data-row-label]')) refresh();
+                if (e.target.matches('[data-row-label]')) { refresh(); return; }
+
+                if (e.target.closest('[data-options] [data-option]')) {
+                    refreshCorrect(e.target.closest('[data-row]'));
+                }
+            });
+
+            // The picker's own choice, kept where a rebuild can find it.
+            shell.addEventListener('change', function (e) {
+                if (e.target.matches('[data-correct]')) rememberCorrect(e.target);
             });
 
             /* ---- Switching structure ------------------------------------------ */
             form.querySelectorAll('[data-structure]').forEach(function (radio) {
                 radio.addEventListener('change', applyStructure);
+            });
+
+            /* ---- Switching Standard / Quiz ------------------------------------ */
+            form.querySelectorAll('[data-form-type]').forEach(function (radio) {
+                radio.addEventListener('change', function () {
+                    allRows().forEach(function (row) {
+                        var type = row.querySelector('[data-row-type]');
+
+                        row.querySelectorAll('[data-when="correct"]').forEach(function (el) {
+                            el.hidden = !(type && type.value === CORRECT_TYPE && isQuiz());
+                        });
+                    });
+                });
             });
 
             /* ---- The step tabs: switch page, and drag to reorder --------------- */
@@ -1096,7 +1465,9 @@
                     // have to be written here by hand. Without this every
                     // question on a form created through this dialog would land
                     // on page one with no section.
+                    submitting = true;
                     stamp();
+                    pack();
                     form.submit();
                 });
 
@@ -1138,9 +1509,659 @@
                 });
             });
 
+            /* ---- Bulk upload ----------------------------------------------------
+               Choose a sheet → the server reads and checks it → the admin looks
+               over every row → Import lays the questions into the builder.
+
+               The server never writes. It answers with the checked questions,
+               in order, and they are added here — to the section whose Bulk
+               Upload button was pressed — with the very functions + Add Question
+               uses. Pages and sections are never made by a sheet; they are made
+               by hand. The questions are then saved with the form, through
+               the same request, validation and transaction as any question an
+               admin types. That is what makes an imported question
+               indistinguishable from a typed one.
+
+               Everything from the sheet is rendered with textContent. A cell is
+               whatever someone typed into a spreadsheet, and it is not markup. */
+            var bulk = document.getElementById('bulkDialog');
+
+            if (bulk) (function () {
+                var q = function (selector) { return bulk.querySelector(selector); };
+
+                var fileInput = q('[data-bulk-file]'),
+                    drop      = q('[data-bulk-drop]'),
+                    chip      = q('[data-bulk-chip]'),
+                    errorBox  = q('[data-bulk-error]'),
+                    importBtn = q('[data-bulk-import]'),
+                    backBtn   = q('[data-bulk-back]'),
+                    stages    = {
+                        choose: q('[data-bulk-stage="choose"]'),
+                        review: q('[data-bulk-stage="review"]')
+                    },
+                    URL_PREVIEW = @json(route('backend.forms.bulk-preview')),
+                    MAX_BYTES   = {{ \App\Support\FormImportSheet::MAX_KB }} * 1024,
+                    opener  = null,   // the section Bulk Upload was pressed in — every question goes here
+                    context = null,   // the builder as it was when the sheet was checked
+                    fields  = [],
+                    chosen  = null,
+                    request = null;
+
+                function stage(name) {
+                    Object.keys(stages).forEach(function (key) { stages[key].hidden = key !== name; });
+                    backBtn.hidden   = name !== 'review';
+                    importBtn.hidden = name !== 'review';
+                }
+
+                function kb(bytes) {
+                    return bytes < 1024 * 1024
+                        ? Math.max(1, Math.round(bytes / 1024)) + ' KB'
+                        : (bytes / 1024 / 1024).toFixed(1) + ' MB';
+                }
+
+                /* What the server needs to check against: whether this is a quiz
+                   (which needs its correct answers) and how many questions are
+                   already on the form. Nothing about pages or sections — those
+                   are made by hand, and a sheet only ever fills the section its
+                   button was pressed in. */
+                function snapshot() {
+                    return {
+                        form_type: isQuiz() ? 'quiz' : 'standard',
+                        questions: allRows().length
+                    };
+                }
+
+                /* One sentence saying where the questions will go, so nobody has
+                   to guess what "Bulk Upload" in the third section means. */
+                function describeTarget() {
+                    var s     = structure(),
+                        page  = opener.closest('[data-page]'),
+                        pages = pageCards(),
+                        pt    = page.querySelector('[data-page-title]'),
+                        st    = opener.querySelector('[data-section-title]'),
+                        pName = (pt && pt.value.trim()) || ('Page ' + (pages.indexOf(page) + 1)),
+                        sName = (st && st.value.trim()) || ('Section ' + (sectionsOf(page).indexOf(opener) + 1));
+
+                    if (s === 'sections')       return 'Questions will be added to “' + sName + '”, after the ones already there.';
+                    if (s === 'pages')          return 'Questions will be added to “' + pName + '”, after the ones already there.';
+                    if (s === 'pages_sections') return 'Questions will be added to “' + pName + ' › ' + sName + '”, after the ones already there.';
+
+                    return 'Questions will be added after the ones already on this form.';
+                }
+
+                /* The template for the form type picked right now. A quiz gets
+                   its own: Question instead of Label, Correct Answer, and no
+                   Placeholder. */
+                function pointTemplate() {
+                    var link = q('[data-bulk-template]'),
+                        hint = q('[data-bulk-template-hint]'),
+                        quiz = isQuiz();
+
+                    link.href = link.getAttribute(quiz ? 'data-quiz' : 'data-standard');
+                    link.lastChild.textContent = quiz ? ' Download Quiz Template' : ' Download Excel Template';
+                    hint.textContent = quiz
+                        ? 'Download the quiz template, fill in each question, its options and the correct answer, then upload it here.'
+                        : 'Download the template, fill in your questions and field details, then upload it here.';
+                }
+
+                function open(section) {
+                    opener = section;
+                    reset();
+                    pointTemplate();
+                    q('[data-bulk-target]').textContent = describeTarget();
+
+                    bulk.classList.add('is-open');
+                    requestAnimationFrame(function () { bulk.classList.add('is-visible'); });
+                    drop.focus();
+                }
+
+                function close() {
+                    if (request) request.abort();
+                    request = null;
+
+                    bulk.classList.remove('is-visible');
+                    setTimeout(function () { bulk.classList.remove('is-open'); }, 180);
+
+                    var button = opener && opener.querySelector('[data-bulk-open]');
+                    if (button) button.focus();
+                }
+
+                function reset() {
+                    if (request) request.abort();
+
+                    request = null;
+                    fields  = [];
+                    chosen  = null;
+                    fileInput.value = '';
+                    drop.hidden     = false;
+                    chip.hidden     = true;
+                    errorBox.hidden = true;
+                    importBtn.disabled = true;
+                    stage('choose');
+                }
+
+                function status(text, tone) {
+                    var el = q('[data-bulk-status]');
+                    el.textContent = text;
+                    el.className   = 'fb-file__status' + (tone ? ' fb-file__status--' + tone : '');
+                }
+
+                function fail(message) {
+                    status('Could not be used', 'bad');
+                    errorBox.textContent = message;
+                    errorBox.hidden      = false;
+                }
+
+                /* ---- Upload and check ---- */
+                function check(file) {
+                    chosen = file;
+                    drop.hidden     = true;
+                    chip.hidden     = false;
+                    errorBox.hidden = true;
+                    q('[data-bulk-name]').textContent = file.name;
+                    q('[data-bulk-size]').textContent = kb(file.size);
+
+                    // The server checks all of this too; saying it here saves a
+                    // round trip for the obvious ones.
+                    if (!/\.(xlsx|xls)$/i.test(file.name)) return fail('Upload an Excel file — .xlsx or .xls.');
+                    if (file.size > MAX_BYTES) return fail('That file is larger than ' + kb(MAX_BYTES) + '.');
+
+                    status('Checking…', 'busy');
+
+                    context = snapshot();
+
+                    var body = new FormData();
+                    body.append('file', file);
+                    body.append('context', JSON.stringify(context));
+
+                    request = window.AbortController ? new AbortController() : null;
+
+                    fetch(URL_PREVIEW, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value
+                        },
+                        body: body,
+                        signal: request ? request.signal : undefined
+                    })
+                        .then(function (response) {
+                            if (response.status === 419) {
+                                throw new Error('Your session has expired. Reload the page and try again — your questions on screen are not saved yet.');
+                            }
+
+                            return response.json().catch(function () {
+                                throw new Error('The file could not be checked. Please try again.');
+                            }).then(function (data) {
+                                if (!response.ok) throw new Error(data.message || 'The file could not be checked. Please try again.');
+                                return data;
+                            });
+                        })
+                        .then(function (data) {
+                            request = null;
+                            status('Checked', 'ok');
+                            review(data);
+                        })
+                        .catch(function (error) {
+                            request = null;
+                            if (error.name === 'AbortError') return;
+                            fail(error.message);
+                        });
+                }
+
+                /* ---- The preview ---- */
+                function cell(row, text, className) {
+                    var td = document.createElement('td');
+                    td.textContent = text;
+                    if (className) td.className = className;
+                    row.appendChild(td);
+                    return td;
+                }
+
+                function chipOf(text, tone) {
+                    var span = document.createElement('span');
+                    span.className   = 'fb-chip' + (tone ? ' fb-chip--' + tone : '');
+                    span.textContent = text;
+                    return span;
+                }
+
+                function review(data) {
+                    var summary  = data.summary,
+                        rows     = q('[data-bulk-rows]'),
+                        box      = q('[data-bulk-summary]'),
+                        problems = q('[data-bulk-problems]'),
+                        quiz     = context.form_type === 'quiz',
+                        // A standard form's template has no Correct Answer
+                        // column; it is shown only when there is something in it.
+                        answers  = quiz || data.rows.some(function (row) { return row.correct_answer; }),
+                        columns  = answers ? 8 : 7;
+
+                    fields = summary.importable ? data.fields : [];
+
+                    box.innerHTML = '';
+
+                    var file = document.createElement('p');
+                    file.className   = 'fb-bulk__file';
+                    file.textContent = chosen.name + ' · ' + kb(chosen.size);
+                    box.appendChild(file);
+
+                    var chips = document.createElement('div');
+                    chips.className = 'fb-bulk__chips';
+                    chips.appendChild(chipOf(summary.total + (summary.total === 1 ? ' field' : ' fields') + ' found'));
+                    chips.appendChild(chipOf(summary.valid + ' valid', 'ok'));
+                    if (summary.invalid) chips.appendChild(chipOf(summary.invalid + (summary.invalid === 1 ? ' error' : ' errors'), 'bad'));
+                    if (summary.warnings) chips.appendChild(chipOf(summary.warnings + (summary.warnings === 1 ? ' warning' : ' warnings'), 'warn'));
+                    box.appendChild(chips);
+
+                    // Problems with the file as a whole — more questions than the
+                    // form can take.
+                    problems.innerHTML = '';
+                    (data.errors || []).forEach(function (message) {
+                        var li = document.createElement('li');
+                        li.textContent = message;
+                        problems.appendChild(li);
+                    });
+                    problems.hidden = !(data.errors || []).length;
+
+                    // A quiz's template calls the column Question.
+                    q('[data-bulk-labelcol]').textContent = quiz ? 'Question' : 'Label';
+                    q('[data-bulk-correctcol]').hidden    = !answers;
+                    rows.innerHTML = '';
+
+                    data.rows.forEach(function (row) {
+                        var bad  = row.errors.length > 0,
+                            warn = row.warnings.length > 0,
+                            tr   = document.createElement('tr'),
+                            options = row.grid_rows.length
+                                ? row.grid_rows.length + ' × ' + row.grid_columns.length
+                                : (row.options.length ? row.options.length + (row.options.length === 1 ? ' option' : ' options') : '—');
+
+                        tr.className = bad ? 'is-invalid' : (warn ? 'is-warn' : '');
+
+                        cell(tr, row.row, 'fb-bulk__num-cell');
+                        cell(tr, row.order !== null ? row.order : (row.order_input || '—'));
+                        cell(tr, row.label || '—', 'fb-bulk__label-cell');
+                        cell(tr, row.type_label || '—');
+                        cell(tr, row.required === null ? (row.required_input || '—') : (row.required ? 'Yes' : 'No'));
+                        cell(tr, options).title = row.options.join(' | ');
+                        if (answers) cell(tr, row.correct_answer || '—');
+                        cell(tr, bad ? '✗' : (warn ? '!' : '✓'), 'fb-bulk__status ' + (bad ? 'is-bad' : (warn ? 'is-warn' : 'is-ok')));
+
+                        rows.appendChild(tr);
+
+                        // The reasons, on their own line under the row they are about.
+                        if (bad || warn) {
+                            var note = document.createElement('tr'),
+                                td   = document.createElement('td'),
+                                list = document.createElement('ul');
+
+                            note.className = 'fb-bulk__note ' + (bad ? 'is-invalid' : 'is-warn');
+                            td.colSpan     = columns;
+
+                            row.errors.concat(row.warnings).forEach(function (message, i) {
+                                var li = document.createElement('li');
+                                li.textContent = (i < row.errors.length ? 'Row ' + row.row + ': ' : 'Note: ') + message;
+                                li.className   = i < row.errors.length ? 'is-bad' : 'is-warn';
+                                list.appendChild(li);
+                            });
+
+                            td.appendChild(list);
+                            note.appendChild(td);
+                            rows.appendChild(note);
+                        }
+                    });
+
+                    importBtn.disabled    = !summary.importable;
+                    importBtn.textContent = summary.importable
+                        ? 'Import ' + summary.valid + (summary.valid === 1 ? ' Field' : ' Fields')
+                        : (summary.invalid ? 'Fix the errors to import' : 'Nothing to import');
+
+                    stage('review');
+                    importBtn.focus();
+                }
+
+                /* ---- Add the questions ----
+                   Every one goes into the section Bulk Upload was opened from,
+                   after the questions already there, in the sheet's Order.
+
+                   All or nothing on screen too: if any question cannot be added,
+                   the ones that were are taken away again, so the builder is
+                   never left holding half a file. */
+                function fill(row, field) {
+                    row.querySelector('[data-row-label]').value = field.label || '';
+
+                    var required = row.querySelector('[data-row-required]'),
+                        holder   = row.querySelector('[data-row-placeholder]'),
+                        help     = row.querySelector('[data-row-help]');
+
+                    if (required) required.checked = !!field.is_required;
+                    if (holder) holder.value = field.placeholder || '';
+                    if (help) help.value = field.help_text || '';
+
+                    (field.options || []).forEach(function (label) { addOption(row, 'options', label, ''); });
+                    (field.rows || []).forEach(function (label) { addOption(row, 'rows', label, ''); });
+                    (field.columns || []).forEach(function (label) { addOption(row, 'columns', label, ''); });
+
+                    // Set after the options exist, since the picker is built from them.
+                    var correct = row.querySelector('[data-correct]');
+
+                    if (correct && field.correct_answer) {
+                        correct.value = field.correct_answer;
+                        rememberCorrect(correct);
+                    }
+
+                    refreshOptionCount(row);
+                }
+
+                function run() {
+                    if (!fields.length) return;
+
+                    // The dialog covers the builder, so nothing should have
+                    // changed underneath it — but the check was made against a
+                    // form type and a question count, so make sure they hold.
+                    if (JSON.stringify(snapshot()) !== JSON.stringify(context) || !document.body.contains(opener)) {
+                        stage('choose');
+                        drop.hidden = true;
+                        chip.hidden = false;
+                        return fail('The form changed while this was open. Upload the file again.');
+                    }
+
+                    var added = [];
+
+                    importing = true;
+
+                    try {
+                        fields.forEach(function (field) {
+                            var row = addField(opener, field.field_type);
+                            if (!row) throw new Error('question');
+
+                            added.push(row);
+                            fill(row, field);
+                        });
+                    } catch (error) {
+                        added.forEach(function (row) { row.remove(); });
+                        importing = false;
+                        refresh();
+
+                        stage('choose');
+                        drop.hidden = true;
+                        chip.hidden = false;
+                        return fail('The questions could not be added, so none were. Nothing on your form changed.');
+                    } finally {
+                        importing = false;
+                    }
+
+                    // Settle the screen once, and open the page the first
+                    // imported question landed on.
+                    applyStructure();
+
+                    if (hasPages(structure()) && added.length) {
+                        active = Math.max(0, pageCards().indexOf(added[0].closest('[data-page]')));
+                        showPages();
+                        renderTabs();
+                    }
+
+                    refresh();
+
+                    added.forEach(function (row) { row.classList.add('is-imported'); });
+                    setTimeout(function () {
+                        added.forEach(function (row) { row.classList.remove('is-imported'); });
+                    }, 2600);
+
+                    unsaved(added.length);
+                    close();
+
+                    if (added[0]) added[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    if (window.hmToast) {
+                        window.hmToast(added.length + (added.length === 1 ? ' field' : ' fields') + ' imported successfully. Save the form to keep them.', 'success');
+                    }
+                }
+
+                /* ---- Wiring ---- */
+                shell.addEventListener('click', function (e) {
+                    var button = e.target.closest('[data-bulk-open]');
+                    if (button) open(button.closest('[data-section]'));
+                });
+
+                fileInput.addEventListener('change', function () {
+                    if (fileInput.files && fileInput.files[0]) check(fileInput.files[0]);
+                });
+
+                ['dragenter', 'dragover'].forEach(function (name) {
+                    drop.addEventListener(name, function (e) {
+                        e.preventDefault();
+                        drop.classList.add('is-over');
+                    });
+                });
+
+                ['dragleave', 'drop'].forEach(function (name) {
+                    drop.addEventListener(name, function (e) {
+                        e.preventDefault();
+                        drop.classList.remove('is-over');
+                    });
+                });
+
+                drop.addEventListener('drop', function (e) {
+                    var file = e.dataTransfer && e.dataTransfer.files[0];
+                    if (file) check(file);
+                });
+
+                // A file dropped just outside the zone would otherwise make the
+                // browser open it and leave the page — and the unsaved form.
+                ['dragover', 'drop'].forEach(function (name) {
+                    bulk.addEventListener(name, function (e) { e.preventDefault(); });
+                });
+
+                q('[data-bulk-change]').addEventListener('click', reset);
+                backBtn.addEventListener('click', reset);
+                importBtn.addEventListener('click', run);
+
+                bulk.querySelectorAll('[data-bulk-close]').forEach(function (button) {
+                    button.addEventListener('click', close);
+                });
+
+                bulk.addEventListener('click', function (e) {
+                    if (e.target === bulk) close();
+                });
+
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape' && bulk.classList.contains('is-open')) close();
+                });
+            })();
+
+            /* ---- Imported but not yet saved -----------------------------------
+               An import puts questions on screen, not in the database — the same
+               as typing them. Say so where Save is, and stop the tab closing on
+               them without a warning. */
+            var unsavedBar   = form.querySelector('[data-unsaved]'),
+                unsavedCount = 0,
+                EDITING      = @json($editing);
+
+            function unsaved(count) {
+                unsavedCount += count;
+
+                if (!unsavedBar) return;
+
+                unsavedBar.hidden = false;
+                unsavedBar.querySelector('[data-unsaved-text]').textContent =
+                    unsavedCount + ' imported question' + (unsavedCount === 1 ? ' is' : 's are') + ' not saved yet. '
+                    + (EDITING ? 'Press Save Changes to keep ' : 'Press Generate Link to create the form with ')
+                    + (unsavedCount === 1 ? 'it.' : 'them.');
+            }
+
+            /* ---- Leaving with unsaved changes ---------------------------------
+               WHAT COUNTS AS A CHANGE is decided by comparison, not by listening:
+               every input on the form is read into a snapshot when the page has
+               finished setting itself up, and "unsaved" means the form no longer
+               matches it. That catches everything without a hook on each action
+               — typing, a new type from the listbox, an option added or removed,
+               a question dragged to another section, a whole bulk import — and
+               it lets an admin who changes something back see no warning at all.
+
+               WHERE IT IS ASKED:
+                 • a link or a button that would take the page away (the menu,
+                   Back to Forms, Cancel, sign out) — the dialog above, with
+                   Save / Leave without saving / Stay;
+                 • closing the tab, reloading, typing an address, the browser's
+                   Back — the browser's own warning. Nothing else is allowed
+                   there, and no page may change its wording. */
+            var afterSave = form.querySelector('[data-after-save]'),
+                leaveBox  = document.getElementById('leaveDialog'),
+                baseline  = null,
+                leaving   = false,
+                pending   = null;   // { href } or { form } — where the admin was going
+
+            function snapshotState() {
+                stamp();   // where each question sits counts: a drag is a change
+
+                var parts = [];
+
+                Array.prototype.forEach.call(form.querySelectorAll('input[name], select[name], textarea[name]'), function (input) {
+                    if (input.disabled || input.type === 'file') return;
+                    if (['_token', '_method', 'builder_payload', 'after_save'].indexOf(input.name) !== -1) return;
+                    if ((input.type === 'checkbox' || input.type === 'radio') && !input.checked) return;
+
+                    parts.push(input.name + ' ' + input.value);
+                });
+
+                return parts.join('');
+            }
+
+            function isDirty() {
+                return baseline !== null && !submitting && !leaving && snapshotState() !== baseline;
+            }
+
+            function openLeave(target) {
+                pending = target;
+                leaveBox.classList.add('is-open');
+                requestAnimationFrame(function () { leaveBox.classList.add('is-visible'); });
+                leaveBox.querySelector('[data-leave-save]').focus();
+            }
+
+            function closeLeave() {
+                pending = null;
+                leaveBox.classList.remove('is-visible');
+                setTimeout(function () { leaveBox.classList.remove('is-open'); }, 180);
+            }
+
+            function carryOn(target) {
+                leaving = true;
+
+                if (target.form) {
+                    // The admin already chose; submit() skips the submit event,
+                    // so this does not come straight back here.
+                    target.form.submit();
+                } else {
+                    window.location.href = target.href;
+                }
+            }
+
+            // Links, in the capture phase so this is decided before anything else
+            // on the page acts on the click.
+            document.addEventListener('click', function (e) {
+                if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+                var link = e.target.closest('a[href]');
+                if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+                if (link.closest('#leaveDialog, #bulkDialog, #linkDialog')) return;
+
+                var href = link.getAttribute('href') || '';
+                if (href === '' || href.charAt(0) === '#' || /^(javascript|mailto|tel):/i.test(href)) return;
+
+                // A jump within this same page is not leaving it.
+                if (link.hash && link.href.split('#')[0] === window.location.href.split('#')[0]) return;
+
+                if (!isDirty()) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+                openLeave({ href: link.href });
+            }, true);
+
+            // Any other form on the page that would navigate — signing out, the
+            // header search.
+            document.addEventListener('submit', function (e) {
+                if (e.target === form || e.target.closest('#bulkDialog') || !isDirty()) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+                openLeave({ form: e.target });
+            }, true);
+
+            window.addEventListener('beforeunload', function (e) {
+                if (isDirty()) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+
+            if (leaveBox) {
+                leaveBox.querySelector('[data-leave-stay]').addEventListener('click', closeLeave);
+
+                leaveBox.querySelector('[data-leave-discard]').addEventListener('click', function () {
+                    var target = pending;
+                    closeLeave();
+                    if (target) carryOn(target);
+                });
+
+                leaveBox.querySelector('[data-leave-save]').addEventListener('click', function () {
+                    var target = pending;
+
+                    // A new form cannot be created without a name or with nothing
+                    // in it — the same two things Generate Link checks — so say
+                    // so here instead of sending a save that will come back.
+                    if (!EDITING) {
+                        var name = document.getElementById('name');
+
+                        if (!name.value.trim()) {
+                            closeLeave();
+                            if (window.hmToast) window.hmToast('Give the form a name first, then create it.', 'warning');
+                            name.focus();
+                            return;
+                        }
+
+                        if (allRows().length === 0) {
+                            closeLeave();
+                            if (window.hmToast) window.hmToast('Add at least one question first.', 'warning');
+                            return;
+                        }
+                    }
+
+                    // After the save, on to the page that was clicked. A sign-out
+                    // or search is not followed on — the admin lands back here,
+                    // saved, and can do it again.
+                    afterSave.value = target && target.href ? target.href : '';
+
+                    closeLeave();
+
+                    if (form.requestSubmit) {
+                        form.requestSubmit();   // fires submit: stamped and packed as usual
+                    } else {
+                        submitting = true;
+                        stamp();
+                        pack();
+                        form.submit();
+                    }
+                });
+
+                leaveBox.addEventListener('click', function (e) {
+                    if (e.target === leaveBox) closeLeave();
+                });
+
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape' && leaveBox.classList.contains('is-open')) closeLeave();
+                });
+            }
+
             /* ---- Start-up ---------------------------------------------------- */
             allRows().forEach(applyType);
             applyStructure();
+
+            // What "unchanged" looks like — taken last, after the start-up above
+            // has filled in anything it fills in by itself (Yes / No's two
+            // options, the correct-answer pickers), so that is not a change.
+            baseline = snapshotState();
         })();
     </script>
 @endpush
@@ -1708,6 +2729,245 @@
             .fb-sec__plain { flex: 1 1 auto; }
             .fb-page__head { flex-wrap: wrap; }
             .fb-page__titles { order: 3; flex-basis: 100%; }
+        }
+
+        /* =================================================================
+           BULK UPLOAD, FORM TYPE, CORRECT ANSWER
+           -----------------------------------------------------------------
+           The panel's own palette, radii and buttons throughout. The modal is
+           the admin dialog (.hm-dialog) widened, not a second modal system.
+           ================================================================= */
+
+        /* Two cards rather than four, so they do not stretch across the page. */
+        .fb-structs--two { grid-template-columns: repeat(auto-fit, minmax(220px, 320px)); }
+
+        /* + Add Question and Bulk Upload, side by side. */
+        .fb-addrow { display: flex; flex-wrap: wrap; gap: 10px; }
+
+        /* The correct-answer picker, under a Multiple choice question's options. */
+        .fb-correct {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border: 1px solid #EADBC9;
+            border-radius: 11px;
+            background: #FDF8F2;
+        }
+        .fb-correct .fb-sub__title { display: block; margin-bottom: 8px; color: #843D21; }
+        .fb-correct select { max-width: 420px; }
+
+        /* Questions that have just arrived from a sheet, for a moment. */
+        .fb-field.is-imported {
+            border-color: #C9A27E;
+            box-shadow: 0 0 0 3px rgba(168, 90, 46, .14);
+            transition: box-shadow .6s ease, border-color .6s ease;
+        }
+
+        .fb-unsaved {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin: 0 0 12px;
+            padding: 11px 14px;
+            border: 1px solid #F0D9B5;
+            border-radius: 11px;
+            background: #FFF8EC;
+            font-size: 13.5px;
+            color: #7A5418;
+        }
+        .fb-unsaved svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+        /* ---- The modal ---- */
+        .hm-dialog__panel.fb-bulk {
+            display: flex;
+            flex-direction: column;
+            width: min(980px, 100%);
+            max-height: calc(100vh - 40px);
+            padding: 0;
+            text-align: left;
+            overflow: hidden;
+        }
+        .fb-bulk__head {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 22px 24px 16px;
+            border-bottom: 1px solid #F1E9DF;
+        }
+        .fb-bulk__icon { flex-shrink: 0; width: 44px; height: 44px; margin: 0; box-shadow: 0 0 0 6px #F8F2EC; }
+        .fb-bulk__icon svg { width: 20px; height: 20px; }
+        .fb-bulk__heading { flex: 1; min-width: 0; }
+        .fb-bulk__heading .hm-dialog__title { margin-bottom: 3px; }
+        .fb-bulk__sub { margin: 0; font-size: 13.5px; color: var(--muted, #8A7E70); }
+
+        .fb-bulk__body { flex: 1; min-height: 0; padding: 20px 24px; overflow-y: auto; }
+        .fb-bulk__target {
+            margin: 0 0 18px;
+            padding: 10px 13px;
+            border-radius: 10px;
+            background: #FDF4EE;
+            font-size: 13.5px;
+            color: #843D21;
+        }
+
+        .fb-bulk__step { display: flex; gap: 14px; }
+        .fb-bulk__step + .fb-bulk__step { margin-top: 22px; }
+        .fb-bulk__num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #A85A2E, #843D21);
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .fb-bulk__stepbody { flex: 1; min-width: 0; }
+        .fb-bulk__steptitle { margin: 3px 0 4px; font-size: 15px; font-weight: 700; color: var(--ink, #2E2620); }
+        /* The panel's .form-hint is a fixed 500px wide, which is wider than a
+           phone: inside this modal it pushed the body into a sideways scroll and
+           clipped the sentence. Scoped here rather than changed at the source,
+           where other screens are laid out around that width. */
+        .fb-bulk .form-hint { width: auto; max-width: 100%; }
+        .fb-bulk__stepbody > .form-hint { margin-bottom: 12px; }
+
+        /* The drop zone. A label around a hidden file input, so a click
+           anywhere in it — or Enter from the keyboard — opens the picker. */
+        .fb-drop {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            padding: 28px 20px;
+            border: 2px dashed #DCC8B4;
+            border-radius: 14px;
+            background: #FFFDFB;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color .15s ease, background .15s ease;
+        }
+        .fb-drop:hover, .fb-drop:focus-within, .fb-drop.is-over { border-color: #A85A2E; background: #FDF4EE; }
+        .fb-drop__input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+        .fb-drop__icon { width: 38px; height: 38px; margin-bottom: 4px; color: #A85A2E; }
+        .fb-drop__title { font-size: 14.5px; font-weight: 600; color: var(--ink, #2E2620); }
+        .fb-drop__or { font-size: 12.5px; color: var(--muted, #8A7E70); }
+        .fb-drop__btn { pointer-events: none; }
+        .fb-drop__hint { margin-top: 4px; font-size: 12px; color: var(--muted, #8A7E70); }
+
+        .fb-file {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
+            padding: 12px 14px;
+            border: 1px solid var(--line, #E7DED2);
+            border-radius: 12px;
+            background: #fff;
+        }
+        .fb-file__icon { width: 26px; height: 26px; flex-shrink: 0; color: #1F7A4D; }
+        .fb-file__meta { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+        .fb-file__name { overflow: hidden; font-size: 14px; font-weight: 600; color: var(--ink, #2E2620); text-overflow: ellipsis; white-space: nowrap; }
+        .fb-file__size { font-size: 12px; color: var(--muted, #8A7E70); }
+        .fb-file__status { flex-shrink: 0; font-size: 12.5px; font-weight: 600; color: var(--muted, #8A7E70); white-space: nowrap; }
+        .fb-file__status--busy { color: #A6741F; }
+        .fb-file__status--ok { color: #1F7A4D; }
+        .fb-file__status--bad { color: #C0392B; }
+        .fb-file__change { flex-shrink: 0; }
+
+        .fb-bulk__error {
+            margin: 10px 0 0;
+            padding: 10px 13px;
+            border-radius: 10px;
+            background: #FBEDEA;
+            font-size: 13.5px;
+            color: #A8321F;
+        }
+
+        /* ---- The review ---- */
+        .fb-bulk__file { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--muted, #8A7E70); }
+        .fb-bulk__chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        .fb-chip {
+            padding: 5px 12px;
+            border-radius: 999px;
+            background: #F4EDE5;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ink, #2E2620);
+        }
+        .fb-chip--ok { background: #E8F3EC; color: #1F7A4D; }
+        .fb-chip--bad { background: #FBEDEA; color: #A8321F; }
+        .fb-chip--warn { background: #FFF4DE; color: #8A5A12; }
+
+        .fb-bulk__problems {
+            margin: 0 0 14px;
+            padding: 10px 14px 10px 30px;
+            border-radius: 10px;
+            background: #FBEDEA;
+            font-size: 13.5px;
+            color: #A8321F;
+        }
+
+        .fb-bulk__tablewrap { overflow-x: auto; border: 1px solid var(--line, #E7DED2); border-radius: 12px; }
+        .fb-bulk__table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .fb-bulk__table th {
+            position: sticky;
+            top: 0;
+            padding: 10px 12px;
+            background: #FAF6F1;
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: .05em;
+            text-align: left;
+            text-transform: uppercase;
+            color: var(--muted, #8A7E70);
+            white-space: nowrap;
+        }
+        .fb-bulk__table td { padding: 9px 12px; border-top: 1px solid #F1E9DF; color: var(--ink, #2E2620); vertical-align: top; }
+        .fb-bulk__num-cell { color: var(--muted, #8A7E70); }
+        .fb-bulk__label-cell { min-width: 160px; font-weight: 600; }
+
+        .fb-bulk__table tr.is-invalid td { background: #FEF6F4; }
+        .fb-bulk__table tr.is-warn td { background: #FFFBF1; }
+        .fb-bulk__table tr.fb-bulk__note td { padding-top: 0; border-top: 0; }
+        .fb-bulk__note ul { margin: 0; padding-left: 18px; }
+        .fb-bulk__note li { font-size: 12.5px; line-height: 1.6; }
+        .fb-bulk__note li.is-bad { color: #A8321F; }
+        .fb-bulk__note li.is-warn { color: #8A5A12; }
+
+        .fb-bulk__status { font-weight: 700; text-align: center; }
+        .fb-bulk__status.is-ok { color: #1F7A4D; }
+        .fb-bulk__status.is-bad { color: #C0392B; }
+        .fb-bulk__status.is-warn { color: #A6741F; }
+
+        .fb-bulk__foot {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 24px;
+            border-top: 1px solid #F1E9DF;
+            background: #FFFDFB;
+        }
+        .fb-bulk__foot [data-bulk-import] { margin-left: auto; }
+
+        /* ---- Unsaved changes dialog ----
+           The confirm dialog's panel, a little wider, with its three answers
+           stacked: the one most people want first and loudest, and leaving
+           without saving clearly a different kind of choice from staying. */
+        .hm-dialog__panel.fb-leave { width: min(440px, 100%); }
+        .fb-leave__actions { display: flex; flex-direction: column; gap: 9px; }
+        .fb-leave__actions > * { justify-content: center; width: 100%; }
+        .fb-leave__discard { color: #B2402C; border-color: #F0D2CA; }
+        .fb-leave__discard:hover { background: #FBEDEA; border-color: #E6B7AA; color: #962F1E; }
+        .fb-bulk__foot [data-bulk-import]:disabled { opacity: .55; cursor: not-allowed; }
+
+        @media (max-width: 640px) {
+            .fb-bulk__head, .fb-bulk__body, .fb-bulk__foot { padding-left: 16px; padding-right: 16px; }
+            .fb-file { flex-wrap: wrap; }
+            .fb-bulk__foot { flex-wrap: wrap; }
+            .fb-bulk__foot [data-bulk-import] { width: 100%; margin-left: 0; }
         }
     </style>
 @endpush

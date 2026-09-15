@@ -462,6 +462,77 @@ class FormStructureTest extends TestCase
         $this->assertSame('Available from March', $values['notes']->value);
     }
 
+    /* ================================ QUIZ =================================
+       A quiz is read as a numbered list: one question per row, its answers one
+       under another, and no description line under it. A standard form keeps
+       the two-to-a-row layout with its choices flowing along the line. */
+
+    public function test_a_quiz_numbers_its_questions_straight_through_its_sections(): void
+    {
+        $form = $this->save([
+            'structure_type' => Form::SECTIONS,
+            'form_type'      => Form::QUIZ,
+            'sections'       => ['a' => ['title' => 'Basics'], 'b' => ['title' => 'Advanced']],
+            'fields'         => [
+                $this->q('What is Python?', FormFieldType::RADIO, ['section_ref' => 'a', 'options' => [['label' => 'A language'], ['label' => 'A snake']]]),
+                $this->q('Tracking code', FormFieldType::HIDDEN, ['section_ref' => 'a', 'default_value' => 'x']),
+                $this->q('Which symbol starts a comment?', FormFieldType::RADIO, ['section_ref' => 'b', 'options' => [['label' => '#'], ['label' => '//']]]),
+                $this->q('Your name', FormFieldType::SHORT_TEXT, ['section_ref' => 'b']),
+            ],
+        ]);
+
+        $html = $this->page($form)->assertOk()->getContent();
+
+        // 1, 2, 3 across both sections — the new section does not restart at 1,
+        // and the hidden field, which nobody sees, is not counted.
+        $this->assertMatchesRegularExpression('#<span class="hmf-num">1\.</span>\s*What is Python\?#', $html);
+        $this->assertMatchesRegularExpression('#<span class="hmf-num">2\.</span>\s*Which symbol starts a comment\?#', $html);
+        $this->assertMatchesRegularExpression('#<span class="hmf-num">3\.</span>\s*Your name#', $html);
+        $this->assertSame(3, substr_count($html, 'class="hmf-num"'));
+    }
+
+    public function test_a_quiz_lists_its_answers_one_per_line_with_no_description(): void
+    {
+        $form = $this->save([
+            'form_type' => Form::QUIZ,
+            'fields'    => [$this->q('What is Python?', FormFieldType::RADIO, [
+                'options'   => [['label' => 'Programming Language'], ['label' => 'Database'], ['label' => 'OS']],
+                'help_text' => 'Choose one',
+            ])],
+        ]);
+
+        $page = $this->page($form)->assertOk();
+
+        // The same element carries both classes (Blade leaves a double space).
+        $this->assertMatchesRegularExpression('/class="hmf-choices\s+hmf-choices--stacked\s*"/', $page->getContent());
+
+        $page->assertSee('hmf-qs--quiz', false)
+            // One question to a row.
+            ->assertSee('hmf-field--wide', false)
+            // The description is kept on the question, but not drawn on a quiz.
+            ->assertDontSee('Choose one')
+            ->assertDontSee('_help"', false);
+
+        $this->assertSame('Choose one', $form->fields->first()->help_text);
+    }
+
+    public function test_a_standard_form_keeps_its_flowing_choices_its_descriptions_and_no_numbers(): void
+    {
+        $form = $this->save([
+            'form_type' => Form::STANDARD,
+            'fields'    => [$this->q('Gender', FormFieldType::RADIO, [
+                'options'   => [['label' => 'Male'], ['label' => 'Female'], ['label' => 'Other']],
+                'help_text' => 'Choose one',
+            ])],
+        ]);
+
+        $this->page($form)->assertOk()
+            ->assertSee('Choose one')
+            ->assertDontSee('hmf-choices--stacked', false)
+            ->assertDontSee('hmf-qs--quiz', false)
+            ->assertDontSee('class="hmf-num"', false);
+    }
+
     /* ============================== DUPLICATE ============================== */
 
     public function test_duplicating_a_structured_form_gives_the_copy_its_own_pages(): void

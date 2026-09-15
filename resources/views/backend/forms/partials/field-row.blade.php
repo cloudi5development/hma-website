@@ -42,6 +42,13 @@
         <input type="hidden" name="fields[{{ $r }}][page_ref]" value="{{ $pageRef ?? '' }}" data-row-page>
         <input type="hidden" name="fields[{{ $r }}][section_ref]" value="{{ $sectionRef ?? '' }}" data-row-section>
 
+        {{-- Placeholder and help text are not edited on this screen, but they
+             are carried through it. The service writes whatever a row posts,
+             so a row with no input for them saved them as blank — which went
+             unnoticed only while nothing could set them. Bulk upload can. --}}
+        <input type="hidden" name="fields[{{ $r }}][placeholder]" value="{{ $row['placeholder'] ?? '' }}" data-row-placeholder>
+        <input type="hidden" name="fields[{{ $r }}][help_text]" value="{{ $row['help_text'] ?? '' }}" data-row-help>
+
         {{-- Label on the left, type on the right. --}}
         <div class="fb-field__label">
             <input type="text" name="fields[{{ $r }}][label]" data-row-label
@@ -136,6 +143,21 @@
             <p class="form-hint" data-options-empty @if (count($options)) hidden @endif>
                 No options yet — add the choices people will pick from.
             </p>
+
+            {{-- The right answer, on a Multiple choice question of a Quiz. A list
+                 of this question's own options rather than a text box, so it
+                 cannot name one that does not exist; the builder script rebuilds
+                 it as options are typed, added and removed. Hidden on a standard
+                 form but still posted, so a quiz switched to standard and back
+                 keeps its answers. --}}
+            <div class="fb-correct" data-when="correct" hidden>
+                <label class="fb-sub__title" for="correct_{{ $r }}">Correct answer</label>
+                <select id="correct_{{ $r }}" name="fields[{{ $r }}][correct_answer]" class="form-control-hm"
+                        data-correct data-selected="{{ $row['correct_answer'] ?? '' }}">
+                    <option value="">— Choose the correct option —</option>
+                </select>
+                @error($errorKey . '.correct_answer') <p class="form-error">{{ $message }}</p> @enderror
+            </div>
         </div>
 
         {{-- A grid's two lists: rows down the side, columns across the top. --}}

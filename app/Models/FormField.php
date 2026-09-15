@@ -202,6 +202,20 @@ class FormField extends Model
         return $this->settings[$key] ?? null;
     }
 
+    /**
+     * The stored VALUE of the right option, on a Multiple choice question.
+     *
+     * Kept whatever the form's type — a quiz switched back to a standard form
+     * and forward again should not have lost its answers in between. It is
+     * never rendered on the public page.
+     */
+    public function correctAnswer(): ?string
+    {
+        $answer = $this->field_type === FormFieldType::RADIO ? $this->setting('correct_answer') : null;
+
+        return filled($answer) ? (string) $answer : null;
+    }
+
     public function allowsMultipleFiles(): bool
     {
         return $this->isFile() && (bool) $this->setting('multiple');

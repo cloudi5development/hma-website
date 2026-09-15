@@ -139,6 +139,7 @@ class FormBuilderTree
                 // holding them are hidden then anyway.
                 'rows'           => $field->rows->map->only(['label', 'value'])->all(),
                 'columns'        => $field->columns->map->only(['label', 'value'])->all(),
+                'correct_answer' => $field->correctAnswer(),
             ],
         )])->all();
     }

@@ -30,6 +30,26 @@
     // given one page is drawn as the plain form it currently is, rather than
     // with a "Step 1 of 1" and a Next button that has nowhere to go.
     $paged = $form->hasPages() && count($layout) > 1;
+
+    // A quiz is read as a numbered list of questions. The numbers run straight
+    // through the whole form — a new page or section does not start again at 1
+    // — and a hidden field, which nobody sees, is not counted.
+    $quiz    = $form->isQuiz();
+    $numbers = [];
+
+    if ($quiz) {
+        $n = 0;
+
+        foreach ($layout as $page) {
+            foreach ($page['sections'] as $section) {
+                foreach ($section['fields'] as $field) {
+                    if ($field->control() !== 'hidden') {
+                        $numbers[$field->id] = ++$n;
+                    }
+                }
+            }
+        }
+    }
 @endphp
 
 @if ($paged)
@@ -114,8 +134,12 @@
                          here rather than on the form, so each group is its own
                          grid and a section never starts half-way along a row
                          left over from the one before it. --}}
-                    <div class="hmf-qs">
-                        @include('frontend.partials.form-fields', ['fields' => $section['fields']])
+                    <div class="hmf-qs @if ($quiz) hmf-qs--quiz @endif">
+                        @include('frontend.partials.form-fields', [
+                            'fields'  => $section['fields'],
+                            'quiz'    => $quiz,
+                            'numbers' => $numbers,
+                        ])
                     </div>
                 </div>
             @endforeach

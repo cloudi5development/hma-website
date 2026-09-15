@@ -15,7 +15,16 @@
 |
 | The wrapping <form>, its CSRF token and its submit button belong to the page.
 | Its stylesheet is assets/css/frontend/dynamic-form.css.
+|
+| On a quiz, form-structure also passes:
+|   $quiz     true — every question takes its own row, its options are listed
+|             one under another, and no description is shown under it
+|   $numbers  field id => question number, counted across the whole form
 --}}
+@php
+    $quiz    ??= false;
+    $numbers ??= [];
+@endphp
 
 @foreach ($fields as $field)
     @php
@@ -42,7 +51,19 @@
         // box, a 0-10 scale — so they take the full width and the next question
         // starts a new row. Decided from the CONTROL rather than a list of type
         // keys, so a new type of the same shape gets the right width for free.
-        $wide = in_array($field->control(), ['textarea', 'file', 'scale', 'mc_grid', 'tick_grid'], true);
+        //
+        // A quiz is read question by question, down the page, so every question
+        // is full width: two to a row, "1  2 / 3  4" reads as nonsense once the
+        // questions are numbered.
+        $wide = $quiz || in_array($field->control(), ['textarea', 'file', 'scale', 'mc_grid', 'tick_grid'], true);
+
+        // A quiz shows no description line. Its questions are the question and
+        // the choices; an instruction such as "Choose one" only repeats what a
+        // row of radio buttons already says. Every aria-describedby below reads
+        // this too, so none of them points at a line that was not drawn.
+        $help = $quiz ? null : $field->help_text;
+
+        $number = $numbers[$field->id] ?? null;
     @endphp
 
     {{-- A hidden field is not drawn at all: no wrapper, no label, no space on
@@ -70,11 +91,13 @@
              <label for>, which may only ever point at one input. --}}
         @if (in_array($field->control(), ['radio', 'checkbox', 'scale', 'rating', 'mc_grid', 'tick_grid'], true))
             <span class="hmf-label" id="{{ $id }}_label">
+                @if ($number) <span class="hmf-num">{{ $number }}.</span> @endif
                 {{ $field->label }}
                 @if ($field->is_required) <span class="hmf-req" aria-hidden="true">*</span> @endif
             </span>
         @else
             <label class="hmf-label" for="{{ $id }}">
+                @if ($number) <span class="hmf-num">{{ $number }}.</span> @endif
                 {{ $field->label }}
                 @if ($field->is_required) <span class="hmf-req" aria-hidden="true">*</span> @endif
             </label>
@@ -88,14 +111,14 @@
                           placeholder="{{ $field->placeholder }}"
                           @if ($clientRequired) required @endif
                           @if ($invalid) aria-invalid="true" @endif
-                          @if ($field->help_text) aria-describedby="{{ $id }}_help" @endif>{{ $value }}</textarea>
+                          @if ($help) aria-describedby="{{ $id }}_help" @endif>{{ $value }}</textarea>
                 @break
 
             @case ('select')
                 <select class="hmf-control hmf-select" id="{{ $id }}" name="{{ $key }}"
                         @if ($clientRequired) required @endif
                         @if ($invalid) aria-invalid="true" @endif
-                        @if ($field->help_text) aria-describedby="{{ $id }}_help" @endif>
+                        @if ($help) aria-describedby="{{ $id }}_help" @endif>
                     <option value="">{{ $field->placeholder ?: '— Select —' }}</option>
                     @foreach ($options as $option)
                         <option value="{{ $option->value }}" @selected(in_array((string) $option->value, $selected, true))>{{ $option->label }}</option>
@@ -104,7 +127,7 @@
                 @break
 
             @case ('radio')
-                <div class="hmf-choices" role="radiogroup" aria-labelledby="{{ $id }}_label">
+                <div class="hmf-choices @if ($quiz) hmf-choices--stacked @endif" role="radiogroup" aria-labelledby="{{ $id }}_label">
                     @foreach ($options as $i => $option)
                         <label class="hmf-choice" for="{{ $id }}_{{ $i }}">
                             <input type="radio" id="{{ $id }}_{{ $i }}" name="{{ $key }}"
@@ -120,7 +143,7 @@
             @case ('checkbox')
                 {{-- The [] suffix is what makes this post a list; the field's
                      rules validate it as an array. --}}
-                <div class="hmf-choices" role="group" aria-labelledby="{{ $id }}_label">
+                <div class="hmf-choices @if ($quiz) hmf-choices--stacked @endif" role="group" aria-labelledby="{{ $id }}_label">
                     @foreach ($options as $i => $option)
                         <label class="hmf-choice" for="{{ $id }}_{{ $i }}">
                             <input type="checkbox" id="{{ $id }}_{{ $i }}" name="{{ $key }}[]"
@@ -144,7 +167,7 @@
                      rejected upload. `accept` is a convenience for the picker;
                      the real check is server-side in FormField::validationRules. --}}
                 <p class="hmf-help" id="{{ $id }}_help">
-                    @if ($field->help_text) {{ $field->help_text }} · @endif
+                    @if ($help) {{ $help }} · @endif
                     {{ strtoupper(implode(', ', $field->allowedExtensions())) }}
                     · up to {{ \App\Support\UploadLimit::label($field->maxFileKb()) }}
                     @if ($field->allowsMultipleFiles()) · several files allowed @endif
@@ -276,11 +299,11 @@
                        @if ($field->rule('max_length')) maxlength="{{ $field->rule('max_length') }}" @endif
                        @if ($clientRequired) required @endif
                        @if ($invalid) aria-invalid="true" @endif
-                       @if ($field->help_text) aria-describedby="{{ $id }}_help" @endif>
+                       @if ($help) aria-describedby="{{ $id }}_help" @endif>
         @endswitch
 
-        @if ($field->help_text && $field->control() !== 'file')
-            <p class="hmf-help" id="{{ $id }}_help">{{ $field->help_text }}</p>
+        @if ($help && $field->control() !== 'file')
+            <p class="hmf-help" id="{{ $id }}_help">{{ $help }}</p>
         @endif
 
         {{-- Server-side errors. The browser's own `required` catches the easy

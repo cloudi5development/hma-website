@@ -73,9 +73,19 @@
             @endforeach
         </div>
 
-        <button type="button" class="btn-soft" data-field-add>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-            Add Question
-        </button>
+        {{-- Two ways to add questions, side by side. Bulk Upload fills THIS
+             section — pages and sections are made by hand, and a sheet only
+             ever adds questions — so it lives with the section rather than once
+             for the whole form. --}}
+        <div class="fb-addrow">
+            <button type="button" class="btn-soft" data-field-add>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                Add Question
+            </button>
+            <button type="button" class="btn-ghost" data-bulk-open>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+                Bulk Upload
+            </button>
+        </div>
     </div>
 </div>

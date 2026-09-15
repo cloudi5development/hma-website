@@ -15,6 +15,7 @@ use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\DepartmentController;
 use App\Http\Controllers\Backend\EventController;
 use App\Http\Controllers\Backend\FaqController;
+use App\Http\Controllers\Backend\FormBulkUploadController;
 use App\Http\Controllers\Backend\FormController;
 use App\Http\Controllers\Backend\FormResponseController;
 use App\Http\Controllers\Backend\HeroController;
@@ -151,6 +152,13 @@ Route::prefix('admin')->name('backend.')->group(function () {
             // Asked by the builder's "Generate Link" dialog, so the address it
             // shows is the one the form will really be created with.
             Route::post('slug-preview', [FormController::class, 'slugPreview'])->name('slug-preview');
+
+            // The builder's Bulk Upload. Neither writes: the preview checks a
+            // sheet and returns its questions for the builder to add, and the
+            // form's own Save stores them. Declared before the resource below
+            // so "forms/bulk-template" is not read as a form id.
+            Route::get('bulk-template', [FormBulkUploadController::class, 'template'])->name('bulk-template');
+            Route::post('bulk-preview', [FormBulkUploadController::class, 'preview'])->name('bulk-preview');
 
             Route::post('{form}/toggle', [FormController::class, 'toggle'])->name('toggle');
             // Settings live on the form's own page, not on the builder — see
