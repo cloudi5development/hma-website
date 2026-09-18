@@ -377,6 +377,68 @@ class FormBulkUploadTest extends TestCase
 
     /* ============================== ROW ERRORS ============================= */
 
+    /* ============================ THE OPTIONS CELL ========================== */
+
+    /** Choices typed one per line (Alt+Enter) used to arrive as ONE option with spaces in it. */
+    public function test_options_on_separate_lines_are_separate_options(): void
+    {
+        $response = $this->preview($this->sheet([
+            $this->row(1, 'Choose your age', 'Drop-down', 'Yes', "18-25\n26-35\n36-45"),
+            $this->row(2, 'Rate us', 'Multiple-choice grid', 'No', "Rows: Product | Support\nColumns: Good | Bad"),
+        ]))->assertOk()->assertJsonPath('summary.importable', true);
+
+        $response->assertJsonPath('fields.0.options', ['18-25', '26-35', '36-45']);
+        $response->assertJsonPath('fields.1.rows', ['Product', 'Support']);
+        $response->assertJsonPath('fields.1.columns', ['Good', 'Bad']);
+    }
+
+    /** Commas are not the separator — said before import, not guessed at. */
+    public function test_options_separated_by_commas_are_flagged(): void
+    {
+        $response = $this->preview($this->sheet([
+            $this->row(1, 'Choose your age', 'Drop-down', 'Yes', '18-25, 26-35, 36-45'),
+            $this->row(2, 'Consent', 'Checkboxes', 'Yes', 'I agree to the Terms, Privacy Policy'),
+        ]))->assertOk();
+
+        $this->assertStringContainsString('separate them with “|” instead of commas', implode(' ', $response->json('rows.0.warnings')));
+        $response->assertJsonPath('rows.0.options', ['18-25, 26-35, 36-45']);   // not split behind the admin's back
+    }
+
+    /**
+     * In the standard template Options is the last column, and choices typed
+     * "in the next box" land in Placeholder or Description. A "|" list there on
+     * a question that needs choices IS its choices: used, with a note.
+     */
+    public function test_choices_typed_into_placeholder_or_description_are_used_as_the_options(): void
+    {
+        $response = $this->preview($this->sheet([
+            $this->row(1, 'Choose your age', 'Drop-down', 'Yes', '', '', '18-25 | 26-35 | 36-45'),
+            $this->row(2, 'Gender', 'Multiple choice', 'Yes', '', '', '', 'Male | Female | Other'),
+            $this->row(3, 'Name', 'Short answer', 'No', '', '', 'First | Last'),   // not a choice question: left alone
+        ]))->assertOk()->assertJsonPath('summary.importable', true)->assertJsonPath('summary.invalid', 0);
+
+        $response->assertJsonPath('fields.0.options', ['18-25', '26-35', '36-45']);
+        $response->assertJsonPath('fields.0.placeholder', '');
+        $response->assertJsonPath('fields.1.options', ['Male', 'Female', 'Other']);
+        $response->assertJsonPath('fields.1.help_text', '');
+        $response->assertJsonPath('fields.2.placeholder', 'First | Last');
+
+        $this->assertContains('The choices were in the Placeholder column, so they were used as the options.', $response->json('rows.0.warnings'));
+        $this->assertContains('The choices were in the Description column, so they were used as the options.', $response->json('rows.1.warnings'));
+    }
+
+    /** An empty Options cell with nowhere else to take choices from is still refused, and says so plainly. */
+    public function test_a_choice_question_with_no_choices_anywhere_is_refused(): void
+    {
+        $response = $this->preview($this->sheet([
+            $this->row(1, 'Pick one', 'Drop-down', 'Yes'),
+            $this->row(2, 'Pick again', 'Multiple choice', 'Yes', '', 'A | B'),   // in Correct Answer: which one is right is a guess
+        ]))->assertOk()->assertJsonPath('summary.importable', false);
+
+        $this->assertStringContainsString('The Options cell is empty.', implode(' ', $this->errorsFor($response, 2)));
+        $this->assertContains('The choices for this Multiple choice question are in the Correct Answer column — move them to the Options column.', $this->errorsFor($response, 3));
+    }
+
     public function test_each_kind_of_bad_row_is_named_against_its_row(): void
     {
         $response = $this->preview($this->sheet([
@@ -393,9 +455,9 @@ class FormBulkUploadTest extends TestCase
         $this->assertSame([], $this->errorsFor($response, 2));
         $this->assertContains('Unsupported field type “invalid_type”. Choose one from the Type list.', $this->errorsFor($response, 3));
         $this->assertContains('Label is required.', $this->errorsFor($response, 4));
-        $this->assertStringContainsString('Options are required for Checkboxes', implode(' ', $this->errorsFor($response, 5)));
-        $this->assertStringContainsString('Options are required for Drop-down', implode(' ', $this->errorsFor($response, 6)));
-        $this->assertStringContainsString('Options are required for Multiple choice', implode(' ', $this->errorsFor($response, 7)));
+        $this->assertStringContainsString('Add the choices for this Checkboxes question', implode(' ', $this->errorsFor($response, 5)));
+        $this->assertStringContainsString('Add the choices for this Drop-down question', implode(' ', $this->errorsFor($response, 6)));
+        $this->assertStringContainsString('Add the choices for this Multiple choice question', implode(' ', $this->errorsFor($response, 7)));
         $this->assertStringContainsString('Order must be a whole number', implode(' ', $this->errorsFor($response, 8)));
         $this->assertContains('Option “php” is listed more than once.', $this->errorsFor($response, 9));
 
@@ -486,28 +548,57 @@ class FormBulkUploadTest extends TestCase
             ->assertJsonPath('message', 'The sheet is missing the “Question”, “Type” and “Required” columns. Download a fresh template and keep its headings as they are.');
     }
 
-    public function test_more_rows_than_a_form_can_hold_are_refused(): void
-    {
-        $rows = [];
-        for ($i = 1; $i <= FormImportSheet::MAX_ROWS + 1; $i++) {
-            $rows[] = $this->row($i, "Question {$i}", 'Short answer');
-        }
+    /* ================================ NO LIMITS ============================
+       The module sets none: not on rows, text length, options, or how full the
+       form already is. The numbers below are past every cap it used to have
+       (200 rows, 190-character labels, 60 options). */
 
-        $this->preview($this->sheet($rows))
-            ->assertStatus(422)
-            ->assertJsonPath('message', 'That sheet has more than ' . FormImportSheet::MAX_ROWS . ' questions, which is the most one form can hold. Split it into smaller files.');
+    public function test_a_sheet_of_any_size_is_read_whole_with_long_text_and_many_options(): void
+    {
+        $long    = trim(str_repeat('Explain the difference between these two approaches. ', 20));   // ~1,100 characters
+        $options = implode(' | ', array_map(fn ($i) => "Choice {$i}", range(1, 150)));
+
+        $rows = [];
+        for ($i = 1; $i <= 320; $i++) {
+            $rows[] = $this->row($i, "Question {$i}", 'Short answer', 'No');
+        }
+        $rows[] = $this->row(321, $long, 'Multiple choice', 'Yes', $options, 'Choice 150');
+
+        $response = $this->preview($this->sheet($rows), ['form_type' => Form::QUIZ])
+            ->assertOk()
+            ->assertJsonPath('summary.total', 321)
+            ->assertJsonPath('summary.invalid', 0)
+            ->assertJsonPath('summary.importable', true)
+            ->assertJsonPath('errors', []);
+
+        $fields = $response->json('fields');
+
+        $this->assertCount(321, $fields);
+        $this->assertSame('Question 320', $fields[319]['label']);
+        $this->assertSame($long, $fields[320]['label']);
+        $this->assertCount(150, $fields[320]['options']);
+        $this->assertSame('Choice 150', $fields[320]['correct_answer']);
     }
 
-    public function test_an_import_that_would_overfill_the_form_is_blocked(): void
+    public function test_an_import_is_never_blocked_by_how_many_questions_the_form_already_has(): void
     {
         $this->preview($this->sheet([
             $this->row(1, 'One', 'Short answer'),
             $this->row(2, 'Two', 'Short answer'),
-        ]), ['questions' => FormBuilderService::MAX_FIELDS - 1])
+        ]), ['questions' => 5000])
             ->assertOk()
-            ->assertJsonPath('summary.importable', false)
-            ->assertJsonPath('errors.0', 'This form already has ' . (FormBuilderService::MAX_FIELDS - 1) . ' questions, and a form can hold '
-                . FormBuilderService::MAX_FIELDS . '. Import at most 1 more.');
+            ->assertJsonPath('summary.importable', true)
+            ->assertJsonPath('errors', []);
+    }
+
+    public function test_a_file_the_server_itself_refused_is_explained_as_a_server_limit(): void
+    {
+        // What PHP hands over when the file was bigger than upload_max_filesize.
+        $file = new UploadedFile(tempnam(sys_get_temp_dir(), 'big'), 'questions.xlsx', null, UPLOAD_ERR_INI_SIZE, true);
+
+        $response = $this->preview($file)->assertStatus(422);
+
+        $this->assertStringStartsWith('That file is larger than this server accepts (', $response->json('message'));
     }
 
     public function test_the_preview_and_template_are_behind_the_admin_guard(): void
@@ -731,6 +822,64 @@ class FormBulkUploadTest extends TestCase
         );
 
         $this->assertSame('Q80 option 2', $form->fields->last()->correctAnswer());
+    }
+
+    /**
+     * Past every cap the builder used to have — 200 questions, 60 options, 20
+     * pages, 40 sections, 190-character text — and nothing is cut off.
+     */
+    public function test_a_form_of_any_size_saves_whole(): void
+    {
+        $long  = str_repeat('A very long question that keeps going. ', 40);   // ~1,600 characters
+        $pairs = [];
+
+        for ($p = 1; $p <= 25; $p++) {
+            $pairs[] = ["pages[p{$p}][id]", ''];
+            $pairs[] = ["pages[p{$p}][title]", "Page {$p}"];
+        }
+
+        // 45 sections, all on the first page.
+        for ($s = 1; $s <= 45; $s++) {
+            $pairs[] = ["sections[s{$s}][id]", ''];
+            $pairs[] = ["sections[s{$s}][page_ref]", 'p1'];
+            $pairs[] = ["sections[s{$s}][title]", "Section {$s}"];
+        }
+
+        for ($q = 1; $q <= 230; $q++) {
+            $key = "nf{$q}";
+            array_push($pairs,
+                ["fields[{$key}][id]", ''],
+                ["fields[{$key}][label]", $q === 230 ? $long : "Question {$q}"],
+                ["fields[{$key}][field_type]", $q === 230 ? FormFieldType::RADIO : FormFieldType::SHORT_TEXT],
+                ["fields[{$key}][is_required]", '0'],
+                ["fields[{$key}][page_ref]", 'p1'],
+                ["fields[{$key}][section_ref]", 's' . (($q % 45) + 1)],
+            );
+        }
+
+        for ($o = 1; $o <= 80; $o++) {
+            $pairs[] = ["fields[nf230][options][o{$o}][label]", "Option {$o} " . str_repeat('x', 250)];
+            $pairs[] = ["fields[nf230][options][o{$o}][value]", ''];
+        }
+
+        $name = str_repeat('Annual Hiring Assessment ', 20);   // ~500 characters
+
+        $this->asAdmin()->post(route('backend.forms.store'), [
+            'name'            => $name,
+            'status'          => Form::PUBLISHED,
+            'structure_type'  => Form::PAGES_SECTIONS,
+            'builder_payload' => json_encode($pairs),
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $form = Form::with(['fields.options', 'pages', 'sections'])->latest('id')->firstOrFail();
+
+        $this->assertSame(trim($name), $form->name);
+        $this->assertCount(25, $form->pages);
+        $this->assertCount(45, $form->sections);
+        $this->assertCount(230, $form->fields);
+        $this->assertSame(trim($long), $form->fields->last()->label);
+        $this->assertCount(80, $form->fields->last()->options);
+        $this->assertSame('Option 80 ' . str_repeat('x', 250), $form->fields->last()->options->last()->label);
     }
 
     public function test_an_unreadable_payload_saves_nothing_and_says_so(): void

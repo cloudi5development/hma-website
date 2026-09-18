@@ -24,7 +24,10 @@
                  never take more than is on screen. The count and whether a
                  filter is on are both spelled out in the confirmation. --}}
             @if ($responses->total())
-                @php $filtered = request()->hasAny(['q', 'status', 'date']); @endphp
+                {{-- filled(), not has(): the toolbar always submits q= and status=,
+                     empty, and "Delete Filtered" must not claim a filter that
+                     is not there. --}}
+                @php $filtered = collect(['q', 'status', 'date'])->contains(fn ($k) => filled(request($k))); @endphp
                 <form method="POST" action="{{ route('backend.forms.responses.clear', [$form] + request()->query()) }}"
                       class="d-inline"
                       data-confirm="Delete {{ $filtered ? 'the ' . number_format($responses->total()) . ' response(s) these filters are showing' : 'all ' . number_format($responses->total()) . ' response(s) of this form' }}, including any uploaded files? This cannot be undone."
@@ -46,6 +49,13 @@
     <div class="hm-card mb-3">
         <div class="hm-card__body">
             <form method="GET" class="row g-2 align-items-end">
+                {{-- The search, status and page size from the toolbar ride
+                     along, so filtering by day does not quietly drop them. --}}
+                @foreach (['q', 'status', 'per_page'] as $carried)
+                    @if (filled(request($carried)))
+                        <input type="hidden" name="{{ $carried }}" value="{{ request($carried) }}">
+                    @endif
+                @endforeach
                 <div class="col-12 col-md-4">
                     <label class="form-label" for="date">Date</label>
                     <input type="date" id="date" name="date" value="{{ request('date') }}" class="form-control-hm">
@@ -80,14 +90,13 @@
                 </thead>
                 <tbody>
                     @forelse ($responses as $response)
-                        @php $values = $response->keyed(); @endphp
                         <tr>
                             <td>#{{ $response->id }}</td>
                             @foreach ($columns as $column)
                                 <td @if ($loop->first) class="hm-table__name" @endif>
                                     {{-- Escaped by Blade, as everything a stranger
                                          typed must be. --}}
-                                    {{ \Illuminate\Support\Str::limit($values[$column->field_key]->display ?? '', 60) ?: '—' }}
+                                    {{ \Illuminate\Support\Str::limit($response->answerFor($column)?->display ?? '', 60) ?: '—' }}
                                 </td>
                             @endforeach
                             <td class="hm-table__date">

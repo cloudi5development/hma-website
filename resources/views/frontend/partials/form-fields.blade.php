@@ -33,8 +33,28 @@
         $invalid  = $errors->has($key) || $errors->has($key . '.*');
         // old() first so a failed submission gives the visitor their answers
         // back; the admin's default value is only the starting state.
-        $value    = old($key, $field->default_value);
+        //
+        // What comes back is whatever was POSTED, and a stale page or a forged
+        // post can send a list where one answer belongs, or one answer where a
+        // list belongs. It is coerced to the shape this control draws — printed
+        // as-is, an array here turned the page that shows the visitor their
+        // mistakes into a server error.
+        $raw   = old($key, $field->default_value);
+        $value = match ($field->control()) {
+            'mc_grid', 'tick_grid' => is_array($raw) ? $raw : [],
+            'checkbox'             => is_array($raw) ? array_values(array_filter($raw, 'is_scalar')) : $raw,
+            default                => is_array($raw) ? '' : $raw,
+        };
         $selected = is_array($value) ? array_map('strval', $value) : [(string) $value];
+
+        // Every message for this question, flattened. A wildcard get() returns
+        // them grouped under the key each belongs to ("rate.1" => [...]) — a
+        // grid row, one of several files, one ticked box — and a group is not
+        // text. unique() because a grid can raise the same message per row.
+        $messages = collect($errors->get($key))
+            ->merge(collect($errors->get($key . '.*'))->flatten())
+            ->unique()
+            ->values();
         $options  = $field->options;
         $cond     = $field->condition();
 
@@ -254,7 +274,7 @@
                         </thead>
                         <tbody>
                             @foreach ($field->rows as $r => $row)
-                                @php $picked = array_map('strval', (array) ($gridOld[$r] ?? [])); @endphp
+                                @php $picked = array_map('strval', array_filter((array) ($gridOld[$r] ?? []), 'is_scalar')); @endphp
                                 <tr>
                                     <th scope="row">{{ $row->label }}</th>
                                     @foreach ($field->columns as $column)
@@ -274,19 +294,25 @@
                         </tbody>
                     </table>
                 </div>
-
-                @foreach ($field->rows as $r => $row)
-                    @foreach ($errors->get($key . '.' . $r) as $message)
-                        <p class="hmf-error">{{ $message }}</p>
-                    @endforeach
-                @endforeach
+                {{-- Row errors are printed with the rest, below — once each. --}}
                 @break
 
             @default
-                @php $spec = \App\Support\FormFieldType::spec($field->field_type); @endphp
+                @php
+                    $spec     = \App\Support\FormFieldType::spec($field->field_type);
+                    // A mobile number is ten digits, and the keyboard, the
+                    // length and the pattern say so before the server does.
+                    // form-scripts keeps it to digits and cleans a pasted
+                    // "+91 98765 43210"; the server checks again regardless.
+                    $isMobile = $field->field_type === \App\Support\FormFieldType::MOBILE;
+                @endphp
                 <input class="hmf-control" type="{{ $spec['input'] ?? 'text' }}"
                        id="{{ $id }}" name="{{ $key }}" value="{{ $value }}"
-                       placeholder="{{ $field->placeholder }}"
+                       placeholder="{{ $field->placeholder ?: ($isMobile ? 'e.g. 9876543210' : '') }}"
+                       @if ($isMobile)
+                           inputmode="numeric" maxlength="10" pattern="[0-9]{10}" autocomplete="tel-national"
+                           title="Enter a 10-digit mobile number" data-hmf-mobile
+                       @endif
                        @if ($field->rule('min_value') !== null) min="{{ $field->rule('min_value') }}" @endif
                        @if ($field->rule('max_value') !== null) max="{{ $field->rule('max_value') }}" @endif
                        {{-- The date/time window the admin set. Enforced server
@@ -296,7 +322,7 @@
                        @if ($field->rule('max_date')) max="{{ $field->rule('max_date') }}" @endif
                        @if ($field->rule('min_time')) min="{{ $field->rule('min_time') }}" @endif
                        @if ($field->rule('max_time')) max="{{ $field->rule('max_time') }}" @endif
-                       @if ($field->rule('max_length')) maxlength="{{ $field->rule('max_length') }}" @endif
+                       @if ($field->rule('max_length') && ! $isMobile) maxlength="{{ $field->rule('max_length') }}" @endif
                        @if ($clientRequired) required @endif
                        @if ($invalid) aria-invalid="true" @endif
                        @if ($help) aria-describedby="{{ $id }}_help" @endif>
@@ -308,7 +334,7 @@
 
         {{-- Server-side errors. The browser's own `required` catches the easy
              ones first, but it is never what the submission is judged on. --}}
-        @foreach (array_merge($errors->get($key), $errors->get($key . '.*')) as $message)
+        @foreach ($messages as $message)
             <p class="hmf-error">{{ $message }}</p>
         @endforeach
     </div>

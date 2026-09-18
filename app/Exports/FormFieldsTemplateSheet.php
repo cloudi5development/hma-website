@@ -58,7 +58,9 @@ class FormFieldsTemplateSheet implements FromArray, WithTitle, WithEvents
         return [
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet   = $event->sheet->getDelegate();
-                $last    = FormImportSheet::MAX_ROWS + 1;
+                // Every row of the sheet gets the dropdowns — there is no last
+                // row a template is meant for.
+                $last    = 1048576;
                 $lastCol = $this->letter(array_key_last($this->columns()));
 
                 // Headings stay on screen, and look like headings.
@@ -88,19 +90,19 @@ class FormFieldsTemplateSheet implements FromArray, WithTitle, WithEvents
 
                 $order = $this->base('Order', 'A whole number. Lowest comes first; no two rows may share one.');
                 $order->setType(DataValidation::TYPE_WHOLE);
-                $order->setOperator(DataValidation::OPERATOR_BETWEEN);
+                $order->setOperator(DataValidation::OPERATOR_GREATERTHANOREQUAL);
                 $order->setFormula1('1');
-                $order->setFormula2('9999');
                 $sheet->setDataValidation("{$this->letter('order')}2:{$this->letter('order')}{$last}", $order);
 
-                // The free-text columns with a format to follow get a length rule
-                // — which is what makes Excel show the hint at all: a validation
-                // of type "none" is silently left out of the file by the writer.
-                // The lengths are the importer's own ceilings.
+                // The free-text columns with a format to follow get a hint. It
+                // has to ride on a real rule — a validation of type "none" is
+                // silently left out of the file by the writer — so it is a
+                // length rule at 32,767, which is Excel's own most for a cell and
+                // no limit of this module's: the importer takes any length.
                 foreach ([
-                    'label'          => [190, 'The question people will read. Up to 190 characters.'],
-                    'options'        => [12000, 'Separate choices with |  e.g.  Male | Female | Other'],
-                    'correct_answer' => [190, 'Multiple choice only. Must match one of the Options exactly.'],
+                    'label'          => [32767, 'The question people will read.'],
+                    'options'        => [32767, 'Separate choices with |  e.g.  Male | Female | Other — or one per line (Alt+Enter).'],
+                    'correct_answer' => [32767, 'Multiple choice only. Must match one of the Options exactly.'],
                 ] as $key => [$max, $hint]) {
                     if (! $this->has($key)) {
                         continue;

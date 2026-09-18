@@ -1663,6 +1663,10 @@ body * {
     font-size: 12px;
     color: var(--muted);
     width: 500px;
+    /* As with .form-control-hm below: 500px is the preferred width, and
+       max-width keeps a hint inside a narrower column. Without it every hint
+       ran 500px wide on a phone and pushed the whole page sideways. */
+    max-width: 100%;
 }
 
 .form-control-hm {

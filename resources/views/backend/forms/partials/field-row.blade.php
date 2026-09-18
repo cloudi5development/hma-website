@@ -49,6 +49,18 @@
         <input type="hidden" name="fields[{{ $r }}][placeholder]" value="{{ $row['placeholder'] ?? '' }}" data-row-placeholder>
         <input type="hidden" name="fields[{{ $r }}][help_text]" value="{{ $row['help_text'] ?? '' }}" data-row-help>
 
+        {{-- The same for the rest of what a question can carry but this screen
+             does not edit: its show-only-if condition and the limits on its
+             answer. Without these every Save erased them — a form's
+             conditions, a date window, a file-size cap, gone the first time
+             anyone fixed a typo. The service keeps only the settings the
+             question's current type offers, so a stale one is dropped when the
+             type changes, not before. --}}
+        @foreach (['cond_field_key', 'cond_operator', 'cond_value', 'min_length', 'max_length', 'min_value', 'max_value',
+                   'max_file_size_kb', 'min_date', 'max_date', 'min_time', 'max_time'] as $carried)
+            <input type="hidden" name="fields[{{ $r }}][{{ $carried }}]" value="{{ $row[$carried] ?? '' }}">
+        @endforeach
+
         {{-- Label on the left, type on the right. --}}
         <div class="fb-field__label">
             <input type="text" name="fields[{{ $r }}][label]" data-row-label
@@ -212,8 +224,7 @@
             <div class="col-6 col-md-3">
                 <div class="form-row" style="margin-bottom:0">
                     <label class="form-label">Scale from</label>
-                    <input type="number" min="{{ \App\Support\FormFieldType::SCALE_FLOOR }}"
-                           max="{{ \App\Support\FormFieldType::SCALE_CEILING }}"
+                    <input type="number" step="1"
                            name="fields[{{ $r }}][scale_min]" class="form-control-hm"
                            value="{{ $row['scale_min'] ?? '' }}"
                            placeholder="{{ \App\Support\FormFieldType::SCALE_DEFAULT_MIN }}">
@@ -222,8 +233,7 @@
             <div class="col-6 col-md-3">
                 <div class="form-row" style="margin-bottom:0">
                     <label class="form-label">Scale to</label>
-                    <input type="number" min="{{ \App\Support\FormFieldType::SCALE_FLOOR }}"
-                           max="{{ \App\Support\FormFieldType::SCALE_CEILING }}"
+                    <input type="number" step="1"
                            name="fields[{{ $r }}][scale_max]" class="form-control-hm"
                            value="{{ $row['scale_max'] ?? '' }}"
                            placeholder="{{ \App\Support\FormFieldType::SCALE_DEFAULT_MAX }}">
@@ -251,7 +261,7 @@
             <div class="col-6 col-md-3">
                 <div class="form-row" style="margin-bottom:0">
                     <label class="form-label">How many icons</label>
-                    <input type="number" min="2" max="{{ \App\Support\FormFieldType::RATING_MAX_COUNT }}"
+                    <input type="number" min="2" step="1"
                            name="fields[{{ $r }}][rating_count]" class="form-control-hm"
                            value="{{ $row['rating_count'] ?? '' }}"
                            placeholder="{{ \App\Support\FormFieldType::RATING_DEFAULT_COUNT }}">
@@ -266,6 +276,19 @@
                         @endforeach
                     </select>
                 </div>
+            </div>
+        </div>
+
+        {{-- A Hidden question is never shown to a visitor; this is the value it
+             quietly records with every response (a source, a campaign, a batch).
+             Without it the type recorded nothing at all. The input is posted for
+             every type, so a default value set elsewhere is carried, not lost. --}}
+        <div data-when="hidden-note" hidden>
+            <div class="form-row" style="margin-bottom:0">
+                <label class="form-label" for="default_{{ $r }}">Value to record</label>
+                <input type="text" id="default_{{ $r }}" name="fields[{{ $r }}][default_value]" class="form-control-hm"
+                       value="{{ $row['default_value'] ?? '' }}" placeholder="e.g. instagram-campaign">
+                <p class="form-hint">Not shown on the form. Saved with every response, so you can tell where it came from.</p>
             </div>
         </div>
 

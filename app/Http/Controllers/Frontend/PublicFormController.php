@@ -7,7 +7,9 @@ use App\Models\Form;
 use App\Services\FormSubmissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use PDOException;
 
 /**
  * The public side: one route serves every form the admin has ever built.
@@ -41,14 +43,9 @@ class PublicFormController extends Controller
             ->with(['fields.options', 'pages', 'sections'])
             ->firstOrFail();
 
+        // Published is the only condition — no cap, and nobody is turned away
+        // for having answered before.
         [$accepting, $closedReason] = $form->submissionState();
-
-        // "Allow multiple submissions: No" is remembered per browser — see
-        // FormSubmissionService::submittedKey for why not by IP.
-        if ($accepting && ! $form->allows_multiple && FormSubmissionService::hasSubmitted($form)) {
-            $accepting     = false;
-            $closedReason  = 'You have already submitted this form.';
-        }
 
         return view('frontend.form', [
             'form'         => $form,
@@ -76,8 +73,11 @@ class PublicFormController extends Controller
             return back()->with('form_error', $closedReason);
         }
 
-        if (! $form->allows_multiple && FormSubmissionService::hasSubmitted($form)) {
-            return back()->with('form_error', 'You have already submitted this form.');
+        // The page draws "no questions yet" instead of a form here, so a POST
+        // can only come from a stale tab or a script — and it would file an
+        // empty response against a form that asks nothing.
+        if ($form->fields->isEmpty()) {
+            return back()->with('form_error', 'This form has no questions yet, so there is nothing to submit.');
         }
 
         // The honeypot: invisible to a person, irresistible to a bot that fills
@@ -87,15 +87,33 @@ class PublicFormController extends Controller
             return $this->finish($request, $form);
         }
 
-        $validator = $this->submissions->validator($form, $request->all(), $request->allFiles());
+        $input     = $this->submissions->normalise($form, $request->all());
+        $validator = $this->submissions->validator($form, $input, $request->allFiles());
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
 
-        $this->submissions->store($form, $validator->validated() + $request->all(), $request);
+        try {
+            $this->submissions->store($form, $validator->validated() + $input, $request);
+        } catch (PDOException $e) {
+            // PDOException, not only QueryException (which extends it): when
+            // the server drops the connection over an oversized statement, the
+            // transaction's rollback fails as well, and that raw error is the
+            // one that arrives here.
+            // The module sets no length limit, but the database server has one
+            // for a single statement (max_allowed_packet — 1 MB on a stock XAMPP),
+            // and an answer pasted past it fails here. The response is written in
+            // one transaction, so nothing half-saved is left behind; tell the
+            // visitor plainly rather than showing a server error page.
+            //
+            // No withInput(): the input is what did not fit, and flashing it
+            // into the database-backed session would fail the same way.
+            Log::warning('A form response could not be stored', ['form' => $form->id, 'error' => $e->getMessage()]);
 
-        $request->session()->put(FormSubmissionService::submittedKey($form), true);
+            return back()->with('form_error', 'Sorry — we could not save your response. '
+                . 'If you pasted a very long answer, please shorten it and try again.');
+        }
 
         return $this->finish($request, $form);
     }

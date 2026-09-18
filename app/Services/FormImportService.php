@@ -9,7 +9,6 @@ use App\Support\FormImportSheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Reader\IReadFilter;
 use PhpOffice\PhpSpreadsheet\RichText\RichText;
 use Throwable;
 
@@ -31,8 +30,9 @@ use Throwable;
  * been created yet, lands among whatever the admin has on screen and not yet
  * saved, and can be looked over in place before anything is kept.
  *
- * Nothing in the file is trusted. The reader never calculates a formula, never
- * reads past the row and column ceilings, and treats every cell as plain text.
+ * Nothing in the file is trusted. The reader never calculates a formula and
+ * treats every cell as plain text. It sets no limits of its own — not on rows,
+ * not on the length of a cell.
  */
 class FormImportService
 {
@@ -59,21 +59,6 @@ class FormImportService
         // holding "=HYPERLINK(...)" is read as that text and refused below.
         $reader->setReadDataOnly(true);
         $reader->setReadEmptyCells(false);
-
-        // Reads no further than one row past the ceiling, so a sheet with a
-        // million rows is refused without a million rows being loaded to find
-        // out. The extra row is how "too many" is noticed at all.
-        $reader->setReadFilter(new class (FormImportSheet::MAX_ROWS + 2, FormImportSheet::MAX_COLUMNS) implements IReadFilter
-        {
-            public function __construct(private int $rows, private int $columns)
-            {
-            }
-
-            public function readCell($columnAddress, $row, $worksheetName = ''): bool
-            {
-                return $row <= $this->rows && Coordinate::columnIndexFromString($columnAddress) <= $this->columns;
-            }
-        });
 
         try {
             // This form type's own sheet first, then the other template's, then
@@ -104,8 +89,10 @@ class FormImportService
             );
         }
 
+        // Every row the sheet has — there is no ceiling on how many questions
+        // one file may bring.
         $rows    = [];
-        $highest = min($sheet->getHighestDataRow(), FormImportSheet::MAX_ROWS + 2);
+        $highest = $sheet->getHighestDataRow();
 
         for ($r = 2; $r <= $highest; $r++) {
             $cells    = [];
@@ -120,7 +107,7 @@ class FormImportService
                     $formulas[$key] = true;
                 }
 
-                $cells[$key] = $this->text($raw);
+                $cells[$key] = $key === 'options' ? $this->optionsText($raw) : $this->text($raw);
             }
 
             // A row with nothing in it is a gap, not a question.
@@ -135,12 +122,6 @@ class FormImportService
             throw new FormImportException('The sheet has no questions in it. Add one question per row, under the headings.');
         }
 
-        if (count($rows) > FormImportSheet::MAX_ROWS) {
-            throw new FormImportException(
-                'That sheet has more than ' . FormImportSheet::MAX_ROWS . ' questions, which is the most one form can hold. Split it into smaller files.',
-            );
-        }
-
         return $rows;
     }
 
@@ -149,7 +130,9 @@ class FormImportService
     {
         $columns = [];
 
-        for ($c = 1; $c <= FormImportSheet::MAX_COLUMNS; $c++) {
+        $widest = Coordinate::columnIndexFromString($sheet->getHighestDataColumn(1));
+
+        for ($c = 1; $c <= $widest; $c++) {
             $key = FormImportSheet::columnFor($this->text($sheet->getCell(Coordinate::stringFromColumnIndex($c) . '1')->getValue()));
 
             if ($key !== null && ! in_array($key, $columns, true)) {
@@ -180,6 +163,29 @@ class FormImportService
         return trim((string) preg_replace('/\s+/u', ' ', preg_replace('/[\x00-\x1F\x7F]/u', ' ', $text)));
     }
 
+    /**
+     * The Options cell, with each LINE counted as its own choice.
+     *
+     * Typing the choices one under another (Alt+Enter) is as natural in Excel
+     * as typing "|" between them, and text() turns line breaks into spaces —
+     * so "18-25⏎26-35⏎36-45" arrived as ONE option, "18-25 26-35 36-45". Each
+     * line becomes a separate option; a grid written as a "Rows: …" line and a
+     * "Columns: …" line has its two lines joined the way its format wants.
+     */
+    private function optionsText(mixed $value): string
+    {
+        $plain = $value instanceof RichText ? $value->getPlainText() : $value;
+
+        if (is_string($plain) && preg_match('/\R/u', $plain)) {
+            $lines = array_values(array_filter(array_map('trim', preg_split('/\R/u', $plain)), fn ($line) => $line !== ''));
+            $grid  = preg_match('/\brows\s*:/iu', $plain) && preg_match('/\bcolumns\s*:/iu', $plain);
+
+            $plain = implode($grid ? ' ; ' : ' ' . FormImportSheet::OPTION_SEPARATOR . ' ', $lines);
+        }
+
+        return $this->text($plain);
+    }
+
     /* =============================== PREVIEW =============================== */
 
     /**
@@ -190,16 +196,15 @@ class FormImportService
      *   form_type  standard | quiz  — a quiz needs a correct answer on each
      *                                Multiple choice question, and calls its
      *                                Label column "Question"
-     *   questions  how many questions the builder already holds, so an import
-     *              cannot take the form past its ceiling
+     *   questions  how many questions the builder already holds (informational;
+     *              a form has no ceiling)
      *
      * Where the questions go is not the server's business: every one of them is
      * added to the section Bulk Upload was opened from, after what is there.
      */
     public function preview(array $rows, array $context): array
     {
-        $quiz      = ($context['form_type'] ?? null) === Form::QUIZ;
-        $questions = max(0, (int) ($context['questions'] ?? 0));
+        $quiz = ($context['form_type'] ?? null) === Form::QUIZ;
 
         $checked = array_map(fn ($row) => $this->check($row, $quiz), $rows);
 
@@ -221,14 +226,11 @@ class FormImportService
         }
         unset($row);
 
-        $valid  = array_values(array_filter($checked, fn ($row) => $row['errors'] === []));
-        $errors = [];
+        $valid = array_values(array_filter($checked, fn ($row) => $row['errors'] === []));
 
-        if ($questions + count($valid) > FormBuilderService::MAX_FIELDS) {
-            $errors[] = 'This form already has ' . $questions . ' question' . ($questions === 1 ? '' : 's')
-                . ', and a form can hold ' . FormBuilderService::MAX_FIELDS . '. Import at most '
-                . max(0, FormBuilderService::MAX_FIELDS - $questions) . ' more.';
-        }
+        // Problems with the file as a whole. There are none left to find — the
+        // form has no question limit — but the key stays for the screen.
+        $errors = [];
 
         $invalid    = count($checked) - count($valid);
         $importable = $invalid === 0 && $errors === [] && $valid !== [];
@@ -279,8 +281,6 @@ class FormImportService
 
         if ($label === '') {
             $errors[] = $name('label') . ' is required.';
-        } elseif (mb_strlen($label) > 190) {
-            $errors[] = $name('label') . ' is longer than 190 characters.';
         }
 
         /* ---- Type ---- */
@@ -308,19 +308,40 @@ class FormImportService
                 : 'Required must be Yes or No (found “' . $cell('required') . '”).';
         }
 
-        /* ---- Placeholder, description ---- */
-        // A quiz template has no Placeholder column; a sheet that brings one
-        // anyway is read the same as on a standard form.
-        if (mb_strlen($cell('placeholder')) > 190) {
-            $errors[] = 'Placeholder is longer than 190 characters.';
-        }
-
-        if (mb_strlen($cell('description')) > 500) {
-            $errors[] = 'Description is longer than 500 characters.';
-        }
-
         /* ---- Options ---- */
-        [$options, $gridRows, $gridColumns] = $this->choices($type, $cell('options'), $errors, $warnings);
+        // In the standard template Options is the LAST column, after
+        // Placeholder and Description, and choices are often typed into "the
+        // next box" instead. When a question that needs choices has none in
+        // Options but one of those two cells holds a "|" list, that list IS its
+        // choices — a drop-down has no use for a placeholder that reads
+        // "18-25 | 26-35". They are used, the cell they came from is left
+        // empty, and the preview says so. Refusing the row and making the admin
+        // move them by hand only created work.
+        $optionsCell = $cell('options');
+        $movedFrom   = null;
+        $placeholder = $cell('placeholder');
+        $description = $cell('description');
+
+        if ($optionsCell === '' && FormFieldType::needsOptions($type) && $type !== FormFieldType::YES_NO) {
+            foreach (['placeholder' => &$placeholder, 'description' => &$description] as $key => &$value) {
+                if (str_contains($value, FormImportSheet::OPTION_SEPARATOR)) {
+                    [$optionsCell, $value, $movedFrom] = [$value, '', $key];
+
+                    break;
+                }
+            }
+            unset($value);
+        }
+
+        // Choices in the Correct Answer column are NOT taken — which of them
+        // would be the answer is a guess — only pointed at.
+        $elsewhere = str_contains($cell('correct_answer'), FormImportSheet::OPTION_SEPARATOR) ? [$name('correct_answer')] : [];
+
+        [$options, $gridRows, $gridColumns] = $this->choices($type, $optionsCell, $errors, $warnings, $elsewhere);
+
+        if ($movedFrom && $options !== []) {
+            $warnings[] = 'The choices were in the ' . $name($movedFrom) . ' column, so they were used as the options.';
+        }
 
         /* ---- Correct answer ---- */
         $answer = $cell('correct_answer');
@@ -347,8 +368,8 @@ class FormImportService
             'type_label'     => $type ? FormFieldType::label($type) : $cell('type'),
             'required'       => $required,
             'required_input' => $cell('required'),
-            'placeholder'    => $cell('placeholder'),
-            'description'    => $cell('description'),
+            'placeholder'    => $placeholder,
+            'description'    => $description,
             'options'        => $options,
             'grid_rows'      => $gridRows,
             'grid_columns'   => $gridColumns,
@@ -363,7 +384,7 @@ class FormImportService
      *
      * @return array{0: array<int, string>, 1: array<int, string>, 2: array<int, string>}
      */
-    private function choices(?string $type, string $cell, array &$errors, array &$warnings): array
+    private function choices(?string $type, string $cell, array &$errors, array &$warnings, array $misplacedIn = []): array
     {
         if ($type === null) {
             return [[], [], []];
@@ -397,9 +418,22 @@ class FormImportService
             $options = FormImportSheet::splitOptions($cell);
 
             if ($options === []) {
-                $errors[] = 'Options are required for ' . FormFieldType::label($type) . ' — separate them with “|”, e.g. Male | Female | Other.';
+                $errors[] = $misplacedIn
+                    ? 'The choices for this ' . FormFieldType::label($type) . ' question are in the ' . $misplacedIn[0]
+                        . ' column — move them to the Options column.'
+                    : 'The Options cell is empty. Add the choices for this ' . FormFieldType::label($type) . ' question there, '
+                        . 'separated with “|” (e.g. Male | Female | Other) or one per line.';
 
                 return [[], [], []];
+            }
+
+            // One "option" with commas in it is almost always several choices
+            // separated the wrong way. Not split automatically — a single
+            // consent box such as "I agree to the Terms, Privacy Policy" is a
+            // real option with a comma in it — but said, before it is imported.
+            if (count($options) === 1 && str_contains($options[0], ',')) {
+                $warnings[] = 'Only one option was found: “' . $options[0] . '”. If these are separate choices, '
+                    . 'separate them with “|” instead of commas.';
             }
 
             $this->checkList($options, 'Option', $errors);
@@ -414,20 +448,16 @@ class FormImportService
         return [[], [], []];
     }
 
-    /** Duplicates, over-long entries and too many of them, in one list. */
+    /**
+     * Duplicates in one list. As many entries as the admin likes, as long as
+     * they like — but the same one twice would be two choices stored as one
+     * answer nobody could tell apart.
+     */
     private function checkList(array $items, string $noun, array &$errors): void
     {
-        if (count($items) > FormBuilderService::MAX_OPTIONS) {
-            $errors[] = 'At most ' . FormBuilderService::MAX_OPTIONS . ' ' . strtolower($noun) . 's are allowed.';
-        }
-
         $seen = [];
 
         foreach ($items as $item) {
-            if (mb_strlen($item) > 190) {
-                $errors[] = "{$noun} “" . mb_substr($item, 0, 40) . '…” is longer than 190 characters.';
-            }
-
             // Case-insensitive: "PHP" and "php" would read as two choices and
             // be stored as one answer nobody could tell apart.
             $folded = mb_strtolower($item);

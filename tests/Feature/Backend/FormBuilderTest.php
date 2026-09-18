@@ -45,7 +45,6 @@ class FormBuilderTest extends TestCase
             'status'          => Form::DRAFT,
             'submit_label'    => 'Send Enquiry',
             'success_message' => 'Thanks — we will be in touch.',
-            'allow_multiple'  => 1,
             'fields'          => [],
         ];
     }
@@ -172,7 +171,7 @@ class FormBuilderTest extends TestCase
         $this->assertStringNotContainsString('name="slug"', $html);
 
         // Settings belong to a form that exists, not to the act of making one.
-        foreach (['submit_label', 'success_message', 'redirect_url', 'max_submissions', 'notify_emails'] as $setting) {
+        foreach (['submit_label', 'success_message', 'redirect_url', 'notify_emails'] as $setting) {
             $this->assertStringNotContainsString('name="' . $setting . '"', $html, "{$setting} should not be on the create screen.");
         }
 
@@ -329,7 +328,7 @@ class FormBuilderTest extends TestCase
         $this->assertStringContainsString('name="description"', $html);
         $this->assertStringContainsString('Student Name', $html);
 
-        foreach (['title', 'slug', 'submit_label', 'success_message', 'redirect_url', 'max_submissions', 'notify_emails'] as $absent) {
+        foreach (['title', 'slug', 'submit_label', 'success_message', 'redirect_url', 'notify_emails'] as $absent) {
             $this->assertStringNotContainsString('name="' . $absent . '"', $html, "{$absent} should not be on the edit screen.");
         }
     }
@@ -359,6 +358,60 @@ class FormBuilderTest extends TestCase
         $this->assertSame('Apply Now', $form->submit_label);
         $this->assertSame('We have your application.', $form->success_message);
         $this->assertSame(['hr@example.com'], $form->notificationRecipients());
+    }
+
+    /**
+     * And the reverse: saving the questions must not touch the settings.
+     *
+     * The builder posts no settings, and it used to write the settings JSON
+     * anyway — from nothing — so every question save quietly reset the button
+     * label, the thank-you message and the notification address.
+     */
+    public function test_saving_the_questions_leaves_the_settings_alone(): void
+    {
+        $form = $this->makeForm([$this->field()]);
+
+        $this->signedIn()->put(route('backend.forms.settings', $form), [
+            'submit_label'   => 'Apply Now',
+            'notify_enabled' => 1,
+            'notify_emails'  => 'hr@example.com',
+        ])->assertSessionHasNoErrors();
+
+        $this->signedIn()->put(route('backend.forms.update', $form), [
+            'name'   => 'Course Enquiry',
+            'status' => Form::PUBLISHED,
+            'fields' => ['f0' => $this->field(['label' => 'Full Name'])],
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $form->refresh();
+
+        $this->assertSame(['Full Name'], $form->fields->pluck('label')->all());
+        $this->assertSame('Apply Now', $form->submit_label);
+        $this->assertSame(['hr@example.com'], $form->notificationRecipients());
+    }
+
+    /**
+     * A name has no length limit, and the activity log line that quotes it is
+     * shortened rather than allowed to fail the save it records.
+     */
+    public function test_a_very_long_form_name_saves_and_is_logged(): void
+    {
+        $name = trim(str_repeat('Campus Placement Drive Registration ', 25));   // ~900 characters
+
+        $this->signedIn()->post(route('backend.forms.store'), $this->payload([
+            'name'   => $name,
+            'fields' => ['f0' => $this->field()],
+        ]))->assertRedirect()->assertSessionHasNoErrors();
+
+        $form = Form::latest('id')->firstOrFail();
+
+        $this->assertSame($name, $form->name);
+        $this->assertSame($name, $form->title);
+        $this->assertLessThanOrEqual(180, strlen($form->slug));
+        $this->assertStringStartsWith('campus-placement-drive-registration', $form->slug);
+
+        $log = \App\Models\ActivityLog::latest('id')->firstOrFail();
+        $this->assertLessThanOrEqual(253, mb_strlen($log->description));
     }
 
     /**

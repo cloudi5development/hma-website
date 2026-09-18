@@ -7,7 +7,7 @@ use App\Exports\FormFieldsTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Models\Form;
 use App\Services\FormImportService;
-use App\Support\FormImportSheet;
+use App\Support\UploadLimit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -51,22 +51,34 @@ class FormBulkUploadController extends Controller
 
     public function preview(Request $request): JsonResponse
     {
+        // The app sets no size limit on the sheet. The server does — PHP drops a
+        // file larger than upload_max_filesize before Laravel sees it — so when
+        // that is what happened, say so in those words rather than as a vague
+        // "did not upload".
+        $upload = $request->file('file');
+
+        if ($upload && in_array($upload->getError(), [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
+            return response()->json([
+                'message' => 'That file is larger than this server accepts (' . UploadLimit::label() . '). '
+                    . 'Ask your hosting provider to raise upload_max_filesize, or split the sheet.',
+            ], 422);
+        }
+
         $validator = Validator::make($request->all(), [
             // The extension is checked here; whether the bytes really are a
             // spreadsheet is checked by FormImportService, which opens it with
             // the Xlsx and Xls readers and nothing else. MIME sniffing alone is
             // unreliable for these — an .xlsx is a zip, and is often reported
             // as one.
-            'file'    => ['required', 'file', 'max:' . FormImportSheet::MAX_KB, function ($attribute, $value, $fail) {
+            'file'    => ['required', 'file', function ($attribute, $value, $fail) {
                 if (! in_array(strtolower((string) $value->getClientOriginalExtension()), ['xlsx', 'xls'], true)) {
                     $fail('Upload an Excel file — .xlsx or .xls.');
                 }
             }],
-            'context' => ['nullable', 'string', 'max:200000'],
+            'context' => ['nullable', 'string'],
         ], [
             'file.required' => 'Choose an Excel file to upload.',
             'file.file'     => 'The file did not upload. Try choosing it again.',
-            'file.max'      => 'That file is larger than ' . (FormImportSheet::MAX_KB / 1024) . ' MB. A template with hundreds of questions is still only a few KB — check it is the right file.',
         ]);
 
         if ($validator->fails()) {

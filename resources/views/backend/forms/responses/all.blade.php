@@ -21,7 +21,9 @@
                 {{-- Exporting needs a form: the columns are its questions, and
                      there is no shared set of columns across two different
                      forms. --}}
-                <a href="{{ route('backend.forms.responses.export-excel', $formId) }}" class="btn-brand">
+                {{-- With the search, status and date on screen, so the file holds
+                     what the page is showing — the count above says so. --}}
+                <a href="{{ route('backend.forms.responses.export-excel', [$formId] + array_filter(request()->only(['q', 'status', 'date']), 'filled')) }}" class="btn-brand">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
                     Export This Form
                 </a>
@@ -32,7 +34,7 @@
                  so in as many words. --}}
             @if ($responses->total())
                 @php
-                    $filtered = request()->hasAny(['q', 'status', 'date', 'form']);
+                    $filtered = collect(['q', 'status', 'date', 'form'])->contains(fn ($k) => filled(request($k)));
                     $scope    = $filtered
                         ? 'the ' . number_format($responses->total()) . ' response(s) these filters are showing'
                         : 'all ' . number_format($responses->total()) . ' response(s), across every form';
@@ -56,6 +58,13 @@
     <div class="hm-card mb-3">
         <div class="hm-card__body">
             <form method="GET" class="row g-2 align-items-end">
+                {{-- The search, status and page size from the toolbar ride
+                     along, so filtering by day does not quietly drop them. --}}
+                @foreach (['q', 'status', 'per_page'] as $carried)
+                    @if (filled(request($carried)))
+                        <input type="hidden" name="{{ $carried }}" value="{{ request($carried) }}">
+                    @endif
+                @endforeach
                 <div class="col-12 col-md-4">
                     <label class="form-label" for="form">Form</label>
                     <select id="form" name="form" class="form-control-hm">

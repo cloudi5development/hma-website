@@ -32,6 +32,18 @@ class FormController extends Controller
 
     public function index(Request $request): View
     {
+        // A hand-edited ?q[]=x or ?status[]=x arrives as an array, which the
+        // search, the status check and the toolbar's own inputs all take as a
+        // string — a server error for a URL typo. Read as "no filter".
+        foreach (['q', 'status', 'per_page'] as $key) {
+            if (is_array($request->input($key))) {
+                $request->merge([$key => null]);
+                $request->query->remove($key);
+            }
+        }
+
+        $status = (string) $request->input('status');
+
         $forms = $this->applyTableFilters(
                 Form::query()->withCount(['fields', 'responses']),
                 ['name', 'title', 'slug'],
@@ -40,8 +52,8 @@ class FormController extends Controller
                 statusColumn: null,
             )
             ->when(
-                array_key_exists($request->input('status'), Form::STATUSES),
-                fn ($q) => $q->where('status', $request->input('status')),
+                array_key_exists($status, Form::STATUSES),
+                fn ($q) => $q->where('status', $status),
             )
             ->latest('id')
             ->paginate($this->perPage())->withQueryString();
@@ -179,7 +191,6 @@ class FormController extends Controller
     {
         $data = $request->validate(FormBuilderRequest::settingRules());
 
-        $data['allow_multiple'] = $request->boolean('allow_multiple');
         $data['notify_enabled'] = $request->boolean('notify_enabled');
 
         $this->builder->saveSettings($form, $data);
@@ -193,7 +204,9 @@ class FormController extends Controller
     {
         // Uploads live outside the database, so the rows cascading is not enough
         // — the files have to be swept before the responses go.
-        foreach ($form->responses()->with('values')->cursor() as $response) {
+        // lazy(), not cursor(): cursor() ignores with(), which made this one
+        // query per response. lazy() streams in chunks and eager-loads each.
+        foreach ($form->responses()->with('values')->lazy() as $response) {
             FormSubmissionService::deleteUploads($response);
         }
 
@@ -259,7 +272,7 @@ class FormController extends Controller
     {
         $form->load(['fields.options', 'fields.rows', 'fields.columns']);
 
-        $validator = $submissions->validator($form, $request->all(), $request->allFiles());
+        $validator = $submissions->validator($form, $submissions->normalise($form, $request->all()), $request->allFiles());
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput()

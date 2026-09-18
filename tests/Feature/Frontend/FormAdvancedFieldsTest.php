@@ -33,7 +33,6 @@ class FormAdvancedFieldsTest extends TestCase
             'status'          => Form::PUBLISHED,
             'submit_label'    => 'Submit',
             'success_message' => 'Thanks.',
-            'allow_multiple'  => 1,
             'fields'          => $fields,
         ]);
     }
@@ -166,6 +165,52 @@ class FormAdvancedFieldsTest extends TestCase
         $this->submit($form, ['rate_us' => 5])->assertSessionHasNoErrors();
 
         $this->assertSame('5', $this->answers()['rate_us']->value);
+    }
+
+    /* ============================== NO CEILINGS ============================
+       A scale used to stop at 0–10 and a rating at 10 icons. Neither does now;
+       what is left is what makes the question make sense — a scale's top above
+       its bottom, and a rating of at least two. */
+
+    public function test_a_scale_and_a_rating_go_as_far_as_the_admin_sets(): void
+    {
+        $form = $this->form([
+            ['field_type' => FormFieldType::LINEAR_SCALE, 'label' => 'Score', 'scale_min' => -5, 'scale_max' => 100],
+            ['field_type' => FormFieldType::RATING, 'label' => 'Stars', 'rating_count' => 20],
+        ]);
+
+        [$scale, $rating] = [$form->fields[0], $form->fields[1]];
+
+        $this->assertSame(-5, $scale->scaleMin());
+        $this->assertSame(100, $scale->scaleMax());
+        $this->assertCount(106, $scale->scaleSteps());
+        $this->assertSame(20, $rating->ratingCount());
+
+        $this->submit($form, ['score' => 101, 'stars' => 20])->assertSessionHasErrors('score');
+        $this->submit($form, ['score' => 87, 'stars' => 21])->assertSessionHasErrors('stars');
+        $this->submit($form, ['score' => 87, 'stars' => 20])->assertSessionHasNoErrors();
+
+        $this->assertSame('87', $this->answers()['score']->value);
+        $this->assertSame('20', $this->answers()['stars']->value);
+    }
+
+    public function test_the_builder_accepts_a_scale_and_rating_past_the_old_ceilings(): void
+    {
+        $admin = User::where('is_super_admin', true)->firstOrFail();
+
+        $this->withSession(['admin_logged_in' => true, 'admin_id' => $admin->id])
+            ->post(route('backend.forms.store'), [
+                'name' => 'Wide ranges', 'status' => Form::DRAFT,
+                'fields' => [
+                    'f0' => ['field_type' => FormFieldType::LINEAR_SCALE, 'label' => 'Score', 'scale_min' => 0, 'scale_max' => 50],
+                    'f1' => ['field_type' => FormFieldType::RATING, 'label' => 'Stars', 'rating_count' => 15],
+                ],
+            ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $fields = Form::where('name', 'Wide ranges')->firstOrFail()->fields;
+
+        $this->assertSame(50, $fields[0]->scaleMax());
+        $this->assertSame(15, $fields[1]->ratingCount());
     }
 
     /* ========================= MULTIPLE-CHOICE GRID ======================== */
@@ -335,7 +380,7 @@ class FormAdvancedFieldsTest extends TestCase
 
         app(FormBuilderService::class)->save([
             'name' => 'Feedback', 'title' => 'Tell us how we did', 'slug' => 'feedback',
-            'status' => Form::PUBLISHED, 'allow_multiple' => 1,
+            'status' => Form::PUBLISHED,
             'fields' => [[
                 'id' => $field->id, 'field_type' => FormFieldType::DROPDOWN, 'label' => 'Rate each area',
                 'options' => [['label' => 'Good', 'value' => 'good']],

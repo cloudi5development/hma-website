@@ -87,19 +87,33 @@ class FormBuilderTree
                     ->unique('id');
             }
 
-            $page['sections'] = self::sectionsFor($sections, $page['id'], $mine);
+            $page['sections'] = self::sectionsFor($sections, $page['id'], $mine, self::newSectionRef($i, $page['ref']));
         }
 
         return $pageRows;
     }
 
+    /**
+     * The ref for the unsaved section a page is given when it has none — which
+     * is every page of a Multi-Page form, since that shape keeps no sections.
+     *
+     * One per PAGE. They all used to be "s0", so the moment such a form was
+     * switched to Multi-Page + Sections the posted sections[s0] of each page
+     * overwrote the last, and every question on every page was saved into the
+     * one section that survived — on the last page.
+     */
+    private static function newSectionRef(int $pageIndex, string $pageRef): string
+    {
+        return $pageIndex === 0 ? self::NEW_SECTION : self::NEW_SECTION . $pageRef;
+    }
+
     /** One page's sections, each carrying its questions. */
-    private static function sectionsFor($sections, ?int $pageId, $fields): array
+    private static function sectionsFor($sections, ?int $pageId, $fields, string $newRef = self::NEW_SECTION): array
     {
         $mine = $sections->filter(fn ($s) => $s->form_page_id === $pageId)->values();
 
         if ($mine->isEmpty()) {
-            return [self::section(self::NEW_SECTION, null, '', '', self::rows($fields))];
+            return [self::section($newRef, null, '', '', self::rows($fields))];
         }
 
         $ids  = $mine->pluck('id')->all();
@@ -159,15 +173,18 @@ class FormBuilderTree
             $pages = [self::NEW_PAGE => []];
         }
 
-        $out = [];
+        $out   = [];
+        $index = 0;
 
         foreach ($pages as $ref => $page) {
             $ref  = (string) $ref;
             $mine = array_filter($sections, fn ($s) => (string) ($s['page_ref'] ?? self::NEW_PAGE) === $ref);
 
             if ($mine === []) {
-                $mine = [self::NEW_SECTION => []];
+                $mine = [self::newSectionRef($index, $ref) => []];
             }
+
+            $index++;
 
             $rows = [];
 
@@ -176,7 +193,7 @@ class FormBuilderTree
 
                 $rows[] = self::section(
                     $sectionRef,
-                    isset($section['id']) ? (int) $section['id'] : null,
+                    isset($section['id']) && $section['id'] !== '' ? (int) $section['id'] : null,
                     (string) ($section['title'] ?? ''),
                     (string) ($section['description'] ?? ''),
                     array_filter(
@@ -186,12 +203,18 @@ class FormBuilderTree
                 );
             }
 
-            $out[] = self::page(
+            // Assigned, not added with `+`: page() already carries an empty
+            // 'sections', and an array union keeps the LEFT side's key — so the
+            // sections (and every question in them) were silently dropped, and
+            // a failed save redrew the builder empty.
+            $built             = self::page(
                 $ref,
-                isset($page['id']) ? (int) $page['id'] : null,
+                isset($page['id']) && $page['id'] !== '' ? (int) $page['id'] : null,
                 (string) ($page['title'] ?? ''),
                 (string) ($page['description'] ?? ''),
-            ) + ['sections' => $rows];
+            );
+            $built['sections'] = $rows;
+            $out[]             = $built;
         }
 
         return $out;

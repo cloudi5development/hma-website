@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
  * The row carries nothing about the questions — those are FormFields. What it
  * owns is the form's identity (name, title, slug), whether the public page is
  * live, and the settings that decide what happens around a submission: the
- * button text, the thank-you message, the caps, the notification.
+ * button text, the thank-you message, the notification.
  */
 class Form extends Model
 {
@@ -85,13 +85,16 @@ class Form extends Model
      * Every default here is a real answer rather than a blank: a form saved
      * without touching the settings tab still has a submit button that says
      * something and a message that thanks the person who filled it in.
+     *
+     * There is no submission cap and no "one response per person" any more —
+     * both were removed along with every other limit on the module. A form
+     * that is published takes every response it is sent. Values of either key
+     * still stored on an older form are simply not read.
      */
     public const SETTING_DEFAULTS = [
         'submit_label'     => 'Submit',
         'success_message'  => 'Thank you! Your response has been submitted successfully.',
         'redirect_url'     => null,
-        'allow_multiple'   => true,
-        'max_submissions'  => null,
         'closed_message'   => 'This form is currently closed.',
         'notify_enabled'   => false,
         'notify_emails'    => null,
@@ -192,18 +195,6 @@ class Form extends Model
         return $this->setting('redirect_url');
     }
 
-    public function getAllowsMultipleAttribute(): bool
-    {
-        return (bool) $this->setting('allow_multiple');
-    }
-
-    public function getMaxSubmissionsAttribute(): ?int
-    {
-        $max = $this->setting('max_submissions');
-
-        return $max ? (int) $max : null;
-    }
-
     /**
      * Where a submission notification is sent. Blank when notifications are off
      * or no address was given, and the caller then sends nothing.
@@ -273,14 +264,6 @@ class Form extends Model
         return \App\Support\FormLayout::for($this);
     }
 
-    /** How many more submissions the cap allows, or null when uncapped. */
-    public function remainingSubmissions(): ?int
-    {
-        $max = $this->max_submissions;
-
-        return $max === null ? null : max(0, $max - $this->responses()->count());
-    }
-
     /**
      * Whether the public page will take a submission right now, and why not.
      *
@@ -288,19 +271,15 @@ class Form extends Model
      * handler have to agree — a form that renders a submit button and then
      * refuses the submission is the worst of both.
      *
+     * Being published is the only condition. There is no cap on how many
+     * responses a form takes, and nobody is turned away for having answered
+     * before.
+     *
      * @return array{0: bool, 1: ?string}  [accepting, reason when it is not]
      */
     public function submissionState(): array
     {
-        if (! $this->isPublished()) {
-            return [false, $this->closed_message];
-        }
-
-        if ($this->remainingSubmissions() === 0) {
-            return [false, $this->closed_message];
-        }
-
-        return [true, null];
+        return $this->isPublished() ? [true, null] : [false, $this->closed_message];
     }
 
     public function getStatusLabelAttribute(): string
@@ -331,7 +310,10 @@ class Form extends Model
      */
     public static function uniqueSlug(?string $source, ?int $ignoreId = null): string
     {
-        $base = Str::slug((string) $source) ?: 'form';
+        // A form's name has no length limit, but its link lives in a 255-wide
+        // unique column and has to stay something a person can share — so a
+        // long name makes a link from its opening words. The name is untouched.
+        $base = trim(Str::limit(Str::slug((string) $source), 180, ''), '-') ?: 'form';
         $slug = $base;
         $n    = 1;
 

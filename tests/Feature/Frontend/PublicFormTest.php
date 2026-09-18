@@ -44,7 +44,6 @@ class PublicFormTest extends TestCase
             'status'          => Form::PUBLISHED,
             'submit_label'    => 'Submit',
             'success_message' => 'Thank you! Your response has been submitted successfully.',
-            'allow_multiple'  => 1,
             'fields'          => $fields,
         ]);
     }
@@ -305,6 +304,36 @@ class PublicFormTest extends TestCase
             ->assertSessionHasErrors('doc');
     }
 
+    /**
+     * With no size of its own, a file question takes whatever the server takes.
+     * The module used to stop at 10 MB whatever php.ini said.
+     */
+    public function test_a_file_question_with_no_size_set_is_bounded_only_by_the_server(): void
+    {
+        Storage::fake('local');
+
+        $form  = $this->form([$this->field(['label' => 'Doc', 'field_type' => FormFieldType::FILE, 'file_types' => ['pdf']])]);
+        $field = $form->fields->first();
+
+        $this->assertSame(\App\Support\UploadLimit::kilobytes(), $field->maxFileKb());
+
+        // An admin's own size is honoured up to what the server can take.
+        $this->assertSame(
+            \App\Support\UploadLimit::kilobytes(),
+            $this->form([$this->field(['label' => 'Doc', 'field_type' => FormFieldType::FILE, 'max_file_size_kb' => PHP_INT_MAX])], ['slug' => 'huge'])
+                ->fields->first()->maxFileKb(),
+        );
+
+        if (\App\Support\UploadLimit::kilobytes() <= 12 * 1024) {
+            $this->markTestSkipped('This server takes no more than 12 MB, so the 10 MB cap cannot be shown to be gone.');
+        }
+
+        $this->submit($form, ['doc' => UploadedFile::fake()->create('big.pdf', 12 * 1024, 'application/pdf')])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(1, FormResponse::count());
+    }
+
     /* ========================= CONDITIONAL LOGIC ========================== */
 
     public function test_a_field_hidden_by_its_condition_is_not_required(): void
@@ -347,7 +376,7 @@ class PublicFormTest extends TestCase
         $this->assertArrayNotHasKey('years', FormResponse::firstOrFail()->keyed());
     }
 
-    /* ============================== LIMITS ================================ */
+    /* ============================= AVAILABILITY ============================ */
 
     public function test_a_disabled_form_refuses_a_submission_posted_straight_at_it(): void
     {
@@ -358,30 +387,57 @@ class PublicFormTest extends TestCase
         $this->assertSame(0, FormResponse::count());
     }
 
-    public function test_a_form_closes_itself_once_its_limit_is_reached(): void
+    /**
+     * A published form takes every response it is sent: no response cap, no
+     * one-per-visitor rule, no rate limit. The settings that used to switch
+     * those on are ignored if they are still in an old form's JSON.
+     */
+    public function test_a_published_form_takes_any_number_of_responses_from_the_same_visitor(): void
     {
-        $form = $this->form([$this->field(['label' => 'Name'])], ['max_submissions' => 2]);
+        $form = $this->form([$this->field(['label' => 'Name'])]);
+        $form->update(['settings' => $form->settings + ['max_submissions' => 2, 'allow_multiple' => false]]);
 
-        $this->submit($form, ['name' => 'One'])->assertSessionHasNoErrors();
-        $this->submit($form, ['name' => 'Two'])->assertSessionHasNoErrors();
-        $this->submit($form, ['name' => 'Three'])->assertSessionHas('form_error');
+        // Past the old throttle of 20 a minute, from one session and one IP.
+        for ($i = 1; $i <= 30; $i++) {
+            $this->submit($form, ['name' => "Student {$i}"])
+                ->assertSessionHasNoErrors()
+                ->assertSessionMissing('form_error');
+        }
 
-        $this->assertSame(2, FormResponse::count());
+        $this->assertSame(30, FormResponse::count());
+
+        // A new visitor — the last submit's thank-you flash would otherwise
+        // stand in for the form.
+        $this->flushSession();
 
         $this->get(route('frontend.form.show', $form->slug))
             ->assertOk()
-            ->assertSee($form->closed_message);
+            ->assertDontSee($form->closed_message)
+            ->assertSee('name="name"', false);
     }
 
-    public function test_multiple_submissions_can_be_turned_off(): void
+    public function test_an_answer_of_any_length_is_stored_whole(): void
     {
-        $form = $this->form([$this->field(['label' => 'Name'])], ['allow_multiple' => 0]);
+        $form = $this->form([
+            $this->field(['label' => 'Name']),
+            $this->field(['label' => 'Essay', 'field_type' => FormFieldType::LONG_TEXT]),
+            $this->field(['label' => 'Email', 'field_type' => FormFieldType::EMAIL]),
+        ]);
 
-        $this->submit($form, ['name' => 'Arun'])->assertSessionHasNoErrors();
-        $this->submit($form, ['name' => 'Arun again'])->assertSessionHas('form_error');
+        $essay = str_repeat('Every word of this answer matters. ', 800);   // ~28,000 characters
+        $name  = str_repeat('Arun ', 100);
+        $email = str_repeat('a', 200) . '@example.com';
 
-        $this->assertSame(1, FormResponse::count());
+        $this->submit($form, ['name' => $name, 'essay' => $essay, 'email' => $email])
+            ->assertSessionHasNoErrors();
+
+        $values = FormResponseValue::pluck('value', 'field_key');
+
+        $this->assertSame(trim($essay), $values['essay']);
+        $this->assertSame(trim($name), $values['name']);
+        $this->assertSame($email, $values['email']);
     }
+
 
     public function test_a_redirect_is_followed_when_one_is_configured(): void
     {
@@ -409,8 +465,9 @@ class PublicFormTest extends TestCase
 
         $this->assertNotNull($route);
         $this->assertContains('web', $route->gatherMiddleware());
-        // ...and rate-limited, so the endpoint cannot be hammered.
-        $this->assertContains('throttle:20,1', $route->gatherMiddleware());
+        // Not rate-limited, on purpose: a class or workshop submits from one
+        // shared connection. The honeypot and CSRF are what guard it.
+        $this->assertEmpty(array_filter($route->gatherMiddleware(), fn ($m) => is_string($m) && str_starts_with($m, 'throttle')));
 
         $form = $this->form([$this->field(['label' => 'Name'])]);
 

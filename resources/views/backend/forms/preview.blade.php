@@ -31,7 +31,10 @@
                  style="width:22px;height:22px;flex-shrink:0;color:#A6741F" aria-hidden="true">
                 <circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>
             </svg>
-            <div>
+            {{-- min-width:0 lets this flex item shrink below the hint's 500px
+                 preferred width, so the note wraps on a phone instead of
+                 pushing the page sideways. --}}
+            <div style="flex:1;min-width:0">
                 <p style="margin:0 0 4px;font-weight:600;color:var(--ink,#2E2620)">This is a preview.</p>
                 <p class="form-hint" style="margin:0">
                     Try it exactly as a visitor would — the validation you configured runs for real.

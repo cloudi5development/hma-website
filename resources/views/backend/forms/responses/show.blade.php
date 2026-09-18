@@ -36,9 +36,14 @@
                                              since. --}}
                                         <td style="width:220px;color:#6b6357;vertical-align:top">
                                             {{ $value->field_label }}
-                                            @unless ($value->field)
+                                            {{-- The relation loads removed
+                                                 (soft-deleted) questions too, so
+                                                 "removed" means trashed — a
+                                                 missing row almost never
+                                                 happens. --}}
+                                            @if (! $value->field || $value->field->trashed())
                                                 <span class="hm-table__sub d-block">(field since removed)</span>
-                                            @endunless
+                                            @endif
                                         </td>
                                         <td>
                                             @if ($value->isFile())
@@ -89,8 +94,7 @@
                          after they submitted. Named rather than left as a silent
                          gap, so a blank column in the export is explainable. --}}
                     @php
-                        $answered = $response->values->pluck('field_key')->all();
-                        $missing  = $form->fields->reject(fn ($f) => in_array($f->field_key, $answered, true));
+                        $missing = $form->fields->reject(fn ($f) => $response->answerFor($f) !== null);
                     @endphp
                     @if ($missing->isNotEmpty())
                         <p class="form-hint" style="margin:16px 0 0">

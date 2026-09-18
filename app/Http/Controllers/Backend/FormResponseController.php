@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\Exports\ArrayExport;
+use App\Exports\FormResponsesExport;
 use App\Http\Controllers\Backend\Concerns\HandlesTableQuery;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
@@ -44,6 +44,8 @@ class FormResponseController extends Controller
      */
     public function all(Request $request): View
     {
+        $this->scalarFilters($request);
+
         $formId = $request->integer('form');
 
         $responses = $this->filteredAcrossForms($request)
@@ -62,6 +64,8 @@ class FormResponseController extends Controller
 
     public function index(Request $request, Form $form): View
     {
+        $this->scalarFilters($request);
+
         $responses = $this->filtered($request, $form)
             // The field's choices ride along because an answer is displayed by
             // its label — without them that is a query per answer.
@@ -152,6 +156,8 @@ class FormResponseController extends Controller
     /** Clear one form's responses. */
     public function clear(Request $request, Form $form): RedirectResponse
     {
+        $this->scalarFilters($request);
+
         $deleted = $this->deleteMatching($this->filtered($request, $form));
 
         ActivityLog::record('Responses Cleared', "{$deleted} response(s) of form “{$form->name}” deleted");
@@ -164,6 +170,8 @@ class FormResponseController extends Controller
     /** Clear responses across every form, or across the one being filtered to. */
     public function clearAll(Request $request): RedirectResponse
     {
+        $this->scalarFilters($request);
+
         $deleted = $this->deleteMatching($this->filteredAcrossForms($request));
 
         ActivityLog::record('Responses Cleared', "{$deleted} response(s) deleted from the Responses screen");
@@ -238,12 +246,42 @@ class FormResponseController extends Controller
 
         return response()->streamDownload(function () use ($headings, $rows) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, $headings);
+
+            // A byte-order mark, so Excel opens the file as UTF-8. Without it
+            // Excel assumes the local code page, and every name with an accent,
+            // every ₹ and every curly quote a visitor typed arrives garbled.
+            fwrite($out, "\xEF\xBB\xBF");
+
+            fputcsv($out, array_map(fn ($cell) => self::csvCell($cell), $headings));
             foreach ($rows as $row) {
-                fputcsv($out, $row);
+                fputcsv($out, array_map(fn ($cell) => self::csvCell($cell), $row));
             }
             fclose($out);
-        }, $filename, ['Content-Type' => 'text/csv']);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /**
+     * One CSV cell, made safe to open in a spreadsheet.
+     *
+     * Every answer here was typed by the public. A cell beginning with = + - or
+     * @ is run as a FORMULA when the file is opened in Excel — so an answer of
+     * =HYPERLINK("https://…?"&B2,"open") would build a link out of other
+     * people's answers. The usual defence: a leading apostrophe, which a
+     * spreadsheet reads as "this is text". A phone number or plain number
+     * ("+91 98765 43210", "-5") is left alone: there is nothing to run in it.
+     */
+    private static function csvCell(mixed $value): mixed
+    {
+        if (! is_string($value) || $value === '') {
+            return $value;
+        }
+
+        if (in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true)
+            && ! preg_match('/^[+-]?[\d\s().\-]+$/', $value)) {
+            return "'" . $value;
+        }
+
+        return $value;
     }
 
     public function exportExcel(Request $request, Form $form): BinaryFileResponse
@@ -251,7 +289,7 @@ class FormResponseController extends Controller
         [$headings, $rows] = $this->exportData($request, $form);
 
         return Excel::download(
-            new ArrayExport($headings, $rows),
+            new FormResponsesExport($headings, $rows),
             $form->slug . '-responses-' . now()->format('Y-m-d-His') . '.xlsx',
         );
     }
@@ -269,25 +307,55 @@ class FormResponseController extends Controller
      */
     private function exportData(Request $request, Form $form): array
     {
-        $fields   = $form->fields;
-        $headings = ['ID', ...$fields->pluck('label')->all(), 'Status', 'Submitted'];
+        $this->scalarFilters($request);
+
+        // The live questions, then any that were removed while they held
+        // answers. The builder keeps those (soft-deleted) precisely so their
+        // answers stay readable — and the response page shows them — so an
+        // export that left them out silently dropped part of what was collected.
+        $fields = $form->fields->concat(
+            $form->allFields()->onlyTrashed()->get()
+        );
+
+        $headings = ['ID', ...$fields->map(fn ($f) => $f->trashed() ? $f->label . ' (removed)' : $f->label)->all(), 'Status', 'Submitted'];
 
         $rows = [];
 
-        $this->filtered($request, $form)->with(FormResponse::WITH_ANSWERS)->chunkById(500, function ($responses) use ($fields, &$rows) {
-            foreach ($responses as $response) {
-                $keyed = $response->keyed();
-
-                $rows[] = [
-                    $response->id,
-                    ...$fields->map(fn ($field) => $keyed[$field->field_key]->display ?? '')->all(),
-                    $response->status,
-                    ($response->submitted_at ?? $response->created_at)->format('Y-m-d H:i'),
-                ];
-            }
-        });
+        // Newest first, paged on the id itself. The filter orders by
+        // submitted_at, and chunkById pages with "id > last id seen" while
+        // keeping that order — so every chunk after the first re-read the
+        // newest rows: 1,200 responses exported as 999 rows, 499 of them twice
+        // and the oldest 700 missing. reorder() + chunkByIdDesc walks the
+        // table once, in one order, with nothing skipped.
+        $this->filtered($request, $form)->reorder()->with(FormResponse::WITH_ANSWERS)
+            ->chunkByIdDesc(500, function ($responses) use ($fields, &$rows) {
+                foreach ($responses as $response) {
+                    $rows[] = [
+                        $response->id,
+                        ...$fields->map(fn ($field) => $response->answerFor($field)?->display ?? '')->all(),
+                        $response->status,
+                        ($response->submitted_at ?? $response->created_at)->format('Y-m-d H:i'),
+                    ];
+                }
+            });
 
         return [$headings, $rows];
+    }
+
+    /**
+     * The filter parameters, as the plain strings every query and view here
+     * expects. A hand-edited URL such as ?q[]=x or ?status[]=x arrived as an
+     * array and turned the whole screen into a server error; it is read as
+     * "no filter" instead.
+     */
+    private function scalarFilters(Request $request): void
+    {
+        foreach (['q', 'status', 'date', 'form', 'per_page'] as $key) {
+            if (is_array($request->input($key))) {
+                $request->merge([$key => null]);
+                $request->query->remove($key);
+            }
+        }
     }
 
     /* ================================ SHARED =============================== */

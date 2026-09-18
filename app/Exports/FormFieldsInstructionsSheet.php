@@ -32,7 +32,8 @@ class FormFieldsInstructionsSheet implements FromArray, WithTitle, WithEvents
                 "3.  {$question} is the question people will read.",
                 '4.  Choose a Type from the dropdown. Quiz questions are usually Multiple choice; the “Field Types” sheet lists them all.',
                 '5.  Required must be Yes or No.',
-                '6.  Use | to separate the options, e.g.  PHP | Laravel | React | Java',
+                '6.  Put the choices in the Options column. Use | between them, e.g.  PHP | Laravel | React | Java',
+                '     — or put each one on its own line in the cell (Alt+Enter). Not commas: a comma stays part of the choice.',
                 '7.  Every Multiple choice question needs a Correct Answer, and it must match one of its options exactly.',
                 '     Only one correct answer is allowed per question.',
                 '8.  Do not rename the column headers.',
@@ -43,7 +44,9 @@ class FormFieldsInstructionsSheet implements FromArray, WithTitle, WithEvents
                 '3.  Choose a Type from the dropdown. The “Field Types” sheet explains each one.',
                 '4.  Required must be Yes or No.',
                 '5.  Placeholder is the grey hint shown inside a text box before anyone types. Leave it blank if you do not need one.',
-                '6.  Use | to separate multiple options, e.g.  Male | Female | Other',
+                '6.  Drop-down, Multiple choice and Checkboxes need their choices in the Options column (the last one).',
+                '     Use | between them, e.g.  Male | Female | Other — or put each on its own line in the cell (Alt+Enter).',
+                '     Not commas: a comma stays part of the choice.',
                 '7.  Do not rename the column headers.',
             ];
 
@@ -60,9 +63,8 @@ class FormFieldsInstructionsSheet implements FromArray, WithTitle, WithEvents
                 ['     Multiple-choice grid and Tick box grid need rows and columns. Write them in Options as:'],
                 ['     Rows: Product | Support ; Columns: Poor | Good | Excellent'],
                 [''],
-                ['Limits'],
-                ['     Up to ' . FormImportSheet::MAX_ROWS . " questions per file. {$question} up to 190 characters"
-                    . ($this->quiz ? '.' : ', Description up to 500.')],
+                ['Good to know'],
+                ['     There is no limit on how many questions a file may hold, or on how long any text may be.'],
                 ['     Type plain text only — cells containing formulas are refused.'],
                 [''],
                 ['Nothing is saved when you upload. You will see every row checked first, and the questions are added'],
@@ -84,7 +86,7 @@ class FormFieldsInstructionsSheet implements FromArray, WithTitle, WithEvents
                 foreach ($sheet->getRowIterator() as $row) {
                     $cell = $sheet->getCell('A' . $row->getRowIndex());
 
-                    if (in_array($cell->getValue(), ['Where the questions go', 'Grids', 'Limits'], true)) {
+                    if (in_array($cell->getValue(), ['Where the questions go', 'Grids', 'Good to know'], true)) {
                         $cell->getStyle()->getFont()->setBold(true)->setSize(12);
                     }
                 }

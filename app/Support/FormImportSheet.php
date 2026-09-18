@@ -3,7 +3,6 @@
 namespace App\Support;
 
 use App\Models\FormField;
-use App\Services\FormBuilderService;
 
 /**
  * What a Form Builder bulk-upload spreadsheet looks like.
@@ -85,14 +84,11 @@ class FormImportSheet
 
     public const OPTION_SEPARATOR = '|';
 
-    /** Rows per file. One file can fill a form, and no more. */
-    public const MAX_ROWS = FormBuilderService::MAX_FIELDS;
-
-    /** Upload ceiling in kilobytes. A 200-question sheet is a few dozen KB. */
-    public const MAX_KB = 2048;
-
-    /** The widest the reader looks. Ten columns are used; the slack is for extras. */
-    public const MAX_COLUMNS = 26;
+    /*
+     * No ceiling on rows, file size, or how long a cell may be. The only size
+     * limit left on an upload is the server's own (upload_max_filesize and
+     * post_max_size in php.ini), which PHP applies before this code runs.
+     */
 
     /* =============================== HEADINGS ============================== */
 

@@ -86,15 +86,16 @@ Route::post('/event-registration', [EventRegistrationController::class, 'store']
 | only thing that varies, so a new form is published from the panel and needs
 | no deploy — there is deliberately no route per form.
 |
-| The POST is throttled: a public endpoint that writes a row and can send an
-| email is exactly what a bot looks for. 20 a minute per IP is far above what
-| a person filling in a form does and far below what floods a table.
+| The POST is NOT rate-limited. It was, at 20 a minute per IP, and that is a
+| ceiling a room full of people reaches on its own: a workshop or a classroom
+| sitting a quiz on one Wi-Fi network is one address to the server, and the
+| twenty-first person to press Submit was turned away. Bots are met by the
+| honeypot field and the CSRF token instead — see PublicFormController.
 |
 */
 Route::get('/forms/{slug}', [\App\Http\Controllers\Frontend\PublicFormController::class, 'show'])
     ->name('frontend.form.show');
 Route::post('/forms/{slug}', [\App\Http\Controllers\Frontend\PublicFormController::class, 'submit'])
-    ->middleware('throttle:20,1')
     ->name('frontend.form.submit');
 
 // Content Management pages. Declared one by one rather than as /{key} so the

@@ -33,27 +33,37 @@ class FormBuilderRequest extends FormRequest
      *
      * Split out because the settings are no longer edited on the builder — the
      * create and edit screens ask for a name, a description and the questions,
-     * and nothing else. They are edited on the form's own page instead, and
-     * FormController::updateSettings validates against this same list rather
-     * than keeping a second copy that drifts.
+     * and nothing else. FormController::updateSettings validates against this
+     * same list rather than keeping a second copy that drifts.
+     *
+     * No lengths, and no submission cap or one-response-per-person setting:
+     * those were limits, and the module has none.
      */
     public static function settingRules(): array
     {
         return [
-            'submit_label'    => ['nullable', 'string', 'max:60'],
-            'success_message' => ['nullable', 'string', 'max:500'],
+            'submit_label'    => ['nullable', 'string'],
+            'success_message' => ['nullable', 'string'],
             // A relative path is refused: this is put in a Location header, and
-            // "javascript:..." must never reach one.
-            'redirect_url'    => ['nullable', 'url', 'max:500'],
-            'allow_multiple'  => ['nullable', 'boolean'],
-            'max_submissions' => ['nullable', 'integer', 'min:1', 'max:1000000'],
-            'closed_message'  => ['nullable', 'string', 'max:500'],
+            // "javascript:..." must never reach one. That is safety, not a limit.
+            'redirect_url'    => ['nullable', 'url'],
+            'closed_message'  => ['nullable', 'string'],
             'notify_enabled'  => ['nullable', 'boolean'],
-            'notify_emails'   => ['nullable', 'string', 'max:500'],
-            'notify_subject'  => ['nullable', 'string', 'max:190'],
+            'notify_emails'   => ['nullable', 'string'],
+            'notify_subject'  => ['nullable', 'string'],
         ];
     }
 
+    /**
+     * NO LIMITS. Nothing an admin writes has a length cap, and nothing they add
+     * has a count cap — questions, choices, pages, sections. What is checked is
+     * shape: a real field type, a whole number where one is needed, a correct
+     * answer that is one of the question's options.
+     *
+     * The few `max:` rules left are on values the admin never types — the
+     * builder's own row references, and a derived storage key and link that
+     * live in fixed-width, indexed columns.
+     */
     public function rules(): array
     {
         $id = $this->route('form')?->id;
@@ -61,14 +71,13 @@ class FormBuilderRequest extends FormRequest
         // The settings rules ride along so a payload that does carry them (the
         // service's own tests, an API client) is still checked. The builder
         // screens no longer post any.
-        return static::settingRules() + [
-            'name'        => ['required', 'string', 'max:190'],
-            // Not asked for: the form's name is its title and its link. Still
-            // validated, because an edit screen may yet offer it.
-            'title'       => ['nullable', 'string', 'max:190'],
-            'description' => ['nullable', 'string', 'max:2000'],
+        return static::onlyForTheirTypes(static::settingRules() + [
+            'name'        => ['required', 'string'],
+            // Not asked for: the form's name is its title and its link.
+            'title'       => ['nullable', 'string'],
+            'description' => ['nullable', 'string'],
             'slug'        => [
-                'nullable', 'string', 'max:190', 'alpha_dash',
+                'nullable', 'string', 'max:180', 'alpha_dash',
                 Rule::unique('forms', 'slug')->ignore($id),
             ],
             'status'      => ['nullable', Rule::in(array_keys(Form::STATUSES))],
@@ -84,53 +93,60 @@ class FormBuilderRequest extends FormRequest
                refs are the builder's own keys for rows it has not saved yet —
                opaque strings that let a question name the page it is sitting in
                before that page has an id. */
-            'pages'                   => ['nullable', 'array', 'max:' . FormBuilderService::MAX_PAGES],
+            'pages'                   => ['nullable', 'array'],
             'pages.*.id'              => ['nullable', 'integer'],
-            'pages.*.title'           => ['nullable', 'string', 'max:190'],
-            'pages.*.description'     => ['nullable', 'string', 'max:1000'],
+            'pages.*.title'           => ['nullable', 'string'],
+            'pages.*.description'     => ['nullable', 'string'],
 
-            'sections'                => ['nullable', 'array', 'max:' . FormBuilderService::MAX_SECTIONS],
+            'sections'                => ['nullable', 'array'],
             'sections.*.id'           => ['nullable', 'integer'],
             'sections.*.page_ref'     => ['nullable', 'string', 'max:40'],
-            'sections.*.title'        => ['nullable', 'string', 'max:190'],
-            'sections.*.description'  => ['nullable', 'string', 'max:1000'],
+            'sections.*.title'        => ['nullable', 'string'],
+            'sections.*.description'  => ['nullable', 'string'],
 
             /* ------------------------------- fields ------------------------------- */
+            'fields'                     => ['nullable', 'array'],
             'fields.*.page_ref'          => ['nullable', 'string', 'max:40'],
             'fields.*.section_ref'       => ['nullable', 'string', 'max:40'],
             // Checked against the question's own options in withValidator.
-            'fields.*.correct_answer'    => ['nullable', 'string', 'max:190'],
-            'fields'                     => ['nullable', 'array', 'max:' . FormBuilderService::MAX_FIELDS],
+            'fields.*.correct_answer'    => ['nullable', 'string'],
             'fields.*.id'                => ['nullable', 'integer'],
             'fields.*.field_type'        => ['required', Rule::in(FormFieldType::keys())],
-            'fields.*.label'             => ['nullable', 'string', 'max:190'],
+            'fields.*.label'             => ['nullable', 'string'],
+            // The storage key: derived from the label and shortened by the
+            // builder service, never typed by an admin.
             'fields.*.field_key'         => ['nullable', 'string', 'max:110'],
-            'fields.*.placeholder'       => ['nullable', 'string', 'max:190'],
-            'fields.*.help_text'         => ['nullable', 'string', 'max:500'],
+            'fields.*.placeholder'       => ['nullable', 'string'],
+            'fields.*.help_text'         => ['nullable', 'string'],
             'fields.*.is_required'       => ['nullable', 'boolean'],
-            'fields.*.default_value'     => ['nullable', 'string', 'max:500'],
+            'fields.*.default_value'     => ['nullable', 'string'],
 
-            'fields.*.min_length'        => ['nullable', 'integer', 'min:0', 'max:65535'],
-            'fields.*.max_length'        => ['nullable', 'integer', 'min:1', 'max:65535'],
+            // A length or value window the admin chooses for the ANSWER. Only a
+            // floor of 0 / 1 is checked, because a negative length means nothing.
+            'fields.*.min_length'        => ['nullable', 'integer', 'min:0'],
+            'fields.*.max_length'        => ['nullable', 'integer', 'min:1'],
             'fields.*.min_value'         => ['nullable', 'numeric'],
             'fields.*.max_value'         => ['nullable', 'numeric'],
+            // The allowed file types stay a fixed list: that is what keeps a
+            // .php or .exe from being accepted — safety, not a limit.
             'fields.*.file_types'        => ['nullable', 'array'],
             'fields.*.file_types.*'      => [Rule::in(FormFieldType::ALLOWED_FILE_EXTENSIONS)],
-            'fields.*.max_file_size_kb'  => ['nullable', 'integer', 'min:1', 'max:' . FormFieldType::MAX_FILE_KB],
+            'fields.*.max_file_size_kb'  => ['nullable', 'integer', 'min:1'],
             'fields.*.multiple'          => ['nullable', 'boolean'],
 
             'fields.*.cond_field_key'    => ['nullable', 'string', 'max:110'],
             'fields.*.cond_operator'     => ['nullable', Rule::in(['equals', 'not_equals'])],
-            'fields.*.cond_value'        => ['nullable', 'string', 'max:190'],
+            'fields.*.cond_value'        => ['nullable', 'string'],
 
-            // Linear scale — the range is the admin's, within the module's floor
-            // and ceiling. Nothing here assumes 1 to 5.
-            'fields.*.scale_min'         => ['nullable', 'integer', 'min:' . FormFieldType::SCALE_FLOOR, 'max:' . FormFieldType::SCALE_CEILING],
-            'fields.*.scale_max'         => ['nullable', 'integer', 'min:' . FormFieldType::SCALE_FLOOR, 'max:' . FormFieldType::SCALE_CEILING],
-            'fields.*.scale_min_label'   => ['nullable', 'string', 'max:60'],
-            'fields.*.scale_max_label'   => ['nullable', 'string', 'max:60'],
+            // Linear scale — any whole-number range the admin likes; only that
+            // the top is above the bottom is checked, in withValidator.
+            'fields.*.scale_min'         => ['nullable', 'integer'],
+            'fields.*.scale_max'         => ['nullable', 'integer'],
+            'fields.*.scale_min_label'   => ['nullable', 'string'],
+            'fields.*.scale_max_label'   => ['nullable', 'string'],
 
-            'fields.*.rating_count'      => ['nullable', 'integer', 'min:2', 'max:' . FormFieldType::RATING_MAX_COUNT],
+            // A rating needs at least two icons to be a choice at all.
+            'fields.*.rating_count'      => ['nullable', 'integer', 'min:2'],
             'fields.*.rating_icon'       => ['nullable', Rule::in(array_keys(FormFieldType::RATING_ICONS))],
 
             'fields.*.min_date'          => ['nullable', 'date'],
@@ -138,18 +154,47 @@ class FormBuilderRequest extends FormRequest
             'fields.*.min_time'          => ['nullable', 'date_format:H:i'],
             'fields.*.max_time'          => ['nullable', 'date_format:H:i'],
 
-            'fields.*.options'           => ['nullable', 'array', 'max:' . FormBuilderService::MAX_OPTIONS],
-            'fields.*.options.*.label'   => ['nullable', 'string', 'max:190'],
-            'fields.*.options.*.value'   => ['nullable', 'string', 'max:190'],
+            'fields.*.options'           => ['nullable', 'array'],
+            'fields.*.options.*.label'   => ['nullable', 'string'],
+            'fields.*.options.*.value'   => ['nullable', 'string'],
 
             // A grid's two lists, managed exactly as options are.
-            'fields.*.rows'              => ['nullable', 'array', 'max:' . FormBuilderService::MAX_OPTIONS],
-            'fields.*.rows.*.label'      => ['nullable', 'string', 'max:190'],
-            'fields.*.rows.*.value'      => ['nullable', 'string', 'max:190'],
-            'fields.*.columns'           => ['nullable', 'array', 'max:' . FormBuilderService::MAX_OPTIONS],
-            'fields.*.columns.*.label'   => ['nullable', 'string', 'max:190'],
-            'fields.*.columns.*.value'   => ['nullable', 'string', 'max:190'],
-        ];
+            'fields.*.rows'              => ['nullable', 'array'],
+            'fields.*.rows.*.label'      => ['nullable', 'string'],
+            'fields.*.rows.*.value'      => ['nullable', 'string'],
+            'fields.*.columns'           => ['nullable', 'array'],
+            'fields.*.columns.*.label'   => ['nullable', 'string'],
+            'fields.*.columns.*.value'   => ['nullable', 'string'],
+        ]);
+    }
+
+    /**
+     * A type's own settings are checked only on a question of that type.
+     *
+     * Every row posts every panel — a question's rating count is still in the
+     * page after it is switched to Short answer, just hidden — and the service
+     * keeps only the settings its type offers (FormFieldType's `validations`).
+     * Validating the hidden ones too refused a save over a box the admin could
+     * no longer see: "The fields.f805.rating_count field must be at least 2."
+     * So each is excluded unless the row's type is one that offers it.
+     */
+    private static function onlyForTheirTypes(array $rules): array
+    {
+        $offeredBy = [];
+
+        foreach (FormFieldType::TYPES as $type => $spec) {
+            foreach ($spec['validations'] ?? [] as $setting) {
+                $offeredBy[$setting][] = $type;
+            }
+        }
+
+        foreach ($offeredBy as $setting => $types) {
+            if (isset($rules["fields.*.{$setting}"])) {
+                array_unshift($rules["fields.*.{$setting}"], 'exclude_unless:fields.*.field_type,' . implode(',', $types));
+            }
+        }
+
+        return $rules;
     }
 
     /**
@@ -172,15 +217,33 @@ class FormBuilderRequest extends FormRequest
                 return;
             }
 
+            $labelled = 0;
+
             foreach ((array) $this->input('fields', []) as $key => $row) {
                 $type  = $row['field_type'] ?? null;
                 $label = trim((string) ($row['label'] ?? ''));
+
+                // A SAVED question whose text has been cleared is not an
+                // abandoned row. Dropping it deleted the question — and, when
+                // it had answers, took it off the responses table — with no
+                // confirmation, just because its text was being retyped. The
+                // bin icon is how a question is deleted.
+                if ($label === '' && filled($row['id'] ?? null)) {
+                    $validator->errors()->add(
+                        "fields.{$key}.label",
+                        'A question has no text. Type the question, or delete it with the bin icon.',
+                    );
+
+                    continue;
+                }
 
                 // An abandoned blank row is dropped on save, so it is not held to
                 // any of this either.
                 if ($label === '') {
                     continue;
                 }
+
+                $labelled++;
 
                 $filled = fn (string $list) => collect($row[$list] ?? [])
                     ->filter(fn ($item) => trim((string) ($item['label'] ?? '')) !== '')
@@ -231,6 +294,14 @@ class FormBuilderRequest extends FormRequest
                     );
                 }
             }
+
+            // Creating a form publishes it and hands out its link, so it must
+            // ask something. The Create Form dialog checks this too, but it
+            // counted a blank row — which the service then drops — as a
+            // question, and a published form with nothing in it went out.
+            if ($this->isMethod('post') && ! $this->route('form') && $labelled === 0 && $this->has('fields')) {
+                $validator->errors()->add('fields', 'Add at least one question (with its text filled in) before creating the form.');
+            }
         });
     }
 
@@ -238,10 +309,15 @@ class FormBuilderRequest extends FormRequest
     {
         $this->unpackPayload();
 
-        $this->merge([
-            'allow_multiple' => $this->boolean('allow_multiple'),
-            'notify_enabled' => $this->boolean('notify_enabled'),
-        ]);
+        // An unticked checkbox posts nothing, so a settings form that leaves
+        // "notify" off has to be told it is off. But only a SETTINGS form: this
+        // used to run on every builder save too, handing the service a
+        // notify_enabled it took as "settings were posted" — and every builder
+        // save quietly rewrote the form's settings, switching on "one response
+        // per person" on the way.
+        if ($this->hasAny(array_keys(Form::SETTING_DEFAULTS))) {
+            $this->merge(['notify_enabled' => $this->boolean('notify_enabled')]);
+        }
     }
 
     /* ============================ THE PAYLOAD ==============================
@@ -269,9 +345,6 @@ class FormBuilderRequest extends FormRequest
     /** Kept out of the flashed old input: it duplicates what is unpacked from it. */
     protected $dontFlash = ['builder_payload'];
 
-    /** Upper bound on pairs, so a hostile payload cannot build an unbounded array. */
-    private const MAX_PAYLOAD_PAIRS = 50000;
-
     /** Only these top-level names may be written from the payload. */
     private const PAYLOAD_ROOTS = ['fields', 'pages', 'sections'];
 
@@ -287,7 +360,13 @@ class FormBuilderRequest extends FormRequest
 
         $this->request->remove('builder_payload');
 
-        if (! is_array($pairs) || count($pairs) > self::MAX_PAYLOAD_PAIRS) {
+        // The builder always sends its pages and sections, even for a plain
+        // form (the page → section nesting is always in the document), so an
+        // EMPTY list is never a real save. It is what a second press of Save
+        // sent while the first was still on its way — every input already
+        // packed and disabled — and taken at its word it removed every
+        // question, page and section on the form.
+        if (! is_array($pairs) || $pairs === []) {
             $this->payloadUnreadable = true;
 
             return;
@@ -308,6 +387,24 @@ class FormBuilderRequest extends FormRequest
         // inside it.
         foreach (self::PAYLOAD_ROOTS as $root) {
             $this->request->set($root, $data[$root] ?? []);
+        }
+
+        // ...and the same on the ORIGINAL request. A form request is a copy,
+        // and when validation fails Laravel flashes the original's input as
+        // old() — which held only the JSON string, the questions themselves
+        // having been packed into it. The builder then found no old('fields')
+        // and redrew the form from the database: every unsaved question,
+        // page and section gone because one of them had an error. With the
+        // unpacked arrays here the builder redraws exactly what was posted,
+        // and the JSON (the same data again, however large) is not flashed.
+        $original = $this->container?->make('request');
+
+        if ($original instanceof \Illuminate\Http\Request && $original !== $this) {
+            $original->request->remove('builder_payload');
+
+            foreach (self::PAYLOAD_ROOTS as $root) {
+                $original->request->set($root, $data[$root] ?? []);
+            }
         }
     }
 
@@ -354,7 +451,6 @@ class FormBuilderRequest extends FormRequest
             'slug.alpha_dash'      => 'The link can only contain letters, numbers, dashes and underscores.',
             'slug.unique'          => 'Another form is already using that link. Pick a different one.',
             'redirect_url.url'     => 'The redirect must be a full URL, e.g. https://example.com/thank-you',
-            'fields.max'           => 'A form may hold at most ' . FormBuilderService::MAX_FIELDS . ' fields.',
             'fields.*.field_type.required' => 'Every field needs a type.',
             'fields.*.field_type.in'       => 'That is not a field type this builder offers.',
         ];

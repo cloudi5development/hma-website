@@ -363,7 +363,7 @@
                             <span class="fb-drop__title">Drag and drop your Excel file here</span>
                             <span class="fb-drop__or">or</span>
                             <span class="btn-brand fb-drop__btn">Choose Excel File</span>
-                            <span class="fb-drop__hint">Supported formats: .xlsx, .xls · up to {{ \App\Support\FormImportSheet::MAX_KB / 1024 }} MB · {{ \App\Support\FormImportSheet::MAX_ROWS }} questions</span>
+                            <span class="fb-drop__hint">Supported formats: .xlsx, .xls · any number of questions</span>
                         </label>
 
                         <div class="fb-file" data-bulk-chip hidden>
@@ -478,10 +478,7 @@
                 optionTpl  = document.getElementById('optionTemplate'),
                 sectionTpl = document.getElementById('sectionTemplate'),
                 pageTpl    = document.getElementById('pageTemplate'),
-                MAX          = {{ \App\Services\FormBuilderService::MAX_FIELDS }},
-                MAX_PAGES    = {{ \App\Services\FormBuilderService::MAX_PAGES }},
-                MAX_SECTIONS = {{ \App\Services\FormBuilderService::MAX_SECTIONS }},
-                active       = 0;
+                active     = 0;   // no caps: questions, pages and sections are unlimited
 
             if (!form || !shell || !pagesBox) return;
 
@@ -685,21 +682,47 @@
                 });
             }
 
+            var submitting = false;
+
             // Coming back to this page with the browser's Back button can restore
-            // it exactly as it was left — with every input still switched off.
+            // it exactly as it was left — with every input still switched off,
+            // the save still "on its way" (which silenced the unsaved-changes
+            // warning) and Create Form still reading "Creating…".
             window.addEventListener('pageshow', function () {
                 form.querySelectorAll('[data-packed]').forEach(function (input) {
                     input.disabled = false;
                     input.removeAttribute('data-packed');
                 });
+
+                submitting = false;
+                form.querySelectorAll('button[type="submit"]').forEach(function (button) { button.disabled = false; });
+
+                var create = document.getElementById('createFormBtn');
+                if (create) {
+                    create.disabled = false;
+                    create.textContent = 'Create Form';
+                }
             });
 
-            var submitting = false;
+            form.addEventListener('submit', function (e) {
+                // One save per press. A second press while the first is on its
+                // way found every input already packed and switched off, sent
+                // an empty list — and the server, taking that as "no
+                // questions", emptied the form.
+                if (submitting) {
+                    e.preventDefault();
+                    return;
+                }
 
-            form.addEventListener('submit', function () {
                 submitting = true;
                 stamp();
                 pack();
+
+                // After this event, not in it: a disabled submitter is left out
+                // of the posted data.
+                setTimeout(function () {
+                    form.querySelectorAll('button[type="submit"]').forEach(function (button) { button.disabled = true; });
+                }, 0);
             });
 
             /* ---- Per-row: which panels this field type shows -----------------
@@ -745,7 +768,8 @@
                         spec.options === 'grid' ||
                         spec.control === 'file' ||
                         spec.validations.indexOf('scale_min') !== -1 ||
-                        spec.validations.indexOf('rating_count') !== -1
+                        spec.validations.indexOf('rating_count') !== -1 ||
+                        spec.control === 'hidden'
                     );
                 }
 
@@ -951,11 +975,6 @@
 
             /* ---- Adding questions, sections and pages ------------------------ */
             function addField(section, type) {
-                if (allRows().length >= MAX) {
-                    window.alert('A form may hold at most ' + MAX + ' questions.');
-                    return null;
-                }
-
                 var host = section.querySelector('[data-fields]');
                 if (!host) return null;
 
@@ -985,11 +1004,6 @@
                 var host = page.querySelector('[data-sections]');
                 if (!host) return null;
 
-                if (sectionsOf(page).length >= MAX_SECTIONS) {
-                    window.alert('A page may hold at most ' + MAX_SECTIONS + ' sections.');
-                    return null;
-                }
-
                 host.insertAdjacentHTML('beforeend', sectionTpl.innerHTML
                     .replace(/__S__/g, ref('s'))
                     .replace(/__P__/g, page.getAttribute('data-page-ref')));
@@ -1007,11 +1021,6 @@
             }
 
             function addPage() {
-                if (pageCards().length >= MAX_PAGES) {
-                    window.alert('A form may hold at most ' + MAX_PAGES + ' pages.');
-                    return null;
-                }
-
                 pagesBox.insertAdjacentHTML('beforeend', pageTpl.innerHTML
                     .replace(/__P__/g, ref('p'))
                     .replace(/__S__/g, ref('s')));
@@ -1381,7 +1390,10 @@
                 linkPreview = document.querySelector('[data-link-preview]'),
                 base        = @json(url('/forms')) + '/';
 
-            if (nameInput && linkPreview) {
+            // Only while CREATING. A saved form's link never changes on rename
+            // (it has been shared by then), so on the edit screen the preview
+            // stays the real link instead of showing one that will not exist.
+            if (nameInput && linkPreview && document.getElementById('generateLink')) {
                 nameInput.addEventListener('input', function () {
                     // The path only — see the markup for why the absolute URL is
                     // not shown here.
@@ -1427,7 +1439,15 @@
                         return;
                     }
 
-                    if (allRows().length === 0) {
+                    // A row with no text is dropped when the form is saved, so it
+                    // does not count: counting it created a published form that
+                    // asked nothing.
+                    var asked = allRows().filter(function (row) {
+                        var label = row.querySelector('[data-row-label]');
+                        return label && label.value.trim() !== '';
+                    });
+
+                    if (asked.length === 0) {
                         if (window.hmToast) window.hmToast('Add at least one question first.', 'warning');
                         return;
                     }
@@ -1540,7 +1560,6 @@
                         review: q('[data-bulk-stage="review"]')
                     },
                     URL_PREVIEW = @json(route('backend.forms.bulk-preview')),
-                    MAX_BYTES   = {{ \App\Support\FormImportSheet::MAX_KB }} * 1024,
                     opener  = null,   // the section Bulk Upload was pressed in — every question goes here
                     context = null,   // the builder as it was when the sheet was checked
                     fields  = [],
@@ -1664,7 +1683,6 @@
                     // The server checks all of this too; saying it here saves a
                     // round trip for the obvious ones.
                     if (!/\.(xlsx|xls)$/i.test(file.name)) return fail('Upload an Excel file — .xlsx or .xls.');
-                    if (file.size > MAX_BYTES) return fail('That file is larger than ' + kb(MAX_BYTES) + '.');
 
                     status('Checking…', 'busy');
 
@@ -1686,6 +1704,12 @@
                         signal: request ? request.signal : undefined
                     })
                         .then(function (response) {
+                            // No size limit of the module's own; this is the
+                            // server refusing a request larger than post_max_size.
+                            if (response.status === 413) {
+                                throw new Error('That file is larger than this server accepts. Ask your hosting provider to raise the upload limit, or split the sheet.');
+                            }
+
                             if (response.status === 419) {
                                 throw new Error('Your session has expired. Reload the page and try again — your questions on screen are not saved yet.');
                             }
@@ -2022,10 +2046,10 @@
                     if (['_token', '_method', 'builder_payload', 'after_save'].indexOf(input.name) !== -1) return;
                     if ((input.type === 'checkbox' || input.type === 'radio') && !input.checked) return;
 
-                    parts.push(input.name + ' ' + input.value);
+                    parts.push([input.name, input.value]);
                 });
 
-                return parts.join('');
+                return JSON.stringify(parts);
             }
 
             function isDirty() {
@@ -2753,7 +2777,8 @@
             background: #FDF8F2;
         }
         .fb-correct .fb-sub__title { display: block; margin-bottom: 8px; color: #843D21; }
-        .fb-correct select { max-width: 420px; }
+        /* min(): 420px on a wide screen, never wider than the row on a phone. */
+        .fb-correct select { max-width: min(420px, 100%); }
 
         /* Questions that have just arrived from a sheet, for a moment. */
         .fb-field.is-imported {

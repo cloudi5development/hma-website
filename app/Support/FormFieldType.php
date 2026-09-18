@@ -72,8 +72,9 @@ class FormFieldType
             'icon' => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/>',
         ],
         self::MOBILE => [
+            // No length settings: a mobile number is always exactly ten digits.
             'label' => 'Mobile number', 'group' => 'Basic', 'control' => 'input', 'input' => 'tel',
-            'options' => false, 'multiple' => false, 'validations' => ['min_length', 'max_length'],
+            'options' => false, 'multiple' => false, 'validations' => [],
             'icon' => '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
         ],
         self::NUMBER => [
@@ -178,9 +179,6 @@ class FormFieldType
     /** What a file field accepts when the admin names nothing. */
     public const DEFAULT_FILE_EXTENSIONS = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
 
-    /** The ceiling on a file field, before the server's own limit is applied. */
-    public const MAX_FILE_KB = 10 * 1024;
-
     /** The two options a Yes/No field is created with. The admin may relabel them. */
     public const YES_NO_OPTIONS = [
         ['label' => 'Yes', 'value' => 'Yes'],
@@ -193,12 +191,9 @@ class FormFieldType
      */
     public const SCALE_DEFAULT_MIN = 1;
     public const SCALE_DEFAULT_MAX = 5;
-    public const SCALE_FLOOR       = 0;
-    public const SCALE_CEILING     = 10;
 
-    /** Rating defaults and the shapes a rating may be drawn with. */
+    /** Rating defaults and the shapes a rating may be drawn with. No upper count. */
     public const RATING_DEFAULT_COUNT = 5;
-    public const RATING_MAX_COUNT     = 10;
     public const RATING_ICONS = ['star' => 'Stars', 'heart' => 'Hearts', 'circle' => 'Circles'];
 
     public static function keys(): array

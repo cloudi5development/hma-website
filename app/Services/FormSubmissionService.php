@@ -44,6 +44,25 @@ class FormSubmissionService
     public const HONEYPOT = 'website_url';
 
     /**
+     * What was submitted, cleaned the way it is checked and stored.
+     *
+     * Today that is the mobile numbers: "+91 98765 43210" becomes 9876543210,
+     * so the 10-digit rule judges the number and not its formatting, and every
+     * response holds the number in one form. Run before validator() — by the
+     * live form and the preview alike.
+     */
+    public function normalise(Form $form, array $input): array
+    {
+        foreach ($form->fields as $field) {
+            if ($field->field_type === \App\Support\FormFieldType::MOBILE && array_key_exists($field->field_key, $input)) {
+                $input[$field->field_key] = FormField::normaliseMobile($input[$field->field_key]);
+            }
+        }
+
+        return $input;
+    }
+
+    /**
      * Build the validator for a form against what was submitted.
      *
      * Public so the preview can run the exact same checks without writing
@@ -292,25 +311,7 @@ class FormSubmissionService
             ->implode(' · ') ?: 'View the response';
     }
 
-    /* ============================ SPAM / LIMITS ============================ */
-
-    /**
-     * The session key remembering that this browser has already submitted.
-     *
-     * "Allow multiple submissions: No" is a convenience for the visitor, not a
-     * security control — a determined person clears their cookies. Blocking by
-     * IP instead would be stronger and worse: one college or office behind a
-     * single address would lock everyone out after the first submission.
-     */
-    public static function submittedKey(Form $form): string
-    {
-        return 'form_submitted_' . $form->id;
-    }
-
-    public static function hasSubmitted(Form $form): bool
-    {
-        return (bool) session(static::submittedKey($form));
-    }
+    /* =============================== UPLOADS =============================== */
 
     /** Delete a response's uploads. Called when the response itself is deleted. */
     public static function deleteUploads(FormResponse $response): void

@@ -29,25 +29,14 @@ use Illuminate\Support\Str;
  */
 class FormBuilderService
 {
-    /**
-     * Ceiling on questions per form. Matches the max: rule in FormBuilderRequest.
-     *
-     * Was 60 while every question travelled as a dozen-odd separate POST inputs:
-     * PHP stops reading a request at max_input_vars (1000 here, and on most
-     * hosts) and silently drops the rest, so a 50-question quiz with four
-     * options each lost its last questions on save. The builder now posts its
-     * rows as one JSON payload — see FormBuilderRequest::unpackPayload — so the
-     * number of inputs no longer caps the number of questions.
+    /*
+     * There is no ceiling on anything here — questions per form, choices per
+     * question, pages, sections. There were (60, then 200 questions; 60 choices;
+     * 20 pages; 40 sections) and they were removed on request. The one limit a
+     * form really had was PHP's max_input_vars, which silently dropped the tail
+     * of a large form; the builder now posts its rows as a single JSON payload
+     * (FormBuilderRequest::unpackPayload), so that one is gone too.
      */
-    public const MAX_FIELDS = 200;
-
-    /** Ceiling on choices under one field. */
-    public const MAX_OPTIONS = 60;
-
-    /** Ceilings on the containers. A form needing more than this is two forms. */
-    public const MAX_PAGES = 20;
-
-    public const MAX_SECTIONS = 40;
 
     /**
      * Keys a field may not take, because the submitted request already uses
@@ -116,9 +105,12 @@ class FormBuilderService
                 : Form::STANDARD;
         }
 
-        // Settings are only editable once a form exists, so a create must not
-        // wipe them and an edit that does not post them must not either.
-        if (array_key_exists('submit_label', $data) || array_key_exists('notify_enabled', $data)) {
+        // Settings are written only when settings were actually sent. The
+        // builder never sends any, and a builder save must leave them exactly
+        // as they were — it used to overwrite them, because the request slipped
+        // a notify_enabled=false into every save and this took that as "the
+        // settings were posted". See FormBuilderRequest::prepareForValidation.
+        if (array_intersect_key($data, Form::SETTING_DEFAULTS) !== []) {
             $attributes['settings'] = $this->settings($data);
         }
 
@@ -168,11 +160,7 @@ class FormBuilderService
             $settings[$key] = $data[$key] ?? null;
         }
 
-        $settings['allow_multiple']  = (bool) ($data['allow_multiple'] ?? false);
-        $settings['notify_enabled']  = (bool) ($data['notify_enabled'] ?? false);
-        $settings['max_submissions'] = filled($data['max_submissions'] ?? null)
-            ? (int) $data['max_submissions']
-            : null;
+        $settings['notify_enabled'] = (bool) ($data['notify_enabled'] ?? false);
 
         return $settings;
     }
@@ -206,7 +194,7 @@ class FormBuilderService
         $seen     = [];
         $order    = 0;
 
-        foreach (array_slice($rows, 0, self::MAX_PAGES, true) as $ref => $row) {
+        foreach ($rows as $ref => $row) {
             // Only a page this form owns may be updated by id; an id from
             // anywhere else creates a new page rather than hijacking one.
             $page = isset($row['id']) ? $existing->get((int) $row['id']) : null;
@@ -248,7 +236,7 @@ class FormBuilderService
         $seen     = [];
         $order    = 0;
 
-        foreach (array_slice($rows, 0, self::MAX_SECTIONS, true) as $ref => $row) {
+        foreach ($rows as $ref => $row) {
             // On a paged form a section belongs to a page; on a single-page one
             // it hangs off the form itself. A section whose page did not survive
             // this save belongs nowhere, and is dropped with it.
@@ -320,7 +308,29 @@ class FormBuilderService
         $keys     = [];
         $order    = 0;
 
-        foreach (array_slice($rows, 0, self::MAX_FIELDS, true) as $row) {
+        // A saved question KEEPS its storage key, whatever its text becomes.
+        // The builder never posts a key, and deriving it afresh from the label
+        // on every save meant renaming "Course" to "Preferred Course" moved it
+        // to a new key — and every answer already filed under the old one fell
+        // out of the responses table and the exports, and any condition that
+        // watched it stopped working. Two questions both called "Name" swapped
+        // keys (and so swapped their answer history) when reordered.
+        //
+        // Reserved up front, so a NEW question given the same label further up
+        // the list counts on from it ("name_2") instead of taking it.
+        $kept = [];
+
+        foreach ($rows as $row) {
+            $field = isset($row['id']) ? $existing->get((int) $row['id']) : null;
+
+            if ($field && trim((string) ($row['label'] ?? '')) !== '' && blank($row['field_key'] ?? null)) {
+                $kept[$field->id] = $field->field_key;
+            }
+        }
+
+        $keys = array_values($kept);
+
+        foreach ($rows as $row) {
             $label = trim((string) ($row['label'] ?? ''));
 
             // A row with no label is one the admin added and never filled in.
@@ -344,7 +354,9 @@ class FormBuilderService
                 'form_section_id'  => $sectionId,
                 'field_type'       => $type,
                 'label'            => $label,
-                'field_key'        => $this->uniqueKey($row, $label, $keys),
+                'field_key'        => $field && isset($kept[$field->id])
+                    ? $kept[$field->id]
+                    : $this->uniqueKey($row, $label, $keys),
                 'placeholder'      => trim((string) ($row['placeholder'] ?? '')) ?: null,
                 'help_text'        => trim((string) ($row['help_text'] ?? '')) ?: null,
                 'is_required'      => (bool) ($row['is_required'] ?? false),
@@ -596,7 +608,7 @@ class FormBuilderService
         $order = 0;
         $taken = [];
 
-        foreach (array_slice($rows, 0, self::MAX_OPTIONS, true) as $row) {
+        foreach ($rows as $row) {
             $label = trim((string) ($row['label'] ?? ''));
 
             if ($label === '') {
@@ -637,7 +649,7 @@ class FormBuilderService
     {
         return DB::transaction(function () use ($form) {
             $copy = Form::create([
-                'name'           => Str::limit($form->name . ' - Copy', 255, ''),
+                'name'           => $form->name . ' - Copy',
                 'title'          => $form->title,
                 'description'    => $form->description,
                 'slug'           => Form::uniqueSlug($form->slug . '-copy'),

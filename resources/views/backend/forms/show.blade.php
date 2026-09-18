@@ -55,6 +55,36 @@
                             your closed message instead of the questions.
                         </p>
                     @endunless
+
+                    {{-- Publish / Disable and Duplicate. The forms list sends
+                         people here for both — without them a form could never
+                         be closed, and a duplicate (always created as a draft)
+                         could never go live. --}}
+                    <div class="d-flex gap-2 mt-2 flex-wrap">
+                        <form method="POST" action="{{ route('backend.forms.toggle', $form) }}" class="d-inline"
+                              data-confirm="{{ $form->isPublished()
+                                  ? 'Its link will show the closed message and stop taking responses.'
+                                  : 'Anyone with its link will be able to fill it in.' }}"
+                              data-confirm-title="{{ $form->isPublished() ? 'Disable this form?' : 'Publish this form?' }}"
+                              data-confirm-label="{{ $form->isPublished() ? 'Disable' : 'Publish' }}"
+                              data-confirm-icon="{{ $form->isPublished() ? 'warning' : 'question' }}"
+                              @unless ($form->isPublished()) data-confirm-tone="brand" @endunless>
+                            @csrf
+                            <button type="submit" class="{{ $form->isPublished() ? 'btn-ghost' : 'btn-brand' }}">
+                                {{ $form->isPublished() ? 'Disable Form' : 'Publish Form' }}
+                            </button>
+                        </form>
+
+                        <form method="POST" action="{{ route('backend.forms.duplicate', $form) }}" class="d-inline"
+                              data-confirm="The copy starts as a draft, with the same questions and none of the responses."
+                              data-confirm-title="Duplicate this form?"
+                              data-confirm-label="Duplicate"
+                              data-confirm-icon="question"
+                              data-confirm-tone="brand">
+                            @csrf
+                            <button type="submit" class="btn-ghost">Duplicate</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -75,13 +105,6 @@
             </div>
         @endforeach
     </div>
-
-    @if ($form->max_submissions)
-        <p class="form-hint mb-3">
-            Capped at <strong>{{ number_format($form->max_submissions) }}</strong> responses —
-            {{ number_format($form->remainingSubmissions()) }} still to go, after which the form closes itself.
-        </p>
-    @endif
 
     {{-- ============================= QUESTIONS =============================
          What the form actually asks, in the order it asks it. This page is for

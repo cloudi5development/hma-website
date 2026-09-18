@@ -23,7 +23,7 @@ class FormResponseValue extends Model
         'response_id', 'field_id', 'field_key', 'field_label', 'field_type', 'value', 'sort_order',
     ];
 
-    protected $casts = ['sort_order' => 'integer'];
+    protected $casts = ['sort_order' => 'integer', 'field_id' => 'integer', 'response_id' => 'integer'];
 
     public function response(): BelongsTo
     {

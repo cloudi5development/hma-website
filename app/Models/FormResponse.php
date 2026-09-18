@@ -57,6 +57,21 @@ class FormResponse extends Model
         return $this->values->keyBy('field_key')->all();
     }
 
+    /**
+     * This response's answer to one question, or null if it has none.
+     *
+     * Matched on the question's ID, which an answer keeps for good — not on its
+     * key. Keys were rebuilt from the label on every save until that was fixed,
+     * so a renamed question's history sat under a key it no longer had and
+     * showed as blank in the table and the exports. The key is only the
+     * fallback for an answer whose question row is gone entirely.
+     */
+    public function answerFor(FormField $field): ?FormResponseValue
+    {
+        return $this->values->first(fn (FormResponseValue $value) => $value->field_id === $field->id)
+            ?? $this->values->first(fn (FormResponseValue $value) => $value->field_id === null && $value->field_key === $field->field_key);
+    }
+
     public function scopeStatus(Builder $q, ?string $status): Builder
     {
         return $q->when(filled($status), fn ($x) => $x->where('status', $status));

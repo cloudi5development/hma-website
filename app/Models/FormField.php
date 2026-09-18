@@ -123,18 +123,14 @@ class FormField extends Model
     {
         $min = $this->rule('scale_min');
 
-        return $min === null
-            ? FormFieldType::SCALE_DEFAULT_MIN
-            : max(FormFieldType::SCALE_FLOOR, min((int) $min, FormFieldType::SCALE_CEILING));
+        return $min === null ? FormFieldType::SCALE_DEFAULT_MIN : (int) $min;
     }
 
     /** A linear scale's high end, always at least one step above the low end. */
     public function scaleMax(): int
     {
         $max = $this->rule('scale_max');
-        $max = $max === null
-            ? FormFieldType::SCALE_DEFAULT_MAX
-            : max(FormFieldType::SCALE_FLOOR, min((int) $max, FormFieldType::SCALE_CEILING));
+        $max = $max === null ? FormFieldType::SCALE_DEFAULT_MAX : (int) $max;
 
         return max($max, $this->scaleMin() + 1);
     }
@@ -160,7 +156,8 @@ class FormField extends Model
     {
         $count = (int) ($this->rule('rating_count') ?: FormFieldType::RATING_DEFAULT_COUNT);
 
-        return max(2, min($count, FormFieldType::RATING_MAX_COUNT));
+        // Two is the least that is still a choice; there is no most.
+        return max(2, $count);
     }
 
     /** The shape a rating is drawn with — star, heart or circle. */
@@ -241,12 +238,20 @@ class FormField extends Model
         return $configured ?: FormFieldType::DEFAULT_FILE_EXTENSIONS;
     }
 
-    /** The size ceiling in KB: the admin's number, capped by the module and the server. */
+    /**
+     * The size ceiling in KB.
+     *
+     * The module sets none of its own. What is left is the server's —
+     * upload_max_filesize / post_max_size in php.ini, which PHP enforces before
+     * this code ever runs — so that is the figure used, and the one the form
+     * shows, rather than a number the server would not honour anyway. An admin
+     * may still choose a smaller one for a particular field.
+     */
     public function maxFileKb(): int
     {
-        $configured = (int) ($this->rule('max_file_size_kb') ?: FormFieldType::MAX_FILE_KB);
+        $configured = (int) $this->rule('max_file_size_kb');
 
-        return UploadLimit::cap(min(max($configured, 1), FormFieldType::MAX_FILE_KB));
+        return $configured > 0 ? UploadLimit::cap($configured) : UploadLimit::kilobytes();
     }
 
     /** The `accept` attribute for the file input — a convenience, never the guard. */
@@ -273,6 +278,15 @@ class FormField extends Model
             return null;
         }
 
+        // A condition on a question that is no longer on the form can never be
+        // met or failed — the page finds no input to watch and the server
+        // finds no answer. Left in force it hid this question from every
+        // visitor for good, so it is treated as no condition at all: the page,
+        // the server and the builder all read this one method, and so agree.
+        if (! $this->controllerExists((string) $condition['field_key'])) {
+            return null;
+        }
+
         return [
             'field_key' => (string) $condition['field_key'],
             'operator'  => in_array($condition['operator'] ?? '', ['equals', 'not_equals'], true)
@@ -289,6 +303,36 @@ class FormField extends Model
      * the submission service asks this before it builds the rules — see
      * FormSubmissionService.
      */
+    /** @var array<string, bool> Whether each controlling key names a live question — asked once per key. */
+    private array $controllers = [];
+
+    private function controllerExists(string $key): bool
+    {
+        return $this->controllers[$key] ??= static::where('form_id', $this->form_id)
+            ->where('field_key', $key)
+            ->whereKeyNot($this->getKey())
+            ->exists();
+    }
+
+    /**
+     * A mobile number as it should be checked and stored: the ten digits.
+     *
+     * People type the spaces, dashes, dots and brackets they are used to
+     * ("98765 43210", "(987) 654-3210") and often the country code ("+91 …");
+     * those are taken off here. Nothing else is: a number that is still not ten
+     * digits afterwards is refused by the rule, never trimmed to fit.
+     */
+    public static function normaliseMobile(mixed $value): mixed
+    {
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        $digits = preg_replace('/[\s().\-]+/', '', trim($value));
+
+        return str_starts_with($digits, '+91') ? substr($digits, 3) : $digits;
+    }
+
     public function isVisibleFor(array $input): bool
     {
         $condition = $this->condition();
@@ -300,9 +344,10 @@ class FormField extends Model
         $actual = $input[$condition['field_key']] ?? null;
 
         // A checkbox controlling another field matches when the value is among
-        // the boxes that were ticked.
+        // the boxes that were ticked. Flattened first: a tick-box grid answers
+        // with a list per row, and strval() of a list is an error, not a miss.
         $matches = is_array($actual)
-            ? in_array($condition['value'], array_map('strval', $actual), true)
+            ? in_array($condition['value'], array_map('strval', array_filter(\Illuminate\Support\Arr::flatten($actual), 'is_scalar')), true)
             : (string) $actual === $condition['value'];
 
         return $condition['operator'] === 'not_equals' ? ! $matches : $matches;
@@ -334,16 +379,17 @@ class FormField extends Model
 
         return match ($this->field_type) {
             FormFieldType::LONG_TEXT => [
-                $name => [$first, 'string', ...$this->lengthRules(5000)],
+                $name => [$first, 'string', ...$this->lengthRules()],
             ],
             FormFieldType::EMAIL => [
-                $name => [$first, 'string', 'email:rfc', 'max:' . ($this->rule('max_length') ?: 190)],
+                $name => [$first, 'string', 'email:rfc', ...$this->lengthRules()],
             ],
             FormFieldType::MOBILE => [
-                // Digits, and the punctuation a person actually types around them.
-                // Deliberately not an India-only rule: the same builder has to
-                // serve a form collecting international numbers.
-                $name => [$first, 'string', 'regex:/^[0-9+()\-\s]{6,20}$/', ...$this->lengthRules(20)],
+                // A 10-digit mobile number, exactly. The answer arrives already
+                // cleaned by normaliseMobile() — spaces, dashes and a +91 prefix
+                // taken off — so this checks the number itself: an 11th digit
+                // is refused, not stored.
+                $name => [$first, 'string', 'regex:/^[0-9]{10}$/'],
             ],
             FormFieldType::NUMBER => [
                 $name => array_filter([
@@ -395,14 +441,20 @@ class FormField extends Model
 
             FormFieldType::FILE => $this->fileRules($required),
 
-            FormFieldType::HIDDEN => [$name => ['nullable', 'string', 'max:500']],
+            FormFieldType::HIDDEN => [$name => ['nullable', 'string']],
 
-            default => [$name => [$first, 'string', ...$this->lengthRules(255)]],
+            default => [$name => [$first, 'string', ...$this->lengthRules()]],
         };
     }
 
-    /** min/max length rules, with the type's own ceiling when the admin set none. */
-    private function lengthRules(int $fallbackMax): array
+    /**
+     * min/max length rules — only the ones the admin set.
+     *
+     * There is no default ceiling on an answer. There used to be (255 for a
+     * short answer, 5000 for a paragraph, 190 for an email), and the column an
+     * answer is stored in is LONGTEXT, so nothing needed it.
+     */
+    private function lengthRules(): array
     {
         $rules = [];
 
@@ -410,7 +462,9 @@ class FormField extends Model
             $rules[] = 'min:' . (int) $this->rule('min_length');
         }
 
-        $rules[] = 'max:' . (int) ($this->rule('max_length') ?: $fallbackMax);
+        if ($this->rule('max_length')) {
+            $rules[] = 'max:' . (int) $this->rule('max_length');
+        }
 
         return $rules;
     }
@@ -427,7 +481,7 @@ class FormField extends Model
 
         if ($this->allowsMultipleFiles()) {
             return [
-                $name        => [$required ? 'required' : 'nullable', 'array', 'max:10'],
+                $name        => [$required ? 'required' : 'nullable', 'array'],
                 $name . '.*' => ['file', 'mimes:' . $extensions, 'max:' . $max],
             ];
         }
@@ -531,14 +585,32 @@ class FormField extends Model
             }
         }
 
+        // "max" and "min" mean a length on text, a value on a number and a size
+        // on a file. One message for all three told a visitor whose résumé was
+        // too big that it was "too long".
+        $isFile   = $this->control() === 'file';
+        $isNumber = $this->field_type === FormFieldType::NUMBER;
+
         return $grid + [
+            "{$name}.max"          => match (true) {
+                $isFile   => "“{$label}” is larger than " . UploadLimit::label($this->maxFileKb()) . '.',
+                $isNumber => "“{$label}” must be :max or less.",
+                default   => "“{$label}” must be :max characters or fewer.",
+            },
+            "{$name}.min"          => $isNumber
+                ? "“{$label}” must be :min or more."
+                : "“{$label}” must be at least :min characters.",
+            "{$name}.uploaded"     => "“{$label}” did not upload. Please choose the file again.",
+            "{$name}.file"         => "“{$label}” did not upload. Please choose the file again.",
+            "{$name}.*.uploaded"   => "A file in “{$label}” did not upload. Please choose it again.",
+            "{$name}.*.file"       => "A file in “{$label}” did not upload. Please choose it again.",
             "{$name}.between"      => "Choose a value for “{$label}”.",
             "{$name}.integer"      => "“{$label}” must be a whole number.",
             "{$name}.after_or_equal" => "“{$label}” is earlier than this form allows.",
             "{$name}.before_or_equal" => "“{$label}” is later than this form allows.",
             "{$name}.required"     => "Please complete “{$label}”.",
             "{$name}.email"        => "“{$label}” must be a valid email address.",
-            "{$name}.regex"        => "“{$label}” does not look like a valid number.",
+            "{$name}.regex"        => "Enter a valid 10-digit mobile number for “{$label}”.",
             "{$name}.numeric"      => "“{$label}” must be a number.",
             "{$name}.date"         => "“{$label}” must be a valid date.",
             "{$name}.date_format"  => "“{$label}” must be a valid time.",
@@ -546,9 +618,7 @@ class FormField extends Model
             "{$name}.*.in"         => "Choose from the listed options for “{$label}”.",
             "{$name}.mimes"        => "“{$label}” must be a " . strtoupper(implode(', ', $this->allowedExtensions())) . ' file.',
             "{$name}.*.mimes"      => "“{$label}” must be a " . strtoupper(implode(', ', $this->allowedExtensions())) . ' file.',
-            "{$name}.max"          => "“{$label}” is too long.",
-            "{$name}.*.max"        => "Each file in “{$label}” is too large.",
-            "{$name}.min"          => "“{$label}” is too short.",
+            "{$name}.*.max"        => "Each file in “{$label}” must be " . UploadLimit::label($this->maxFileKb()) . ' or smaller.',
         ];
     }
 
@@ -570,7 +640,10 @@ class FormField extends Model
      */
     public static function keyFrom(?string $label): string
     {
-        $key = strtolower(Str::snake(Str::ascii((string) $label)));
+        // Lower-cased BEFORE snake-casing: Str::snake splits at every capital,
+        // so "Email ID" became email_i_d and "CV" became c_v. Only new
+        // questions are keyed this way — a saved one keeps its key.
+        $key = Str::snake(Str::lower(Str::ascii((string) $label)));
         $key = preg_replace('/[^a-z0-9_]+/', '_', $key);
         $key = trim((string) preg_replace('/_+/', '_', $key), '_');
 
