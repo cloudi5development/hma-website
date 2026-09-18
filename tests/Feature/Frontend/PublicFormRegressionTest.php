@@ -114,6 +114,57 @@ class PublicFormRegressionTest extends TestCase
         $this->assertMatchesRegularExpression('/name="rate\[0\]"[^>]*value="Good"[^>]*checked/s', $html);
     }
 
+    /* ============================ A PAGE OF ITS OWN ========================= */
+
+    /**
+     * The form's link is sent to students on its own (demo live), so nothing on
+     * the page may lead into the rest of the website: no site header or
+     * footer, no breadcrumb, no linked logo, no "Back to Home" after submitting.
+     */
+    public function test_the_form_page_has_no_way_into_the_rest_of_the_website(): void
+    {
+        $form = $this->form([['field_type' => FormFieldType::SHORT_TEXT, 'label' => 'Name', 'is_required' => 1]]);
+        $home = route('frontend.index');
+
+        $page = $this->get(route('frontend.form.show', $form->slug))->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('id="hmNavbar"', $page, 'no site header');
+        $this->assertStringNotContainsString('id="hmFooter"', $page, 'no site footer');
+        $this->assertDoesNotMatchRegularExpression('#href="' . preg_quote($home, '#') . '/?"#', $page, 'no link to the home page');
+        $this->assertStringContainsString('name="name"', $page);
+
+        $done = $this->from(route('frontend.form.show', $form->slug))->followingRedirects()
+            ->post(route('frontend.form.submit', $form->slug), ['name' => 'Asha'])
+            ->assertOk()->getContent();
+
+        $this->assertStringContainsString($form->success_message, $done);
+        $this->assertStringNotContainsString('Back to Home', $done);
+        $this->assertDoesNotMatchRegularExpression('#href="' . preg_quote($home, '#') . '/?"#', $done);
+    }
+
+    /** The rest of the site keeps its header and footer. */
+    public function test_other_pages_keep_the_site_header_and_footer(): void
+    {
+        $page = $this->get(route('frontend.index'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('id="hmNavbar"', $page);
+        $this->assertStringContainsString('id="hmFooter"', $page);
+    }
+
+    /** What the page's script needs to check a page is complete before Next. */
+    public function test_each_question_says_whether_it_is_required_and_what_it_is(): void
+    {
+        $form = $this->form([
+            ['field_type' => FormFieldType::CHECKBOX, 'label' => 'Skills', 'is_required' => 1, 'options' => $this->choices(['PHP', 'Go'])],
+            ['field_type' => FormFieldType::SHORT_TEXT, 'label' => 'Nickname', 'is_required' => 0],
+        ]);
+
+        $html = $this->get(route('frontend.form.show', $form->slug))->getContent();
+
+        $this->assertMatchesRegularExpression('/data-hmf-field="skills"\s+data-hmf-control="checkbox"\s+data-hmf-required/', $html);
+        $this->assertMatchesRegularExpression('/data-hmf-field="nickname"\s+data-hmf-control="input"\s*>/', $html);
+    }
+
     /* ============================ MOBILE NUMBER ============================ */
 
     /** An 11- or 15-digit "mobile number" was accepted and stored. It must be ten digits. */

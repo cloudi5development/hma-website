@@ -96,9 +96,17 @@
 
     {{-- data-cond-* is read by the conditional-logic script at the foot of the
          public page. A field with no condition carries none of these and is
-         always visible. --}}
+         always visible.
+
+         data-hmf-required / data-hmf-control are read by the same script to
+         check a question is answered before Next opens the following page —
+         including the kinds the browser's own `required` cannot express (a
+         group of checkboxes, every row of a grid, a question that appears
+         through a condition). --}}
     <div class="hmf-field hmf-field--{{ $field->field_type }} @if ($wide) hmf-field--wide @endif @if ($invalid) is-invalid @endif"
          data-hmf-field="{{ $key }}"
+         data-hmf-control="{{ $field->control() }}"
+         @if ($field->is_required) data-hmf-required @endif
          @if ($cond)
              data-cond-field="{{ $cond['field_key'] }}"
              data-cond-op="{{ $cond['operator'] }}"

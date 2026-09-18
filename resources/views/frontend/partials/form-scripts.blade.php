@@ -85,6 +85,139 @@
         refresh();
     })();
 
+    /* Is every required question answered?
+       ---------------------------------------------------------------------
+       The browser's own `required` covers a text box, a drop-down, a radio
+       group and a file — but not "at least one of these checkboxes", not
+       "every row of this grid", and not a question that only appears through
+       a condition (it carries no `required`, or it would block the form while
+       hidden). Next used to open the following page with any of those left
+       empty. This checks them all, the same way, for:
+
+         - Next, on a multi-page form: the page must be complete first;
+         - Submit, on any form: whatever the browser cannot see.
+
+       A question hidden by its condition is never checked. The server checks
+       everything again regardless (FormSubmissionService::validator). */
+    (function () {
+        'use strict';
+
+        var form = document.querySelector('.hmf__form');
+        if (!form) return;
+
+        function live(field) {
+            return Array.prototype.filter.call(field.querySelectorAll('input, select, textarea'), function (input) {
+                return !input.disabled && input.type !== 'hidden';
+            });
+        }
+
+        // What a required question is missing, or null.
+        function missing(field) {
+            if (field.hidden || !field.hasAttribute('data-hmf-required')) return null;
+
+            var inputs = live(field);
+            if (!inputs.length) return null;
+
+            switch (field.getAttribute('data-hmf-control')) {
+                case 'mc_grid':
+                case 'tick_grid':
+                    var rows = field.querySelectorAll('tbody tr');
+                    for (var r = 0; r < rows.length; r++) {
+                        if (!rows[r].querySelector('input:checked')) {
+                            return { el: rows[r].querySelector('input'), message: 'Please answer every row.' };
+                        }
+                    }
+                    return null;
+                case 'checkbox':
+                    return field.querySelector('input:checked') ? null : { el: inputs[0], message: 'Please choose at least one option.' };
+                case 'radio':
+                case 'scale':
+                case 'rating':
+                    return field.querySelector('input:checked') ? null : { el: inputs[0], message: 'Please choose an option.' };
+                case 'file':
+                    return inputs[0].files && inputs[0].files.length ? null : { el: inputs[0], message: 'Please choose a file.' };
+                default:
+                    return inputs.some(function (input) { return input.value.trim() !== ''; })
+                        ? null
+                        : { el: inputs[0], message: 'Please fill in this field.' };
+            }
+        }
+
+        function clear(field) {
+            Array.prototype.forEach.call(field.querySelectorAll('[data-hmf-client-error]'), function (note) {
+                note.parentNode.removeChild(note);
+            });
+            if (!field.querySelector('.hmf-error')) field.classList.remove('is-invalid');
+        }
+
+        // Bring the question's page on screen (the stepper listens for this),
+        // say what is missing under it, and put the visitor there.
+        function point(field, problem) {
+            form.dispatchEvent(new CustomEvent('hmf:reveal', { detail: field }));
+
+            if (problem.message) {
+                clear(field);
+                field.classList.add('is-invalid');
+
+                var note = document.createElement('p');
+                note.className = 'hmf-error';
+                note.setAttribute('data-hmf-client-error', '');
+                note.setAttribute('role', 'alert');
+                note.textContent = problem.message;
+                field.appendChild(note);
+
+                field.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                if (problem.el && problem.el.focus) problem.el.focus({ preventScroll: true });
+            } else {
+                problem.el.reportValidity();
+            }
+        }
+
+        /* The first question among these that is not complete — unanswered, or
+           answered in a shape its rules refuse (an email, a 10-digit mobile, a
+           number range) — is pointed at, and false comes back. */
+        function complete(fields) {
+            for (var i = 0; i < fields.length; i++) {
+                var field = fields[i];
+                if (field.hidden) continue;
+
+                var problem = missing(field);
+                if (problem) { point(field, problem); return false; }
+
+                var controls = live(field);
+                for (var c = 0; c < controls.length; c++) {
+                    if (!controls[c].checkValidity()) { point(field, { el: controls[c] }); return false; }
+                }
+            }
+
+            return true;
+        }
+
+        // An answer given clears the note it answered.
+        ['input', 'change'].forEach(function (type) {
+            form.addEventListener(type, function (e) {
+                var field = e.target.closest ? e.target.closest('.hmf-field') : null;
+                if (field && field.querySelector('[data-hmf-client-error]') && !missing(field)) clear(field);
+            });
+        });
+
+        // Submit: the browser has already checked what it can; this is the rest.
+        form.addEventListener('submit', function (e) {
+            var fields = form.querySelectorAll('.hmf-field');
+
+            for (var i = 0; i < fields.length; i++) {
+                var problem = missing(fields[i]);
+                if (problem) {
+                    e.preventDefault();
+                    point(fields[i], problem);
+                    return;
+                }
+            }
+        });
+
+        window.hmfComplete = complete;
+    })();
+
     /* Stepping through a multi-page form.
        ---------------------------------------------------------------------
        Every step is already in the page; this only decides which one is on
@@ -153,28 +286,28 @@
             }
         }
 
-        /* The browser's own validation, one step at a time. Without this a
-           visitor fills in four pages, presses Submit, and is told that
-           something on page one is wrong. */
+        /* A page must be complete before the next one opens: every required
+           question on it answered, every answer in a shape its rules accept.
+           Without this a visitor fills in four pages, presses Submit, and is
+           told that something on page one is wrong. The checks themselves are
+           the ones above (window.hmfComplete), so Next and Submit agree. */
         function complete(step) {
-            var controls = step.querySelectorAll('input, select, textarea');
-
-            for (var i = 0; i < controls.length; i++) {
-                var control = controls[i];
-
-                // A conditional field that is not currently shown is disabled by
-                // the script above, and is not this visitor's to answer.
-                if (control.disabled || control.type === 'hidden') continue;
-
-                if (!control.checkValidity()) {
-                    control.reportValidity();
-
-                    return false;
-                }
-            }
-
-            return true;
+            return window.hmfComplete
+                ? window.hmfComplete(step.querySelectorAll('.hmf-field'))
+                : true;
         }
+
+        // A question pointed at on another page (from Submit) brings that page
+        // on screen first.
+        form.addEventListener('hmf:reveal', function (e) {
+            var owner = e.detail && e.detail.closest ? e.detail.closest('[data-step]') : null,
+                index = steps.indexOf(owner);
+
+            if (index > -1 && index !== at) {
+                at = index;
+                render(false);
+            }
+        });
 
         next.addEventListener('click', function () {
             if (!complete(steps[at])) return;
@@ -323,6 +456,10 @@
             buttons = Array.prototype.slice.call(form.querySelectorAll('button[type="submit"], input[type="submit"]'));
 
         form.addEventListener('submit', function (e) {
+            // Stopped by the completeness check above: nothing is on its way,
+            // so the buttons must stay usable.
+            if (e.defaultPrevented) return;
+
             if (sending) {
                 e.preventDefault();
                 return;

@@ -252,10 +252,13 @@
     flex-direction: column;
     gap: 26px;
 }
+/* One question per row, each across the full width of the form (user
+   request, 2026-09-18). It used to be two to a row, which read as a grid of
+   boxes rather than a list of questions. */
 .hmf-qs {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px 22px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
     align-items: start;
 }
 

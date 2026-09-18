@@ -13,6 +13,14 @@
      that links to it, and an unpublished one must not be indexed at all. --}}
 @section('meta_robots'){!! $form->isPublished() ? 'index, follow' : 'noindex, nofollow' !!}@endsection
 
+{{-- The form stands on its own: no site header, footer or breadcrumb, and no
+     "Back to Home" after submitting. Its link is sent straight to students,
+     and nothing on the page should lead them off it into the rest of the
+     website (user request, 2026-09-18). --}}
+{{-- Inline with a literal — never "…)1@endsection": Blade does not see a
+     directive glued to a preceding digit, and the section's buffer stays open. --}}
+@section('standalone', 'yes')
+
 @push('styles')
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap">
     <link rel="stylesheet"
@@ -27,16 +35,6 @@
          class only tightens what this page adds. --}}
     <section class="hmf @if ($embed) hmf--embed @endif">
         <div class="container">
-
-            @unless ($embed)
-                <nav aria-label="Breadcrumb">
-                    <ol class="hmf__crumbs">
-                        <li><a href="{{ route('frontend.index') }}">Home</a></li>
-                        <li class="hmf__crumb-sep" aria-hidden="true">&rsaquo;</li>
-                        <li aria-current="page">{{ $form->title }}</li>
-                    </ol>
-                </nav>
-            @endunless
 
             <div class="hmf__paper">
 
@@ -78,13 +76,6 @@
                         {{-- The admin's own success message, as the headline.
                              Nothing is invented around it. --}}
                         <h2 class="hmf__done-title">{{ session('form_success') }}</h2>
-
-                        @unless ($embed)
-                            <a class="hmf__done-btn" href="{{ route('frontend.index') }}">
-                                Back to Home
-                                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-                            </a>
-                        @endunless
                     </div>
                 @else
 

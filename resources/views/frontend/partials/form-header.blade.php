@@ -17,10 +17,12 @@
     <span class="hmf__banner-glow" aria-hidden="true"></span>
 
     <div class="hmf__banner-inner">
-        <a class="hmf__brand" href="{{ route('frontend.index') }}" aria-label="Hire Minds Academy — home">
+        {{-- The logo only — not a link. The form's page stands on its own and
+             nothing on it leads into the rest of the website. --}}
+        <span class="hmf__brand">
             <img src="{{ \App\Models\Setting::image('site_logo', 'assets/images/branding/logo.png') }}"
-                 alt="Hire Minds Academy" width="150" height="44" loading="lazy">
-        </a>
+                 alt="Hire Minds Academy" width="150" height="44">
+        </span>
 
         <h1 class="hmf__title">{{ $form->title }}</h1>
 

@@ -29,13 +29,20 @@
     {{-- First inside <body> so the overlay paints before anything behind it --}}
     @include('frontend.layouts.loader')
 
-    @include('frontend.layouts.header')
+    {{-- A page that stands on its own sets @section('standalone') and gets no
+         site header or footer — no way from it to the rest of the website.
+         Used by the public forms, whose link is sent to students on their own. --}}
+    @unless ($__env->hasSection('standalone'))
+        @include('frontend.layouts.header')
+    @endunless
 
     <main id="main-content">
         @yield('content')
     </main>
 
-    @include('frontend.layouts.footer')
+    @unless ($__env->hasSection('standalone'))
+        @include('frontend.layouts.footer')
+    @endunless
     {{-- @include('frontend.layouts.search-modal') --}}
 
     @include('frontend.layouts.common-js')
