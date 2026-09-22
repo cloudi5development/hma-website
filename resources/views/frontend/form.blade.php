@@ -149,6 +149,8 @@
 
                 </div>{{-- /.hmf__body --}}
             </div>
+
+            @include('frontend.partials.form-footer')
         </div>
     </section>
 

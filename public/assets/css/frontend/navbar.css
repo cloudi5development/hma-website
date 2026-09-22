@@ -68,7 +68,10 @@
 .hm-navbar__links {
     display: flex;
     align-items: center;
-    gap: 40px;                 /* spread the items out to use the empty space either side */
+    /* Spread the items out to use the empty space either side — but only as far
+       as there is space to spare. With seven items ("Placement Readiness" is the
+       longest) a fixed 40px broke every label onto two lines inside the bar. */
+    gap: clamp(14px, 2vw, 40px);
     margin: 0 auto;
     padding: 0;
     list-style: none;
@@ -83,7 +86,21 @@
     font-weight: 500;
     text-decoration: none;
     border-radius: 999px;
-  
+    /* A label is one line: the bar is a fixed-width pill, so a wrapped item
+       makes the whole bar two rows tall. */
+    white-space: nowrap;
+}
+
+/* The tight desktop band: wide enough that the menu is still the full bar, not
+   wide enough for seven roomy items AND the "Let's Talk" button — which used to
+   be squeezed out of the pill between roughly 992px and 1200px. */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    .hm-navbar__links { gap: 8px; }
+    .hm-navbar__links a { font-size: 14.5px; padding-right: 8px; }
+    .hm-navbar__cta { padding: 5px 10px; font-size: 14.5px; gap: 6px; }
+    /* Sized the way the full-size chip is — by its own font-size and padding,
+       never width/height, which fight that padding and crop the arrow. */
+    .hm-navbar__cta i { font-size: 13px; padding: 9px; }
 }
 
 .hm-navbar__links a:hover,

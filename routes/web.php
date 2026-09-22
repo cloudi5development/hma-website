@@ -6,6 +6,7 @@ use App\Http\Controllers\Frontend\CourseEnquiryController;
 use App\Http\Controllers\Frontend\EventController;
 use App\Http\Controllers\Frontend\EventRegistrationController;
 use App\Http\Controllers\Frontend\HomeController;
+use App\Http\Controllers\Frontend\PlacementReadinessController;
 use App\Http\Controllers\Frontend\SitemapController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -67,6 +68,10 @@ Route::controller(EventController::class)->name('frontend.')->group(function () 
     Route::get('/events', 'index')->name('events');
     Route::get('/events/{slug}', 'show')->name('event-details');
 });
+
+// Placement Readiness — the Placement Success Program page for colleges. Every
+// section of it is admin-editable (Admin → Placement Readiness).
+Route::get('/placement-readiness', [PlacementReadinessController::class, 'index'])->name('frontend.placement-readiness');
 
 // Shared contact form (home + contact pages) — stores the enquiry + emails the sender.
 Route::post('/contact-enquiry', [ContactEnquiryController::class, 'store'])->name('frontend.contact-enquiry.store');

@@ -33,6 +33,7 @@ class AdminModules
             'testimonials'    => 'Testimonials',
             'faqs'            => 'FAQ',
             'about-sections'  => 'About Us',
+            'placement-readiness' => 'Placement Readiness',
             'blogs'           => 'Blog',
         ],
         'Leads' => [

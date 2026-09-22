@@ -4,6 +4,7 @@ namespace Tests\Feature\Frontend;
 
 use App\Models\Form;
 use App\Models\FormResponse;
+use App\Models\Setting;
 use App\Services\FormBuilderService;
 use App\Services\FormSubmissionService;
 use App\Support\FormFieldType;
@@ -140,6 +141,33 @@ class PublicFormRegressionTest extends TestCase
         $this->assertStringContainsString($form->success_message, $done);
         $this->assertStringNotContainsString('Back to Home', $done);
         $this->assertDoesNotMatchRegularExpression('#href="' . preg_quote($home, '#') . '/?"#', $done);
+    }
+
+    /**
+     * With the site footer gone, the sheet still carries the small print every
+     * form service prints under the card: the safety line, a way to reach
+     * somebody about the form, and whose form it is. The address is the one on
+     * Settings -> Contact, and it is a mailto - still nothing into the site.
+     */
+    public function test_the_sheet_carries_the_form_footer(): void
+    {
+        Setting::putMany(['contact_email' => 'forms@example.test', 'site_name' => 'Hire Minds Academy']);
+
+        $form = $this->form([['field_type' => FormFieldType::SHORT_TEXT, 'label' => 'Name', 'is_required' => 1]]);
+
+        foreach ([
+            $this->get(route('frontend.form.show', $form->slug))->assertOk()->getContent(),
+            $this->from(route('frontend.form.show', $form->slug))->followingRedirects()
+                 ->post(route('frontend.form.submit', $form->slug), ['name' => 'Asha'])
+                 ->assertOk()->getContent(),
+        ] as $i => $page) {
+            $where = $i === 0 ? 'the form' : 'the thank-you';
+
+            $this->assertStringContainsString('hmf__foot', $page, "footer missing on {$where}");
+            $this->assertStringContainsString('Never submit passwords', $page, "safety line missing on {$where}");
+            $this->assertStringContainsString('mailto:forms@example.test', $page, "contact missing on {$where}");
+            $this->assertStringContainsString('Hire Minds Academy. All Rights Reserved.', $page, "credit missing on {$where}");
+        }
     }
 
     /** The rest of the site keeps its header and footer. */

@@ -73,6 +73,56 @@
 }
 .hmf--embed .hmf__body { padding: 26px 22px 30px; }
 
+/* ------------------------------ The footer ------------------------------
+   The small print under the card. The page carries no site footer — its link
+   is sent straight to the people filling it in — so this is where the form
+   says who it belongs to and how to reach a person about it. Centred, quiet,
+   and never wider than the card above it. */
+.hmf__foot {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 26px 16px 4px;
+    text-align: center;
+}
+
+.hmf__foot p { margin: 0 0 6px; }
+.hmf__foot p:last-child { margin-bottom: 0; }
+
+.hmf__foot-note {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #8A7E70;
+}
+
+.hmf__foot-help {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #8A7E70;
+}
+
+.hmf__foot-help a {
+    color: #A85A2E;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(168, 90, 46, .35);
+    transition: color .2s ease, border-color .2s ease;
+}
+
+.hmf__foot-help a:hover,
+.hmf__foot-help a:focus-visible { color: #843D21; border-bottom-color: #843D21; }
+
+.hmf__foot-brand {
+    padding-top: 10px;
+    border-top: 1px solid #F0E6DC;
+    font-size: 12px;
+    color: #A2968A;
+}
+
+/* Inside an iframe the host page owns the surroundings; the note still
+   belongs to the form, just tighter. No cap either — an embedded sheet is
+   whatever width the host gives it, and the note has to line up with it. */
+.hmf--embed .hmf__foot { max-width: none; padding: 18px 12px 2px; }
+
 /* -------------------------------- Banner --------------------------------
    The same terracotta gradient and off-centre gold glow the Terms / Privacy
    pages use (content-page.css), so a form reads as part of Hire Minds rather
@@ -663,6 +713,7 @@ textarea.hmf-control { min-height: 104px; resize: vertical; line-height: 1.65; }
     .hmf__paper { border-radius: 16px; }
     .hmf__body { padding: 24px 18px 30px; }
     .hmf__banner { padding: 24px 20px 26px; }
+    .hmf__foot { padding: 20px 8px 2px; }
     .hmf__title { font-size: 22px; }
     .hmf__brand { margin-bottom: 14px; padding: 7px 13px; }
     .hmf__brand img { height: 32px; }

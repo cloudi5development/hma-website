@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             ReelSeeder::class,
             AboutSectionSeeder::class,
             CourseModuleSeeder::class,
+            PlacementSectionSeeder::class,
         ]);
     }
 }

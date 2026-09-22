@@ -7,6 +7,8 @@
     // Inner paths only — $ic() wraps them in a consistent stroke <svg>.
     $icons = [
         'dashboard' => '<rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.6"/>',
+        // A checklist on a clipboard — assessment, then readiness.
+        'placement' => '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="m8.8 11.5 1.6 1.6 3.4-3.4M8.8 17h6.4"/>',
         'courses'   => '<path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v4.5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5V12"/>',
         'department'=> '<path d="M6 22V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v18"/><path d="M4 22h16M9.5 7h1M13.5 7h1M9.5 11h1M13.5 11h1M10 22v-4h4v4"/>',
         'category'  => '<path d="M20.6 13.4 12 22l-8-8V4h10l6.6 6.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.1"/>',
@@ -107,7 +109,7 @@
         @endif
 
         {{-- ---- WEBSITE CONTENT ---- --}}
-        @if ($canAny(...$sectionModules) || $can('blogs'))
+        @if ($canAny(...$sectionModules) || $can('placement-readiness') || $can('blogs'))
         <p class="app-sidebar__heading">Website Content</p>
         @endif
 
@@ -143,6 +145,13 @@
                 @if ($can('faqs'))<a href="{{ route('backend.faqs.index') }}">FAQ</a>@endif
                 @if ($can('about-sections'))<a href="{{ route('backend.about-sections.index') }}">About Us</a>@endif
             </div>
+        </div>
+        @endif
+
+        @if ($can('placement-readiness'))
+        <div class="app-nav__item">
+            <a class="app-nav__link {{ request()->routeIs('backend.placement-readiness.*') ? 'is-active' : '' }}" href="{{ route('backend.placement-readiness.index') }}">{!! $ic('placement') !!}<span class="app-nav__label">Placement Readiness</span></a>
+            <div class="app-nav__flyout"><div class="app-nav__flyout-title">Placement Readiness</div></div>
         </div>
         @endif
 

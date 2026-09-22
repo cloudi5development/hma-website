@@ -1,0 +1,614 @@
+/* ==========================================================================
+   Placement Readiness — /placement-readiness
+   Markup: resources/views/frontend/placement-readiness.blade.php
+           resources/views/frontend/partials/placement-head.blade.php
+
+   The page is the Placement Success Program told in the site's own voice: the
+   terracotta band and gold glow of the other inner pages (content-page.css,
+   dynamic-form.css), the gold-square section label and 34px heading of the home
+   sections, the white card with the soft lift from courses.css, and the brown
+   table header from schedules.css. Nothing from the reference document's own
+   navy/teal palette survives here — only its content and its running order.
+
+   Self-contained (own tokens), like navbar.css: this stylesheet is the only one
+   the page pushes besides the site-wide base.
+   ========================================================================== */
+
+:root {
+    --hm-gold: #E9A320;
+    --hm-gold-2: #F6B72B;
+    --hm-gold-dark: #C6851A;
+    --hm-brown: #2A1D14;
+    --hm-yellow: #F7B500;
+    --hm-ink: #23180F;
+    --hm-muted: #6D6357;
+    --hm-cream: #FCF8F1;
+    --hm-white: #FFFFFF;
+
+    --hm-shadow-sm: 0 6px 18px rgba(42, 29, 20, .08);
+    --hm-shadow-md: 0 14px 40px rgba(42, 29, 20, .12);
+    --hm-radius: 18px;
+    --hm-ease: cubic-bezier(.22, .7, .2, 1);
+
+    --hm-pr-brand: #A5391B;
+    --hm-pr-brand-deep: #7A2A11;
+    --hm-pr-line: #F1E6DE;
+    --hm-pr-body: #4F423A;
+}
+
+/* The layout centres #main-content with flex for the home page; every inner
+   page turns that off. Gated on this page's shell so the rule cannot reach
+   another page if the stylesheet is ever shared. */
+#main-content:has(.hm-pr-page) {
+    position: relative;
+    display: block;
+    min-height: auto;
+    padding: 0;
+    text-align: left;
+    background: #FFFDFB;
+}
+
+.hm-pr-page {
+    color: var(--hm-ink);
+    /* The navbar floats at top:22px and is 72px tall, so it owns the first 94px. */
+    padding: calc(94px + 34px) 0 0;
+}
+
+.hm-pr-page .container { max-width: 1180px; }
+
+/* Anchors (#placement-framework …) must clear the floating navbar. */
+.hm-pr-page [id] { scroll-margin-top: 112px; }
+
+/* ------------------------------ Breadcrumb ------------------------------ */
+.hm-pr-crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 18px;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    color: rgba(255, 255, 255, .78);
+}
+
+.hm-pr-crumbs a { color: rgba(255, 255, 255, .78); text-decoration: none; transition: color .25s var(--hm-ease); }
+.hm-pr-crumbs a:hover { color: #fff; }
+.hm-pr-crumbs__sep { opacity: .55; }
+.hm-pr-crumbs [aria-current="page"] { color: #fff; font-weight: 600; }
+
+/* ================================= HERO ================================= */
+.hm-pr-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    margin-bottom: 0;
+    padding: 46px 0 54px;
+    background: linear-gradient(128deg, var(--hm-pr-brand-deep) 0%, var(--hm-pr-brand) 58%, #C24A22 100%);
+}
+
+/* A soft off-centre highlight so the band is not a flat slab of colour. */
+.hm-pr-hero__glow,
+.hm-pr-sec__glow,
+.hm-pr-cta__glow {
+    position: absolute;
+    top: -55%;
+    right: -8%;
+    z-index: -1;
+    width: 58%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(233, 163, 32, .30) 0%, rgba(233, 163, 32, 0) 68%);
+    pointer-events: none;
+}
+
+.hm-pr-hero__grid {
+    display: grid;
+    grid-template-columns: 1.3fr .7fr;
+    gap: 48px;
+    align-items: center;
+}
+
+.hm-pr-hero__eyebrow {
+    display: inline-block;
+    margin-bottom: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #FFD89B;
+}
+
+.hm-pr-hero__title {
+    margin: 0 0 16px;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: clamp(30px, 4.4vw, 46px);
+    font-weight: 800;
+    line-height: 1.12;
+    color: #fff;
+}
+
+.hm-pr-hero__lead {
+    max-width: 62ch;
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, .88);
+}
+
+.hm-pr-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+/* The card beside the hero copy — white on the band, the same paper as the
+   cards further down the page. */
+.hm-pr-hero__card {
+    padding: 26px 28px 28px;
+    background: #fff;
+    border-radius: var(--hm-radius);
+    box-shadow: var(--hm-shadow-md);
+}
+
+.hm-pr-hero__card-title {
+    margin: 0 0 14px;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--hm-ink);
+}
+
+.hm-pr-hero__list { margin: 0; padding: 0; list-style: none; }
+
+.hm-pr-hero__list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 0;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--hm-pr-body);
+}
+
+.hm-pr-hero__list svg {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    margin-top: 3px;
+    color: #2FA35F;
+}
+
+/* ================================ BUTTONS =============================== */
+.hm-pr-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 26px;
+    border: 1.5px solid transparent;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform .25s var(--hm-ease), box-shadow .25s var(--hm-ease), background .25s var(--hm-ease), color .25s var(--hm-ease);
+}
+
+.hm-pr-btn i { font-size: 12px; }
+.hm-pr-btn:hover { transform: translateY(-2px); }
+
+.hm-pr-btn--primary {
+    color: #843D21;
+    background: var(--hm-gold-2);
+    box-shadow: 0 12px 30px rgba(233, 163, 32, .35);
+}
+
+.hm-pr-btn--primary:hover { background: var(--hm-gold); color: #6E2F17; }
+
+.hm-pr-btn--ghost {
+    color: #fff;
+    background: rgba(255, 255, 255, .10);
+    border-color: rgba(255, 255, 255, .55);
+}
+
+.hm-pr-btn--ghost:hover { background: rgba(255, 255, 255, .18); }
+
+.hm-pr-btn--light {
+    color: #843D21;
+    background: #fff;
+    box-shadow: var(--hm-shadow-sm);
+}
+
+.hm-pr-btn--light:hover { background: var(--hm-cream); }
+
+/* ================================ SECTIONS ============================== */
+.hm-pr-sec {
+    position: relative;
+    isolation: isolate;
+    padding: 76px 0;
+}
+
+.hm-pr-sec--tint { background: var(--hm-cream); }
+
+.hm-pr-sec--dark {
+    overflow: hidden;
+    background: linear-gradient(128deg, var(--hm-pr-brand-deep) 0%, var(--hm-pr-brand) 62%, #C24A22 100%);
+}
+
+/* ---- The heading block (partials/placement-head) ---- */
+.hm-pr-head {
+    max-width: 760px;
+    margin: 0 auto 42px;
+    text-align: center;
+}
+
+.hm-pr-head__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.hm-pr-head__label-icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, var(--hm-yellow), var(--hm-gold-dark));
+}
+
+.hm-pr-head__label-text {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #843D21;
+}
+
+.hm-pr-head__title {
+    margin: 0 0 14px;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.22;
+    color: #1E1E1E;
+}
+
+.hm-pr-head__desc {
+    max-width: 680px;
+    margin: 0 auto;
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--hm-muted);
+}
+
+/* On the terracotta bands the same block is drawn in white. */
+.hm-pr-sec--dark .hm-pr-head__label-text { color: #FFD89B; }
+.hm-pr-sec--dark .hm-pr-head__label-icon { background: linear-gradient(135deg, #FFD89B, var(--hm-gold)); }
+.hm-pr-sec--dark .hm-pr-head__title { color: #fff; }
+.hm-pr-sec--dark .hm-pr-head__desc { color: rgba(255, 255, 255, .85); }
+
+/* ================================= CARDS ================================ */
+.hm-pr-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 26px 26px 28px;
+    background: #fff;
+    border: 1px solid var(--hm-pr-line);
+    border-radius: 14px;
+    box-shadow: 0 12px 34px rgba(42, 29, 20, .06);
+    transition: transform .35s var(--hm-ease), box-shadow .35s var(--hm-ease);
+}
+
+.hm-pr-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 26px 52px rgba(42, 29, 20, .13);
+}
+
+.hm-pr-card__num {
+    display: block;
+    margin-bottom: 10px;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--hm-gold);
+}
+
+.hm-pr-card__title {
+    margin: 0 0 10px;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--hm-ink);
+}
+
+.hm-pr-card__text {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.8;
+    color: var(--hm-muted);
+}
+
+/* A training module carries a coloured edge, alternating down the list — the
+   colour comes from --accent, set per card in the markup. */
+.hm-pr-card--module { border-left: 4px solid var(--accent, var(--hm-gold)); }
+
+/* ---- Stage / reason card, on the terracotta bands ---- */
+.hm-pr-stage {
+    height: 100%;
+    padding: 26px 24px 28px;
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(255, 255, 255, .18);
+    border-radius: 14px;
+    transition: transform .35s var(--hm-ease), background .35s var(--hm-ease);
+}
+
+.hm-pr-stage:hover { transform: translateY(-8px); background: rgba(255, 255, 255, .13); }
+
+.hm-pr-stage__num {
+    display: block;
+    margin-bottom: 10px;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1;
+    color: #FFD89B;
+}
+
+.hm-pr-stage__title {
+    margin: 0 0 10px;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.hm-pr-stage__text {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, .82);
+}
+
+/* ================================= TABLE ================================ */
+.hm-pr-table__wrap {
+    border-radius: calc(var(--hm-radius) + 6px);
+    background: #fff;
+    border: 1px solid rgba(42, 29, 20, .06);
+    box-shadow: var(--hm-shadow-md);
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.hm-pr-table { width: 100%; border-collapse: collapse; margin: 0; }
+
+/* Header row — #843D21, the same brown as the site header bar. */
+.hm-pr-table thead th {
+    padding: 17px 20px;
+    background: #843D21;
+    color: rgba(255, 255, 255, .94);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.hm-pr-table tbody td {
+    padding: 18px 20px;
+    vertical-align: middle;
+    border-top: 1px solid rgba(42, 29, 20, .07);
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: var(--hm-pr-body);
+}
+
+.hm-pr-table tbody tr:nth-child(even) td { background: #FDFAF7; }
+.hm-pr-table tbody td strong { color: var(--hm-ink); font-weight: 700; }
+
+/* The score / duration, as a chip. */
+.hm-pr-score {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: #FFF4B8;
+    color: #843D21;
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ============================ RECRUITMENT FLOW ========================== */
+.hm-pr-flow {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+    margin: 0 0 32px;
+    padding: 0;
+    list-style: none;
+    counter-reset: none;
+}
+
+.hm-pr-flow__step {
+    position: relative;
+    padding: 22px 18px;
+    background: #fff;
+    border: 1px solid var(--hm-pr-line);
+    border-radius: 14px;
+    box-shadow: 0 10px 26px rgba(42, 29, 20, .05);
+}
+
+.hm-pr-flow__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--hm-yellow), var(--hm-gold-dark));
+    color: #4A2410;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.hm-pr-flow__label {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--hm-ink);
+}
+
+/* The responsible-placement note under the flow. */
+.hm-pr-promise {
+    margin: 28px 0 0;
+    padding: 20px 24px;
+    background: #fff;
+    border-left: 5px solid var(--hm-gold);
+    border-radius: 12px;
+    box-shadow: 0 10px 26px rgba(42, 29, 20, .05);
+    font-size: 14.5px;
+    line-height: 1.8;
+    color: var(--hm-pr-body);
+}
+
+.hm-pr-promise strong { color: var(--hm-ink); }
+
+/* ================================== CTA ================================= */
+.hm-pr-cta {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: 72px 0;
+    background: linear-gradient(128deg, var(--hm-pr-brand-deep) 0%, var(--hm-pr-brand) 58%, #C24A22 100%);
+}
+
+.hm-pr-cta__grid {
+    display: grid;
+    grid-template-columns: 1.4fr .6fr;
+    gap: 44px;
+    align-items: center;
+}
+
+.hm-pr-cta__title {
+    margin: 0 0 14px;
+    font-family: 'Poppins', 'Geist', sans-serif;
+    font-size: clamp(26px, 3.4vw, 38px);
+    font-weight: 800;
+    line-height: 1.15;
+    color: #fff;
+}
+
+.hm-pr-cta__lead {
+    max-width: 68ch;
+    margin: 0;
+    font-size: 15.5px;
+    line-height: 1.85;
+    color: rgba(255, 255, 255, .86);
+}
+
+.hm-pr-cta__actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.hm-pr-cta__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    text-decoration: none;
+    transition: color .25s var(--hm-ease);
+}
+
+.hm-pr-cta__link i { color: #FFD89B; }
+.hm-pr-cta__link:hover { color: #FFD89B; }
+
+/* =============================== RESPONSIVE ============================= */
+@media (max-width: 1199.98px) {
+    .hm-pr-flow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 991.98px) {
+    .hm-pr-page { padding-top: calc(94px + 24px); }
+    .hm-pr-hero { padding: 38px 0 44px; }
+    .hm-pr-hero__grid,
+    .hm-pr-cta__grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    .hm-pr-sec { padding: 62px 0; }
+    .hm-pr-head { margin-bottom: 34px; }
+    .hm-pr-head__title { font-size: 29px; }
+    .hm-pr-cta__actions { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 16px; }
+
+    /* A three-column table does not fit a tablet, so each row becomes its own
+       block with its column names printed beside the values (the same
+       treatment the schedules table uses). */
+    .hm-pr-table thead {
+        position: absolute;
+        width: 1px; height: 1px;
+        margin: -1px; padding: 0;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .hm-pr-table__wrap { overflow: visible; }
+    .hm-pr-table tbody tr { display: block; border-top: 1px solid rgba(42, 29, 20, .08); }
+    .hm-pr-table tbody tr:first-child { border-top: 0; }
+    .hm-pr-table tbody td { display: block; border: 0; padding: 6px 20px; }
+    .hm-pr-table tbody tr td:first-child { padding-top: 18px; }
+    .hm-pr-table tbody tr td:last-child { padding-bottom: 18px; }
+    .hm-pr-table tbody tr:nth-child(even) td { background: transparent; }
+
+    .hm-pr-table tbody td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 3px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: #A08C7D;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .hm-pr-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hm-pr-hero__card { padding: 22px 20px 24px; }
+    .hm-pr-sec { padding: 52px 0; }
+    .hm-pr-head__title { font-size: 26px; }
+    .hm-pr-card { padding: 22px 20px 24px; }
+}
+
+@media (max-width: 575.98px) {
+    .hm-pr-page { padding-top: calc(94px + 18px); }
+    .hm-pr-flow { grid-template-columns: minmax(0, 1fr); }
+    .hm-pr-hero__actions { flex-direction: column; align-items: stretch; }
+    .hm-pr-btn { justify-content: center; }
+    .hm-pr-head__title { font-size: 23px; }
+    .hm-pr-cta { padding: 54px 0; }
+    .row.g-4 { --bs-gutter-x: 14px; --bs-gutter-y: 14px; }
+}
+
+/* ---------------------------- Reduced motion ---------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    .hm-pr-btn,
+    .hm-pr-card,
+    .hm-pr-stage,
+    .hm-pr-cta__link { transition: none !important; }
+
+    .hm-pr-btn:hover,
+    .hm-pr-card:hover,
+    .hm-pr-stage:hover { transform: none; }
+}

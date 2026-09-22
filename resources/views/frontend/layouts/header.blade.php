@@ -70,6 +70,7 @@
                     </div>
                 </li>
 
+                <li><a href="{{ route('frontend.placement-readiness') }}" @class(['active' => request()->routeIs('frontend.placement-readiness')])>Placement Readiness</a></li>
                 <li><a href="{{ route('frontend.testimonials') }}" @class(['active' => request()->routeIs('frontend.testimonials')])>Testimonials</a></li>
                 <li><a href="{{ route('frontend.blog') }}" @class(['active' => request()->routeIs('frontend.blog*')])>Blog</a></li>
                 <li><a href="{{ route('frontend.contact-us') }}" @class(['active' => request()->routeIs('frontend.contact-us')])>Contact Us</a></li>

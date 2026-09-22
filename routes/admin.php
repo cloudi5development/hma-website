@@ -22,6 +22,7 @@ use App\Http\Controllers\Backend\HeroController;
 use App\Http\Controllers\Backend\NotificationController;
 use App\Http\Controllers\Backend\PartnerController;
 use App\Http\Controllers\Backend\PasswordResetController;
+use App\Http\Controllers\Backend\PlacementSectionController;
 use App\Http\Controllers\Backend\ReelController;
 use App\Http\Controllers\Backend\ScheduleController;
 use App\Http\Controllers\Backend\SeoPageController;
@@ -116,6 +117,13 @@ Route::prefix('admin')->name('backend.')->group(function () {
         Route::get('about-sections', [AboutSectionController::class, 'index'])->name('about-sections.index');
         Route::get('about-sections/{key}/edit', [AboutSectionController::class, 'edit'])->name('about-sections.edit');
         Route::put('about-sections/{key}', [AboutSectionController::class, 'update'])->name('about-sections.update');
+
+        // Placement Readiness (the nine blocks of /placement-readiness). Seeded
+        // and keyed like About Us, so this is an overview plus edit/update —
+        // what repeats inside a block is edited as rows on its own screen.
+        Route::get('placement-readiness', [PlacementSectionController::class, 'index'])->name('placement-readiness.index');
+        Route::get('placement-readiness/{key}/edit', [PlacementSectionController::class, 'edit'])->name('placement-readiness.edit');
+        Route::put('placement-readiness/{key}', [PlacementSectionController::class, 'update'])->name('placement-readiness.update');
 
         // Sections → Trusted Partners / Counters / Events / Testimonials / FAQ
         Route::resource('partners', PartnerController::class)->except(['show']);
