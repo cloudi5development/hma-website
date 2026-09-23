@@ -7,6 +7,7 @@
         'social'  => 'Social Media',
         'email'   => 'Email / SMTP',
         'seo'     => 'SEO Defaults',
+        'recaptcha' => 'reCAPTCHA',
     ];
 @endphp
 <div class="hm-card mb-3">

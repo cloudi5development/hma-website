@@ -172,6 +172,40 @@ class SettingController extends Controller
         }
     }
 
+    /* =============================== reCAPTCHA ==============================
+       The keys the admin pastes from the reCAPTCHA console. They live here
+       rather than in .env so a key can be changed without a deploy; the
+       verifier falls back to .env when these are blank. */
+
+    public function recaptcha(): View
+    {
+        return view('backend.settings.recaptcha');
+    }
+
+    public function updateRecaptcha(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'recaptcha_site_key'   => ['nullable', 'string', 'max:255'],
+            'recaptcha_secret_key' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        // Trim: a key pasted out of the console often brings a space with it,
+        // and a stray space makes Google answer "invalid site key".
+        $data['recaptcha_site_key'] = trim((string) $data['recaptcha_site_key']);
+
+        // Same "leave it blank to keep the saved one" rule the SMTP password
+        // uses - the secret is never rendered back into the form.
+        if (blank($data['recaptcha_secret_key'] ?? null)) {
+            unset($data['recaptcha_secret_key']);
+        } else {
+            $data['recaptcha_secret_key'] = trim($data['recaptcha_secret_key']);
+        }
+
+        Setting::putMany($data);
+
+        return back()->with('success', 'reCAPTCHA keys saved.');
+    }
+
     /* ============================ LOGO / FAVICON ============================ */
 
     public function logo(): View

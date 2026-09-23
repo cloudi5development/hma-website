@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -25,13 +26,39 @@ class RecaptchaVerifier
     /** Configured, and therefore switched on, only when both keys are present. */
     public function enabled(): bool
     {
-        return filled(config('services.recaptcha.site_key'))
-            && filled(config('services.recaptcha.secret_key'));
+        return filled($this->siteKey()) && filled($this->secretKey());
     }
 
+    /**
+     * The admin's own keys win.
+     *
+     * Settings -> reCAPTCHA is where they are typed, so a key can be changed
+     * without touching the server; .env is the fallback, which keeps an
+     * install that was configured that way working, and gives the test suite
+     * something to set. Empty in the panel means "fall back", not "off".
+     */
     public function siteKey(): ?string
     {
-        return config('services.recaptcha.site_key');
+        return $this->fromSettings('recaptcha_site_key')
+            ?? config('services.recaptcha.site_key');
+    }
+
+    public function secretKey(): ?string
+    {
+        return $this->fromSettings('recaptcha_secret_key')
+            ?? config('services.recaptcha.secret_key');
+    }
+
+    /** A stored setting, or null when it is missing, blank or unreadable. */
+    private function fromSettings(string $key): ?string
+    {
+        try {
+            $value = trim((string) Setting::get($key));
+        } catch (Throwable $e) {
+            return null;   // no database yet (a fresh install, an early boot)
+        }
+
+        return $value !== '' ? $value : null;
     }
 
     /** 'v2' (the checkbox) or 'v3' (invisible). */
@@ -68,7 +95,7 @@ class RecaptchaVerifier
             $response = Http::asForm()
                 ->timeout((int) config('services.recaptcha.timeout', 5))
                 ->post(self::ENDPOINT, array_filter([
-                    'secret'   => config('services.recaptcha.secret_key'),
+                    'secret'   => $this->secretKey(),
                     'response' => $token,
                     'remoteip' => $ip,
                 ]));

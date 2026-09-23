@@ -225,6 +225,8 @@ Route::prefix('admin')->name('backend.')->group(function () {
             Route::post('email/test', [SettingController::class, 'sendTestMail'])->name('email.test');
             Route::get('seo', [SettingController::class, 'seo'])->name('seo');
             Route::put('seo', [SettingController::class, 'updateSeo'])->name('seo.update');
+            Route::get('recaptcha', [SettingController::class, 'recaptcha'])->name('recaptcha');
+            Route::put('recaptcha', [SettingController::class, 'updateRecaptcha'])->name('recaptcha.update');
         });
 
         // Leads → Contact Enquiry (list + view + status + delete + export)

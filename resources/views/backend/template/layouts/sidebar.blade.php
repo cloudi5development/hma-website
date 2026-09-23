@@ -286,11 +286,12 @@
                 <li><a class="app-nav__sublink {{ request()->routeIs('backend.settings.social') ? 'is-active' : '' }}" href="{{ route('backend.settings.social') }}">{!! $ic('social') !!}<span>Social Media</span></a></li>
                 <li><a class="app-nav__sublink {{ request()->routeIs('backend.settings.email') ? 'is-active' : '' }}" href="{{ route('backend.settings.email') }}">{!! $ic('email') !!}<span>Email / SMTP</span></a></li>
                 <li><a class="app-nav__sublink {{ request()->routeIs('backend.settings.seo') ? 'is-active' : '' }}" href="{{ route('backend.settings.seo') }}">{!! $ic('seo') !!}<span>SEO Defaults</span></a></li>
+                <li><a class="app-nav__sublink {{ request()->routeIs('backend.settings.recaptcha') ? 'is-active' : '' }}" href="{{ route('backend.settings.recaptcha') }}">{!! $ic('seo') !!}<span>reCAPTCHA</span></a></li>
             </ul>
             <div class="app-nav__flyout">
                 <div class="app-nav__flyout-title">Settings</div>
                 <a href="{{ route('backend.settings.general') }}">General</a><a href="{{ route('backend.settings.logo') }}">Logo</a><a href="{{ route('backend.settings.contact') }}">Contact</a><a href="{{ route('backend.settings.social') }}">Social Media</a>
-                <a href="{{ route('backend.settings.email') }}">Email / SMTP</a><a href="{{ route('backend.settings.seo') }}">SEO Defaults</a>
+                <a href="{{ route('backend.settings.email') }}">Email / SMTP</a><a href="{{ route('backend.settings.seo') }}">SEO Defaults</a><a href="{{ route('backend.settings.recaptcha') }}">reCAPTCHA</a>
             </div>
         </div>
         @endif

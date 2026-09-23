@@ -8,6 +8,8 @@ use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\Form;
 use App\Models\FormResponse;
+use App\Models\Setting;
+use App\Models\User;
 use App\Services\FormBuilderService;
 use App\Support\FormFieldType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -34,6 +36,12 @@ class RecaptchaEveryFormTest extends TestCase
     {
         parent::setUp();
         Mail::fake();
+
+        // Setting caches its rows in a static for the life of the request, and
+        // a test process is one long life: without this, keys saved by one test
+        // are still cached when the next one starts with an empty database.
+        Setting::putMany([]);
+
         config()->set('services.recaptcha.version', 'v2');
         config()->set('services.recaptcha.site_key', 'site-key-for-tests');
         config()->set('services.recaptcha.secret_key', 'secret-key-for-tests');
@@ -311,6 +319,126 @@ class RecaptchaEveryFormTest extends TestCase
         $this->assertStringContainsString('api.js?render=site-key-for-tests', $page);
         $this->assertStringContainsString('<input type="hidden" name="g-recaptcha-response"', $page);
         $this->assertStringNotContainsString('class="g-recaptcha"', $page);
+    }
+
+    /* ============================ THE SETTINGS PAGE ========================= */
+
+    private function signedInAdmin(): self
+    {
+        $admin = User::factory()->create(['is_super_admin' => true]);
+
+        return $this->withSession([
+            'admin_logged_in' => true, 'admin_id' => $admin->id,
+            'admin_name' => $admin->name, 'admin_email' => $admin->email,
+        ]);
+    }
+
+    public function test_the_settings_page_offers_the_two_key_fields(): void
+    {
+        $page = $this->signedInAdmin()->get(route('backend.settings.recaptcha'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('name="recaptcha_site_key"', $page);
+        $this->assertStringContainsString('name="recaptcha_secret_key"', $page);
+    }
+
+    /**
+     * Typed in the panel, and the forms pick them up: the keys live in the
+     * database so each site holds its own and a deploy never carries them.
+     */
+    public function test_keys_typed_in_the_panel_put_the_box_on_the_forms(): void
+    {
+        // Nothing configured anywhere to begin with.
+        config()->set('services.recaptcha.site_key', null);
+        config()->set('services.recaptcha.secret_key', null);
+        Setting::putMany(['recaptcha_site_key' => '', 'recaptcha_secret_key' => '']);
+
+        $this->assertStringNotContainsString(
+            'g-recaptcha',
+            $this->get(route('frontend.contact-us'))->assertOk()->getContent(),
+            'with no keys there should be no widget at all',
+        );
+
+        $this->signedInAdmin()->put(route('backend.settings.recaptcha.update'), [
+            'recaptcha_site_key'   => 'site-key-from-the-panel',
+            'recaptcha_secret_key' => 'secret-key-from-the-panel',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $page = $this->get(route('frontend.contact-us'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-sitekey="site-key-from-the-panel"', $page);
+        $this->assertStringNotContainsString('secret-key-from-the-panel', $page, 'the secret must never be rendered');
+    }
+
+    /** The panel wins over the server's .env. */
+    public function test_the_panel_key_overrides_the_env_key(): void
+    {
+        config()->set('services.recaptcha.site_key', 'key-from-env');
+        config()->set('services.recaptcha.secret_key', 'secret-from-env');
+
+        Setting::putMany([
+            'recaptcha_site_key'   => 'key-from-the-panel',
+            'recaptcha_secret_key' => 'secret-from-the-panel',
+        ]);
+
+        $page = $this->get(route('frontend.contact-us'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-sitekey="key-from-the-panel"', $page);
+        $this->assertStringNotContainsString('key-from-env', $page);
+    }
+
+    /** Blank in the panel falls back to .env rather than switching it off. */
+    public function test_a_blank_panel_key_falls_back_to_the_env(): void
+    {
+        config()->set('services.recaptcha.site_key', 'key-from-env');
+        config()->set('services.recaptcha.secret_key', 'secret-from-env');
+        Setting::putMany(['recaptcha_site_key' => '', 'recaptcha_secret_key' => '']);
+
+        $this->assertStringContainsString(
+            'data-sitekey="key-from-env"',
+            $this->get(route('frontend.contact-us'))->assertOk()->getContent(),
+        );
+    }
+
+    /** Saving without retyping the secret keeps the stored one. */
+    public function test_leaving_the_secret_blank_keeps_it(): void
+    {
+        Setting::putMany(['recaptcha_secret_key' => 'the-saved-secret']);
+
+        $this->signedInAdmin()->put(route('backend.settings.recaptcha.update'), [
+            'recaptcha_site_key'   => 'a-new-site-key',
+            'recaptcha_secret_key' => '',
+        ])->assertSessionHasNoErrors();
+
+        Setting::putMany([]);   // drop the request cache
+
+        $this->assertSame('the-saved-secret', Setting::get('recaptcha_secret_key'));
+        $this->assertSame('a-new-site-key', Setting::get('recaptcha_site_key'));
+    }
+
+    /** A key pasted with a stray space still works. */
+    public function test_a_pasted_key_is_trimmed(): void
+    {
+        $this->signedInAdmin()->put(route('backend.settings.recaptcha.update'), [
+            'recaptcha_site_key'   => '  spaced-site-key  ',
+            'recaptcha_secret_key' => '  spaced-secret  ',
+        ])->assertSessionHasNoErrors();
+
+        Setting::putMany([]);
+
+        $this->assertSame('spaced-site-key', Setting::get('recaptcha_site_key'));
+        $this->assertSame('spaced-secret', Setting::get('recaptcha_secret_key'));
+    }
+
+    /** Settings are behind the admin guard, like every other settings screen. */
+    public function test_the_keys_are_not_editable_by_a_stranger(): void
+    {
+        $this->get(route('backend.settings.recaptcha'))->assertRedirect();
+
+        $this->put(route('backend.settings.recaptcha.update'), [
+            'recaptcha_site_key' => 'someone-elses-key',
+        ])->assertRedirect();
+
+        $this->assertNotSame('someone-elses-key', Setting::get('recaptcha_site_key'));
     }
 
     /* ============================= WHERE IT SITS ============================ */
