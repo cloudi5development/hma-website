@@ -137,6 +137,19 @@
                              last step. It starts visible so that a form with no
                              JavaScript can still be submitted. --}}
                         <div class="hmf__actions" data-submit-row>
+                            {{-- Inside the action row, above the button: on a
+                                 stepped form the script reveals this row on the
+                                 last step, and a tick box with no Submit beside
+                                 it would be a puzzle on page one.
+
+                                 Only on the public page — the admin's preview is
+                                 a rehearsal by somebody already signed in, and
+                                 it stores nothing. --}}
+                            @include('frontend.partials.recaptcha', [
+                                'action'    => 'dynamic_form',
+                                'noteClass' => 'hm-recaptcha-note hmf__recaptcha',
+                            ])
+
                             <button type="submit" class="hmf__submit">
                                 <span>{{ $form->submit_label }}</span>
                                 <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>

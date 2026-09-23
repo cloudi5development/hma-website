@@ -103,7 +103,7 @@
                             <div class="hm-blog-card__media">
                                 <img class="hm-blog-card__img"
                                      src="{{ $blog->image_url }}"
-                                     alt="{{ $blog->title }}"
+                                     alt="{{ $blog->image_alt_text }}"
                                      width="197" height="165" loading="lazy">
                             </div>
 

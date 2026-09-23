@@ -70,7 +70,10 @@
                                 </tr>
                                 <tr>
                                     <td style="padding-top:16px;border-top:1px solid #43342a;margin-top:14px;font-size:11px;color:#9a8b7c;">
-                                        &copy; {{ now()->year }} Hire Minds Academy. This is an automated message — please don't reply directly.
+                                        {{-- Overridable: the admin's copy of a submission sets a Reply-To
+                                             that reaches the sender, so telling its reader not to reply would
+                                             be wrong. Every other email keeps this wording untouched. --}}
+                                        &copy; {{ now()->year }} Hire Minds Academy. @yield('footer_note', "This is an automated message — please don't reply directly.")
                                     </td>
                                 </tr>
                             </table>

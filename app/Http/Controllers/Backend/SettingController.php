@@ -130,10 +130,20 @@ class SettingController extends Controller
             'mail_encryption'   => ['nullable', 'in:tls,ssl,none'],
             'mail_from_address' => ['nullable', 'email', 'max:190'],
             'mail_from_name'    => ['nullable', 'string', 'max:120'],
+
+            // Where the admin's copy of a submission is sent. Blank is allowed:
+            // notifications then fall back to Settings -> Contact.
+            'enquiry_mail_to'   => ['nullable', 'email', 'max:190'],
+            'enquiry_mail_to_2' => ['nullable', 'email', 'max:190'],
+        ], [
+            'enquiry_mail_to.email'   => 'Enter a valid enquiry email address.',
+            'enquiry_mail_to_2.email' => 'Enter a valid second enquiry email address.',
         ]);
 
-        // Keep the stored password when the field is left blank on save.
-        if (blank($data['mail_password'])) {
+        // Keep the stored password when the field is left blank on save. The
+        // key can be absent entirely (a request that posts only some of these
+        // fields), which used to be a 500 rather than "leave it as it is".
+        if (blank($data['mail_password'] ?? null)) {
             unset($data['mail_password']);
         }
 

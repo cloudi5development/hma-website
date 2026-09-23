@@ -143,6 +143,8 @@
                                 <textarea class="form-control hm-input hm-textarea" id="cfMessage" name="message" placeholder="Tell us how we can help you...">{{ $prefill }}</textarea>
                             </div>
 
+                            @include('frontend.partials.recaptcha', ['action' => 'contact_enquiry'])
+
                             <button type="submit" class="hm-contact__submit">
                                 <span class="hm-btn__label">Send Enquiry <i class="fa-solid fa-paper-plane" aria-hidden="true"></i></span>
                             </button>
@@ -191,12 +193,23 @@
 
                 if (submit) { submit.disabled = true; if (label) label.textContent = 'Sending…'; }
 
+                send();
+            });
+
+            function send() {
                 fetch(form.action, {
                     method: 'POST',
                     headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
                     body: new FormData(form)
                 })
-                .then(function (r) { return r.ok ? r.json() : Promise.reject(r); })
+                .then(function (r) {
+                    // 422 carries the reason - a failed reCAPTCHA check says so
+                    // in words rather than as "something went wrong".
+                    if (r.status === 422) {
+                        return r.json().then(function (body) { return Promise.reject(firstError(body)); });
+                    }
+                    return r.ok ? r.json() : Promise.reject(null);
+                })
                 .then(function (data) {
                     if (data && data.success) {
                         form.reset();
@@ -205,13 +218,28 @@
                         showNote('Something went wrong. Please try again.', false);
                     }
                 })
-                .catch(function () {
-                    showNote('Sorry, we could not send your enquiry. Please try again or call us.', false);
+                .catch(function (message) {
+                    showNote(
+                        typeof message === 'string' && message
+                            ? message
+                            : 'Sorry, we could not send your enquiry. Please try again or call us.',
+                        false,
+                    );
                 })
                 .finally(function () {
                     if (submit) { submit.disabled = false; if (label) label.innerHTML = labelHtml; }
                 });
-            });
+            }
+
+            /** The first message out of a Laravel validation response. */
+            function firstError(body) {
+                var errors = body && body.errors;
+                if (!errors) return body && body.message;
+                for (var key in errors) {
+                    if (errors[key] && errors[key].length) return errors[key][0];
+                }
+                return body.message;
+            }
         })();
     </script>
 @endpush

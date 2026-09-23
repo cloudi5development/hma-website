@@ -1,7 +1,23 @@
 @extends('frontend.layouts.template-base')
 
-@section('title', $blog->title . ' — Hire Minds Academy')
-@section('meta_description', $blog->excerpt)
+{{-- Block sections, not the one-line @section('title', $value) form: that
+     form stores e($value) and the layout escapes again when it yields, so an
+     "&" in a post title would reach the browser as "&amp;". Same treatment as
+     course-details. The meta below is the post's own - SEO -> Page SEO is keyed
+     by route name and skips the details pages, since every post shares one. --}}
+@php
+    $blogMetaDescription = $blog->meta_description ?: $blog->excerpt;
+@endphp
+
+@section('title'){!! $blog->meta_title ?: $blog->title . ' — Hire Minds Academy' !!}@endsection
+
+@if (filled($blogMetaDescription))
+    @section('meta_description'){!! $blogMetaDescription !!}@endsection
+@endif
+
+@if (filled($blog->meta_keywords))
+    @section('meta_keywords'){!! $blog->meta_keywords !!}@endsection
+@endif
 
 @push('styles')
     {{-- Poppins — the heading typeface used across the site's hero/banner blocks --}}
@@ -107,7 +123,7 @@
                              copy read as one bordered panel. --}}
                         <figure class="hm-post__figure">
                             <img src="{{ $blog->image_url }}"
-                                 alt="{{ $blog->title }}"
+                                 alt="{{ $blog->image_alt_text }}"
                                  width="982" height="520">
                         </figure>
 

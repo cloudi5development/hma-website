@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Concerns\SummarisesForAdminEmail;
 
 class EventRegistration extends Model
 {
@@ -20,6 +21,23 @@ class EventRegistration extends Model
         'Business Owner',
         'Other',
     ];
+
+    use SummarisesForAdminEmail;
+
+    /** event_title is the readable snapshot of event_id. */
+    protected function adminEmailSkips(): array
+    {
+        return ['event_id'];
+    }
+
+    protected function adminEmailLabels(): array
+    {
+        return [
+            'event_title'         => 'Event',
+            'professional_status' => 'Professional status',
+            'agreed_terms'        => 'Accepted the terms',
+        ];
+    }
 
     protected $fillable = [
         'event_id', 'event_title', 'name', 'email', 'phone', 'city',

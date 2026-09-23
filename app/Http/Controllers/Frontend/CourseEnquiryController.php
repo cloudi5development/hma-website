@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Frontend\Concerns\NotifiesAdminOfSubmission;
+use App\Rules\Recaptcha;
 use App\Mail\CourseEnquiryThankYou;
 use App\Models\AdminNotification;
 use App\Models\Course;
@@ -14,6 +16,11 @@ use Illuminate\Support\Facades\Mail;
 
 class CourseEnquiryController extends Controller
 {
+    use NotifiesAdminOfSubmission;
+
+    /** The action the page asks Google for; the token is only good for this. */
+    private const RECAPTCHA_ACTION = 'course_enquiry';
+
     /**
      * Store a course-enquiry (the "Take the First Step" modal on course-details)
      * and email the student a thank-you. Submitted via fetch, so it answers JSON.
@@ -31,6 +38,9 @@ class CourseEnquiryController extends Controller
             // Only the Apply buttons on a schedule row send this; it is a label
             // the page rendered, so it is length-capped and stored as typed.
             'batch'       => ['nullable', 'string', 'max:120'],
+            // reCAPTCHA v3. The rule stands aside when no keys are configured,
+            // so an install without them behaves exactly as it did before.
+            'g-recaptcha-response' => [new Recaptcha(self::RECAPTCHA_ACTION, $request->ip())],
         ]);
 
         $course = Course::findOrFail($data['course_id']);
@@ -62,6 +72,14 @@ class CourseEnquiryController extends Controller
         } catch (\Throwable $e) {
             report($e);
         }
+
+        // The admin's own copy of the same submission. Sent whatever
+        // happened above: the two emails are independent.
+        $this->notifyAdminOfSubmission(
+            $enquiry,
+            'New Course Enquiry',
+            route('backend.course-enquiries.show', $enquiry),
+        );
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true]);

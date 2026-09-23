@@ -4,8 +4,15 @@
      otherwise the page's own @section; otherwise the site-wide default from
      Settings → SEO Defaults. $seo comes from AppServiceProvider's composer. --}}
 @php
+    // See seo-content.blade.php: yieldContent() escapes its default argument,
+    // so a fallback passed through it and printed with {{ }} came out escaped
+    // twice. hasSection() picks the branch instead.
+    $fromSection = fn (string $name, $fallback = '') => $__env->hasSection($name)
+        ? $__env->yieldContent($name)
+        : $fallback;
+
     $metaRobots = ($seo?->meta_robots ?: null)
-        ?: $__env->yieldContent('meta_robots', \App\Models\Setting::get('seo_meta_robots', 'index, follow'));
+        ?: $fromSection('meta_robots', \App\Models\Setting::get('seo_meta_robots', 'index, follow'));
     $googleSiteVerification = trim((string) \App\Models\Setting::get('seo_google_site_verification', ''));
     $bingSiteVerification = trim((string) \App\Models\Setting::get('seo_bing_site_verification', ''));
     $googleAnalyticsId = trim((string) \App\Models\Setting::get('seo_google_analytics_id', ''));
@@ -18,9 +25,9 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <meta name="description" content="{{ ($seo?->meta_description ?: null)
-    ?: $__env->yieldContent('meta_description', \App\Models\Setting::get('seo_meta_description', config('app.name'))) }}">
+    ?: $fromSection('meta_description', \App\Models\Setting::get('seo_meta_description', config('app.name'))) }}">
 <meta name="keywords" content="{{ ($seo?->meta_keywords ?: null)
-    ?: $__env->yieldContent('meta_keywords', \App\Models\Setting::get('seo_meta_keywords', '')) }}">
+    ?: $fromSection('meta_keywords', \App\Models\Setting::get('seo_meta_keywords', '')) }}">
 <meta name="author" content="{{ config('app.name') }}">
 <meta name="robots" content="{{ $metaRobots }}">
 @if ($googleSiteVerification !== '')

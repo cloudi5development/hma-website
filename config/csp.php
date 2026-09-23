@@ -51,6 +51,14 @@ return [
             'https://fonts.gstatic.com',
         ],
 
+        // Google reCAPTCHA v3 on the contact form: api.js comes from google.com
+        // and loads its worker from gstatic.com, and the invisible challenge is
+        // an iframe on google.com (already allowed under 'frames' below).
+        'recaptcha' => [
+            'https://www.google.com',
+            'https://www.gstatic.com',
+        ],
+
         // Analytics / Tag Manager, configured under Settings → SEO Defaults.
         // Left in the policy whether or not an ID is set, so switching one on
         // in the panel does not need a code change.

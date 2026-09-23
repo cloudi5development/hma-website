@@ -5,11 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Concerns\SummarisesForAdminEmail;
 
 class CourseEnquiry extends Model
 {
     /** Workflow statuses shared with contact enquiries. */
     public const STATUSES = ['New', 'Contacted', 'Closed'];
+
+    use SummarisesForAdminEmail;
+
+    /** course_name is the readable snapshot of course_id. */
+    protected function adminEmailSkips(): array
+    {
+        return ['course_id'];
+    }
+
+    protected function adminEmailLabels(): array
+    {
+        return ['course_name' => 'Course', 'career_goal' => 'Career goal'];
+    }
 
     protected $fillable = [
         'course_id', 'course_name', 'batch', 'name', 'email', 'phone', 'city',

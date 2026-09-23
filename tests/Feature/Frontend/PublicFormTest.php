@@ -5,6 +5,7 @@ namespace Tests\Feature\Frontend;
 use App\Models\Form;
 use App\Models\FormResponse;
 use App\Models\FormResponseValue;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\FormBuilderService;
 use App\Services\FormSubmissionService;
@@ -549,11 +550,43 @@ class PublicFormTest extends TestCase
         Mail::assertSent(\App\Mail\FormResponseNotification::class, function ($mail) {
             return $mail->hasTo('admissions@example.com') && $mail->hasTo('hr@example.com');
         });
+
+        // and the site's own admin address alongside them
+        Mail::assertSent(\App\Mail\FormResponseNotification::class, fn ($mail) => $mail->hasTo(
+            \App\Models\Setting::adminNotificationRecipients()[0],
+        ));
     }
 
-    public function test_nothing_is_emailed_when_notifications_are_off(): void
+    /**
+     * The form's own extra addresses are the part that switches off. The site's
+     * admin address is still told, because a response nobody hears about is the
+     * bug this replaced: no form has ever had notify_enabled set, and the panel
+     * offers no way to set it.
+     */
+    public function test_the_site_admin_is_emailed_even_with_the_forms_own_addresses_off(): void
     {
         Mail::fake();
+        Setting::putMany(['contact_email' => 'admin@hireminds.test']);
+
+        $form = $this->form([$this->field(['label' => 'Name'])], [
+            'notify_enabled' => 0,
+            'notify_emails'  => 'admissions@example.com',
+        ]);
+
+        $this->submit($form, ['name' => 'Arun']);
+
+        Mail::assertSent(\App\Mail\FormResponseNotification::class, function ($mail) {
+            return $mail->hasTo('admin@hireminds.test')
+                && ! $mail->hasTo('admissions@example.com');
+        });
+    }
+
+    /** With no address configured anywhere there is nobody to tell. */
+    public function test_nothing_is_emailed_when_the_site_has_no_address(): void
+    {
+        Mail::fake();
+        Setting::putMany(['contact_email' => '', 'mail_from_address' => '']);
+        config()->set('mail.from.address', null);
 
         $form = $this->form([$this->field(['label' => 'Name'])], ['notify_enabled' => 0]);
 

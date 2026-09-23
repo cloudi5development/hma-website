@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Frontend\Concerns\NotifiesAdminOfSubmission;
+use App\Rules\Recaptcha;
 use App\Mail\EventRegistrationThankYou;
 use App\Models\AdminNotification;
 use App\Models\Event;
@@ -15,6 +17,11 @@ use Illuminate\Validation\Rule;
 
 class EventRegistrationController extends Controller
 {
+    use NotifiesAdminOfSubmission;
+
+    /** The action the page asks Google for; the token is only good for this. */
+    private const RECAPTCHA_ACTION = 'event_registration';
+
     /**
      * Store a submission from the "Register for the Event" modal and email the
      * registrant a thank-you. Submitted via fetch, so it answers JSON.
@@ -32,6 +39,9 @@ class EventRegistrationController extends Controller
             // The modal will not submit without the box ticked; enforced here too
             // so the record can never be created without the consent on it.
             'agreed_terms'        => ['accepted'],
+            // reCAPTCHA v3. The rule stands aside when no keys are configured,
+            // so an install without them behaves exactly as it did before.
+            'g-recaptcha-response' => [new Recaptcha(self::RECAPTCHA_ACTION, $request->ip())],
         ], [
             'agreed_terms.accepted' => 'Please accept the Terms & Conditions to register.',
         ]);
@@ -67,6 +77,14 @@ class EventRegistrationController extends Controller
         } catch (\Throwable $e) {
             report($e);
         }
+
+        // The admin's own copy of the same submission. Sent whatever
+        // happened above: the two emails are independent.
+        $this->notifyAdminOfSubmission(
+            $registration,
+            'New Event Registration',
+            route('backend.event-registrations.show', $registration),
+        );
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true]);

@@ -68,6 +68,43 @@ class Setting extends Model
     }
 
     /**
+     * Where an admin notification goes when somebody submits something.
+     *
+     * The admin types these on Settings -> Email ("Enquiry Mail Address"), and
+     * both addresses are copied on every submission. Left blank, it falls back
+     * to the address the site already publishes as its own (Settings ->
+     * Contact), then to the address mail is sent FROM, then to the .env
+     * default -- so notifications keep working on an install where nobody has
+     * filled the new fields in. Returns [] only when none of those is a valid
+     * address, and the caller then sends nothing.
+     *
+     * @return array<int, string>
+     */
+    public static function adminNotificationRecipients(): array
+    {
+        $chosen = collect([static::get('enquiry_mail_to'), static::get('enquiry_mail_to_2')])
+            ->map(fn ($email) => trim((string) $email))
+            ->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL))
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($chosen) {
+            return $chosen;
+        }
+
+        foreach ([static::get('contact_email'), static::get('mail_from_address'), config('mail.from.address')] as $email) {
+            $email = trim((string) $email);
+
+            if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return [$email];
+            }
+        }
+
+        return [];
+    }
+
+    /**
      * Branch offices, each with its own name, address and map. Every entry gets
      * a `key` (slug, used by the contact page's tab switcher) and a `map` that
      * is always embeddable — an admin who leaves the embed field blank falls

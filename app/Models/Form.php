@@ -196,12 +196,34 @@ class Form extends Model
     }
 
     /**
-     * Where a submission notification is sent. Blank when notifications are off
-     * or no address was given, and the caller then sends nothing.
+     * Where a submission notification is sent.
+     *
+     * The site's own admin address always gets one, so a response can never be
+     * submitted with nobody told about it. A form may name further addresses of
+     * its own (notify_emails) - a job application and a course enquiry can
+     * belong to different people - and those are added when notify_enabled is
+     * on. Blank only when the site has no valid address configured at all, and
+     * the caller then sends nothing.
      *
      * @return array<int, string>
      */
     public function notificationRecipients(): array
+    {
+        return collect(Setting::adminNotificationRecipients())
+            ->merge($this->extraNotificationRecipients())
+            ->map(fn ($email) => trim((string) $email))
+            ->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL))
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * The addresses this form names for itself, on top of the site's own.
+     *
+     * @return array<int, string>
+     */
+    public function extraNotificationRecipients(): array
     {
         if (! $this->setting('notify_enabled')) {
             return [];

@@ -82,3 +82,50 @@ button, input, select, textarea { font-family: inherit; }
 
 
 /* 1.header */
+
+/* ============================== reCAPTCHA ==============================
+   Shared by every form on the site (frontend/partials/recaptcha.blade.php).
+
+   Google's floating badge is hidden: it sits bottom-right, exactly where the
+   WhatsApp / Instagram / scroll-to-top buttons already are. Their terms allow
+   hiding it provided the attribution below is shown in the form instead, so
+   the two rules belong together and neither may be removed on its own. */
+.grecaptcha-badge { visibility: hidden; }
+
+/* The v2 "I'm not a robot" checkbox. Google's iframe is a fixed 304x78, which
+   is wider than a phone-width modal once padding is taken off, so it is scaled
+   down from its top-left corner there rather than pushing the page sideways. */
+.hm-recaptcha {
+    margin: 0 0 16px;   /* it sits ABOVE the submit button */
+}
+
+.hm-recaptcha__error {
+    margin: 8px 0 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #c0392b;
+}
+
+@media (max-width: 400px) {
+    .hm-recaptcha .g-recaptcha {
+        transform: scale(.86);
+        transform-origin: 0 0;
+        height: 68px;          /* 78 * .86, so nothing below it overlaps */
+    }
+}
+
+.hm-recaptcha-note {
+    margin: 12px 0 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #8A7E70;
+}
+
+.hm-recaptcha-note a {
+    color: #A85A2E;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(168, 90, 46, .3);
+}
+
+.hm-recaptcha-note a:hover,
+.hm-recaptcha-note a:focus-visible { color: #843D21; border-bottom-color: #843D21; }

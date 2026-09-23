@@ -13,9 +13,10 @@ class Blog extends Model
     // renamed to visibleOn() so it no longer shadows Eloquent's forPage().
 
     protected $fillable = [
-        'title', 'slug', 'excerpt', 'content', 'image', 'author',
+        'title', 'slug', 'excerpt', 'content', 'image', 'image_alt', 'author',
         'category', 'published_at', 'sort_order', 'is_active',
         'show_home', 'is_latest',
+        'meta_title', 'meta_description', 'meta_keywords',
     ];
 
     protected $casts = [
@@ -50,6 +51,17 @@ class Blog extends Model
     public function getImageUrlAttribute(): string
     {
         return asset($this->image);
+    }
+
+    /**
+     * Alt text for the cover image, used on the card grids and the article
+     * hero. The admin writes it on the post; left blank it falls back to the
+     * title, which is what every one of those images used before the field
+     * existed.
+     */
+    public function getImageAltTextAttribute(): string
+    {
+        return trim((string) $this->image_alt) ?: (string) $this->title;
     }
 
     /** "20 July, 2024" — matches the design's date styling. */

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Form;
 use App\Services\FormSubmissionService;
+use App\Services\RecaptchaVerifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -23,6 +24,9 @@ use PDOException;
  */
 class PublicFormController extends Controller
 {
+    /** The action the page asks Google for; the token is only good for this. */
+    private const RECAPTCHA_ACTION = 'dynamic_form';
+
     public function __construct(private FormSubmissionService $submissions)
     {
     }
@@ -85,6 +89,18 @@ class PublicFormController extends Controller
         // whatever is submitting learns nothing about why it failed.
         if (filled($request->input(FormSubmissionService::HONEYPOT))) {
             return $this->finish($request, $form);
+        }
+
+        // reCAPTCHA v3. Checked here rather than in the field validator so the
+        // refusal reads as a notice about the form itself, not as a problem
+        // with one of the admin's questions. Passes straight through when no
+        // keys are configured, and the admin's preview never comes here.
+        if (! app(RecaptchaVerifier::class)->passes(
+            $request->input('g-recaptcha-response'), self::RECAPTCHA_ACTION, $request->ip(),
+        )) {
+            return back()
+                ->with('form_error', 'We could not verify that you are a person. Please reload the page and try again.')
+                ->withInput();
         }
 
         $input     = $this->submissions->normalise($form, $request->all());

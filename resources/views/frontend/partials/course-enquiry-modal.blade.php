@@ -176,6 +176,8 @@
                             </div>
                         </div>
 
+                        @include('frontend.partials.recaptcha', ['action' => 'course_enquiry'])
+
                         <button class="hm-enq__submit" type="submit">
                             <span>Send Enquiry</span>
                             <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>

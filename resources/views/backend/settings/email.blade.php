@@ -106,7 +106,44 @@
                             </div>
                         </div>
 
-                        <div class="mt-2">
+                        {{-- ===================== Enquiry Mail Address =====================
+                             Where the ADMIN's copy of a submission goes. Separate from
+                             "From Address" above, which is who the mail comes from.
+                             Left blank, notifications fall back to the address on
+                             Settings -> Contact, exactly as they did before. --}}
+                        <div class="form-section mt-4">
+                            <h2 class="form-section__title">Enquiry Mail Address</h2>
+                        </div>
+
+                        <p class="form-hint" style="margin:-6px 0 14px">
+                            Every contact enquiry, course enquiry, event registration and form
+                            response is emailed to these addresses.
+                        </p>
+
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <div class="form-row" style="margin-bottom:0">
+                                    <label class="form-label" for="enquiry_mail_to">Enquiry Mail To Address</label>
+                                    <input type="email" id="enquiry_mail_to" name="enquiry_mail_to" class="form-control-hm @error('enquiry_mail_to') is-invalid @enderror"
+                                           value="{{ old('enquiry_mail_to', $s('enquiry_mail_to')) }}"
+                                           placeholder="e.g. info@hiremindsacademy.com">
+                                    @error('enquiry_mail_to') <p class="form-error">{{ $message }}</p> @enderror
+                                    <p class="form-hint">Left blank, the address on <strong>Settings &rarr; Contact</strong> is used.</p>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="form-row" style="margin-bottom:0">
+                                    <label class="form-label" for="enquiry_mail_to_2">Enquiry Mail To Address 2 <span class="form-hint" style="display:inline">(optional)</span></label>
+                                    <input type="email" id="enquiry_mail_to_2" name="enquiry_mail_to_2" class="form-control-hm @error('enquiry_mail_to_2') is-invalid @enderror"
+                                           value="{{ old('enquiry_mail_to_2', $s('enquiry_mail_to_2')) }}"
+                                           placeholder="A second inbox, copied on every submission">
+                                    @error('enquiry_mail_to_2') <p class="form-error">{{ $message }}</p> @enderror
+                                    <p class="form-hint">Both addresses receive the same notification.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
                             <button type="submit" class="btn-brand">Save Email Settings</button>
                         </div>
                     </div>

@@ -108,10 +108,13 @@
                 <div class="form-row">
                     <label class="form-label" for="content">Article Body</label>
                     <textarea id="content" name="content" rows="16"
-                              class="form-control-hm @error('content') is-invalid @enderror"
-                              placeholder="The full article. Basic HTML is supported: <h3>Heading</h3> for section titles and <p>…</p> for paragraphs.">{{ old('content', $blog->content) }}</textarea>
-                    <p class="form-hint">Use <code>&lt;h3&gt;</code> for section headings and <code>&lt;p&gt;</code> for paragraphs. <code>&lt;strong&gt;</code> and <code>&lt;a href&gt;</code> also work.</p>
+                              class="form-control-hm @error('content') is-invalid @enderror">{{ old('content', $blog->content) }}</textarea>
+                    <p class="form-hint">Write the article as it should read. Use the toolbar for headings, bold, lists and links - the page styles them to match the site.</p>
                     @error('content') <p class="form-error">{{ $message }}</p> @enderror
+                    {{-- The same editor the Terms / Privacy pages use. It is a
+                         progressive enhancement: the plain textarea above still
+                         posts the field if the script does not load. --}}
+                    @include('backend.partials.rich-text-editor', ['selector' => '#content', 'height' => 460])
                 </div>
 
                 {{-- Row 6 — cover image --}}
@@ -129,6 +132,19 @@
                         </div>
                     </div>
                     @error('image') <p class="form-error">{{ $message }}</p> @enderror
+
+                    {{-- Alt text belongs to the image, so it sits with it
+                         rather than in the SEO block. Blank falls back to the
+                         post title, which is what the cover carried before. --}}
+                    <div class="form-row mt-3" style="margin-bottom:0">
+                        <label class="form-label" for="image_alt">Image Alt Tag</label>
+                        <input type="text" id="image_alt" name="image_alt"
+                               class="form-control-hm @error('image_alt') is-invalid @enderror"
+                               value="{{ old('image_alt', $blog->image_alt) }}"
+                               placeholder="e.g. Student taking notes during a mock technical interview">
+                        @error('image_alt') <p class="form-error">{{ $message }}</p> @enderror
+                        <p class="form-hint">Describes the cover for screen readers and search engines. Left blank, the post title is used.</p>
+                    </div>
                 </div>
 
                 {{-- Row 7 — display order --}}
@@ -162,6 +178,45 @@
                             <span class="check-chip__label">Blog details “The Latest” sidebar</span>
                         </label>
                     </div>
+                </div>
+
+                {{-- =============================== SEO ===============================
+                     Per post, because every post shares one route: SEO -> Page
+                     SEO is keyed by route name and skips the details pages for
+                     exactly that reason. Same three fields a course carries. --}}
+                <div class="form-section mt-4">
+                    <h2 class="form-section__title">SEO</h2>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
+                            <label class="form-label" for="meta_title">Meta Title</label>
+                            <input type="text" id="meta_title" name="meta_title"
+                                   class="form-control-hm @error('meta_title') is-invalid @enderror"
+                                   value="{{ old('meta_title', $blog->meta_title) }}"
+                                   placeholder="Left blank: the post title is used">
+                            @error('meta_title') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="form-row" style="margin-bottom:0">
+                            <label class="form-label" for="meta_keywords">Meta Keywords <span class="form-hint" style="display:inline">(comma separated)</span></label>
+                            <input type="text" id="meta_keywords" name="meta_keywords"
+                                   class="form-control-hm @error('meta_keywords') is-invalid @enderror"
+                                   value="{{ old('meta_keywords', $blog->meta_keywords) }}"
+                                   placeholder="e.g. technical interview, fresher jobs, placement training">
+                            @error('meta_keywords') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row mt-3" style="margin-bottom:0">
+                    <label class="form-label" for="meta_description">Meta Description</label>
+                    <textarea id="meta_description" name="meta_description" rows="2"
+                              class="form-control-hm @error('meta_description') is-invalid @enderror"
+                              placeholder="The line shown under the title in search results. Left blank, the excerpt is used.">{{ old('meta_description', $blog->meta_description) }}</textarea>
+                    @error('meta_description') <p class="form-error">{{ $message }}</p> @enderror
                 </div>
 
             </div>

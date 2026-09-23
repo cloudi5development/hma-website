@@ -754,6 +754,7 @@
         $homeBlogTones = ['cream', 'blue', 'green', 'purple'];
         $blogs = collect($homeBlogs ?? [])->values()->map(fn ($b, $i) => [
             'img_url' => $b->image_url,
+            'img_alt' => $b->image_alt_text,
             'tone'    => $homeBlogTones[$i % 4],
             'title'   => $b->title,
             'excerpt' => $b->excerpt,
@@ -794,7 +795,7 @@
                         <article class="hm-blog hm-blog--{{ $blog['tone'] }} hm-anim hm-anim--up hm-anim--d{{ ($i % 4) + 1 }}">
                             <div class="hm-blog__thumb">
                                 <img src="{{ $blog['img_url'] }}"
-                                     alt="{{ $blog['title'] }}" loading="lazy">
+                                     alt="{{ $blog['img_alt'] }}" loading="lazy">
                             </div>
                             <div class="hm-blog__body">
                                 <h3 class="hm-blog__title">

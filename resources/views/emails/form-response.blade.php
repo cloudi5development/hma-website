@@ -27,10 +27,18 @@
 
     {{-- Uploads are not attached: they are held on the private disk and are only
          reachable by a signed-in admin. --}}
+    @php
+        // Worked out here, not inline: "status@if (...)" is a directive glued to
+        // a word, which Blade does not compile - it printed the @if and @endif
+        // into the email as text. Nothing may sit tight against a directive.
+        $filesLine = $response->values->contains(fn ($v) => $v->isFile())
+            ? ' or download the files attached to it'
+            : '';
+    @endphp
     <p style="margin:0 0 22px;font-size:15px;line-height:1.7;color:#4b4038;">
         <a href="{{ route('backend.forms.responses.show', [$form, $response]) }}"
            style="color:#A85A2E;font-weight:600;">Open this response in the admin panel</a>
-        to change its status@if ($response->values->contains(fn ($v) => $v->isFile())) or download the files attached to it@endif.
+        to change its status{{ $filesLine }}.
     </p>
 
     <p style="margin:0;font-size:15px;color:#4b4038;">— Hire Minds Academy</p>

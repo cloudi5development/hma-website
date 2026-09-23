@@ -48,13 +48,14 @@ class ContentSecurityPolicy
         $fonts     = config('csp.origins.fonts', []);
         $analytics = config('csp.origins.analytics', []);
         $frames    = config('csp.origins.frames', []);
+        $recaptcha = config('csp.origins.recaptcha', []);
 
         $directives = [
             "default-src 'self'",
 
             // 'unsafe-inline' is required by the inline blocks throughout the
             // views; the origin list is what keeps foreign scripts out.
-            'script-src ' . $this->join(["'self'", "'unsafe-inline'"], $cdn, $analytics),
+            'script-src ' . $this->join(["'self'", "'unsafe-inline'"], $cdn, $analytics, $recaptcha),
 
             'style-src ' . $this->join(["'self'", "'unsafe-inline'"], $cdn, $fonts),
 
@@ -62,12 +63,12 @@ class ContentSecurityPolicy
 
             // data: for the inline SVG carets in CSS, blob: for the admin's
             // live upload previews (URL.createObjectURL).
-            'img-src ' . $this->join(["'self'", 'data:', 'blob:'], $analytics),
+            'img-src ' . $this->join(["'self'", 'data:', 'blob:'], $analytics, $recaptcha),
 
             // Reels and any other clip are served from this host.
             "media-src 'self' blob:",
 
-            'connect-src ' . $this->join(["'self'"], $analytics),
+            'connect-src ' . $this->join(["'self'"], $analytics, $recaptcha),
 
             // The branch maps, and nothing else. An ad network's iframe is
             // refused here.

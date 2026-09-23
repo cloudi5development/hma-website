@@ -162,6 +162,8 @@
                     <p class="hm-reg__error" data-hm-error>Please accept the Terms &amp; Conditions.</p>
                 </div>
 
+                @include('frontend.partials.recaptcha', ['action' => 'event_registration'])
+
                 <button class="hm-reg__submit" type="submit">
                     <span>Register Now</span>
                 </button>

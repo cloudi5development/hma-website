@@ -357,7 +357,9 @@ class FormBuilderTest extends TestCase
 
         $this->assertSame('Apply Now', $form->submit_label);
         $this->assertSame('We have your application.', $form->success_message);
-        $this->assertSame(['hr@example.com'], $form->notificationRecipients());
+        // The form's OWN addresses - notificationRecipients() also carries the
+        // site admin, who is told about every response.
+        $this->assertSame(['hr@example.com'], $form->extraNotificationRecipients());
     }
 
     /**
@@ -387,7 +389,9 @@ class FormBuilderTest extends TestCase
 
         $this->assertSame(['Full Name'], $form->fields->pluck('label')->all());
         $this->assertSame('Apply Now', $form->submit_label);
-        $this->assertSame(['hr@example.com'], $form->notificationRecipients());
+        // The form's OWN addresses - notificationRecipients() also carries the
+        // site admin, who is told about every response.
+        $this->assertSame(['hr@example.com'], $form->extraNotificationRecipients());
     }
 
     /**

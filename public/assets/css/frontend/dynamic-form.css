@@ -123,6 +123,17 @@
    whatever width the host gives it, and the note has to line up with it. */
 .hmf--embed .hmf__foot { max-width: none; padding: 18px 12px 2px; }
 
+/* The reCAPTCHA small print, under the submit row. Centred to match it. */
+.hmf__recaptcha {
+    margin: 14px 0 0;
+    text-align: center;
+}
+
+/* The v2 checkbox stacks directly above the submit button, aligned with it. */
+.hmf__form .hmf__actions .hm-recaptcha {
+    margin-bottom: 18px;
+}
+
 /* -------------------------------- Banner --------------------------------
    The same terracotta gradient and off-centre gold glow the Terms / Privacy
    pages use (content-page.css), so a form reads as part of Hire Minds rather
