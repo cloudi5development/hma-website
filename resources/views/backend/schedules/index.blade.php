@@ -84,16 +84,18 @@
                             {{-- Badged from $shows_on_site, so this column always
                                  agrees with what the website is doing. --}}
                             <td>
-                                @if (! $schedule->is_active)
+                                @if ($schedule->is_expired)
+                                    <span class="pill pill--tiny pill--inactive" title="Its start date has passed, so it was hidden automatically. Edit it and tick Active to show it again.">Expired</span>
+                                @elseif (! $schedule->is_active)
                                     <span class="pill pill--tiny pill--inactive">Hidden</span>
                                 @elseif ($course && ! $course->is_active)
                                     <span class="pill pill--tiny pill--inactive" title="The course itself is hidden">Course hidden</span>
                                 @elseif ($schedule->is_running)
-                                    <span class="pill pill--tiny pill--active" title="Started, still running — shown on the site until it ends">Running</span>
+                                    <span class="pill pill--tiny pill--active" title="Its start date has passed, but it was re-activated, so the site still lists it">Re-activated</span>
                                 @elseif ($schedule->shows_on_site)
                                     <span class="pill pill--tiny pill--active">Active</span>
                                 @else
-                                    <span class="pill pill--tiny pill--inactive" title="This batch has finished, so the site leaves it out">Finished</span>
+                                    <span class="pill pill--tiny pill--inactive" title="Its start date has passed, so the site leaves it out">Started</span>
                                 @endif
                             </td>
                             <td class="text-end">

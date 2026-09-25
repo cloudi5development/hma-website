@@ -54,9 +54,13 @@
                             <td>{{ $event->price }}</td>
                             <td><span class="pill pill--tiny pill--interested">{{ ucfirst($event->tone) }}</span></td>
                             <td>
-                                <span class="pill pill--tiny {{ $event->is_active ? 'pill--active' : 'pill--inactive' }}">
-                                    {{ $event->is_active ? 'Active' : 'Hidden' }}
-                                </span>
+                                @if ($event->is_expired)
+                                    <span class="pill pill--tiny pill--inactive" title="Its date has passed, so it was hidden automatically. Edit it and tick Active to show it again.">Expired</span>
+                                @else
+                                    <span class="pill pill--tiny {{ $event->is_active ? 'pill--active' : 'pill--inactive' }}">
+                                        {{ $event->is_active ? 'Active' : 'Hidden' }}
+                                    </span>
+                                @endif
                             </td>
                             <td class="text-end">
                                 <div class="d-inline-flex gap-2">

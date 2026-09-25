@@ -24,12 +24,43 @@ class HomeController extends Controller
     {
         return view('frontend.about-us');
     }
-    public function blog()
+    public function blog(Request $request)
     {
-        // Paginated so the design's Prev / 1 2 / Next controls stay meaningful.
-        $blogs = Blog::active()->paginate(12);
+        $category = trim((string) $request->query('category'));
+        $search   = trim((string) $request->query('q'));
 
-        return view('frontend.blog', compact('blogs'));
+        $query = Blog::active();
+
+        // The category is matched whole, not as a LIKE: it is chosen from the
+        // list the posts themselves produce, so it is either one of them or
+        // nothing.
+        if ($category !== '') {
+            $query->where('category', $category);
+        }
+
+        if ($search !== '') {
+            // % and _ are wildcards to LIKE; a visitor typing one means the
+            // character, not "match anything".
+            $term = '%' . addcslashes($search, '%_\\') . '%';
+
+            $query->where(function ($q) use ($term) {
+                $q->where('title', 'like', $term)
+                  ->orWhere('excerpt', 'like', $term)
+                  ->orWhere('category', 'like', $term);
+            });
+        }
+
+        // Paginated so the design's Prev / 1 2 / Next controls stay meaningful.
+        // withQueryString keeps the filter on every page link - without it,
+        // page 2 of "Development" quietly shows everything again.
+        $blogs = $query->paginate(12)->withQueryString();
+
+        return view('frontend.blog', [
+            'blogs'      => $blogs,
+            'categories' => Blog::categories(),
+            'category'   => $category,
+            'search'     => $search,
+        ]);
     }
 
     /**

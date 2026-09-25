@@ -399,12 +399,44 @@
     .hm-evl__search { flex: 1 1 100%; }
     .hm-evl__grid { --bs-gutter-x: 14px; --bs-gutter-y: 14px; }
 
-    /* Two cards still share a row here, so the copy tightens rather than the
-       card growing taller. */
-    .hm-evl-card { min-height: 226px; }
-    .hm-evl-card__body { padding: 13px 13px 12px; }
-    .hm-evl-card__title { font-size: 15px; max-width: 100%; }
-    .hm-evl-card__person { width: 56%; height: 68%; }
-    .hm-evl-card__meta li { font-size: 11px; }
-    .hm-evl-card__btn { padding: 7px 12px; font-size: 10.5px; }
+    /* ONE card per row here (col-12 up to sm), because two cannot be made to
+       work: the body's own min-content width is about 211px, while half a
+       390px phone is 186px and half a 320px phone only 146px. The card was
+       therefore wider than its column and the right-hand one was clipped at
+       the screen edge, badge and all.
+
+       The ratio has to go with it. aspect-ratio plus a min-height resolves the
+       WIDTH from the height (226 x 184/197 = 211px), which is where that
+       stubborn 211 came from; a full-width card must take its width from the
+       column and its height from its content. */
+    .hm-evl-card {
+        aspect-ratio: auto;
+        min-height: 196px;
+        width: 100%;
+    }
+
+    /* Room again, so the copy goes back to a readable size - the 15px title
+       and 10.5px button were there to survive a 186px card. */
+    .hm-evl-card__body { padding: 18px 18px 16px; }
+    .hm-evl-card__title { font-size: 19px; max-width: 62%; }
+    .hm-evl-card__person { width: 44%; height: 86%; }
+    .hm-evl-card__meta li { font-size: 12.5px; }
+    .hm-evl-card__btn { padding: 9px 16px; font-size: 12px; }
+
+    /* The pager is a nowrap flex row of fixed 40px circles, so past four or
+       five pages it ran off the side of a phone - measured with six pages, the
+       "next" arrow sat 51px beyond the edge and could not be tapped at all.
+       Wrapping is the whole fix; the smaller circles just buy a row. */
+    .hm-evl__pagination {
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 32px;
+    }
+
+    .hm-evl__page {
+        width: 36px;
+        height: 36px;
+        flex: 0 0 36px;
+        font-size: 13px;
+    }
 }

@@ -31,6 +31,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // in config/csp.php; CSP_ENABLED=false turns it off.
         $middleware->append(\App\Http\Middleware\ContentSecurityPolicy::class);
 
+        // Switch off events and course batches past their start date on the
+        // first web request of the day — see App\Support\ContentExpiry.
+        $middleware->web(append: [\App\Http\Middleware\ExpirePastContent::class]);
+
         $middleware->alias([
             // Force a JSON response on any route/group that must always
             // answer in JSON, even when the client forgets the Accept header.

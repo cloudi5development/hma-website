@@ -50,7 +50,16 @@
 
             {{-- ============================= TOOLBAR ============================= --}}
             <div class="hm-blog__toolbar">
-                <div class="hm-blog__filters">
+                {{-- A plain GET form: the chosen category and the search term
+                     both travel in the query string, so a filtered listing can
+                     be linked to, reloaded and paged through. --}}
+                <form class="hm-blog__filters" method="GET" action="{{ route('frontend.blog') }}" role="search">
+
+                    {{-- Keeps the chosen category when a search is submitted;
+                         the category links below carry the search the same way. --}}
+                    @if ($category !== '')
+                        <input type="hidden" name="category" value="{{ $category }}">
+                    @endif
 
                     <div class="hm-blog__search">
                         <label class="visually-hidden" for="hmBlogSearch">Search blog posts</label>
@@ -58,11 +67,14 @@
                                id="hmBlogSearch"
                                type="search"
                                name="q"
+                               value="{{ $search }}"
                                placeholder='Search "Design"'
                                autocomplete="off">
-                        <img class="hm-blog__search-icon"
-                             src="{{ asset('assets/images/blog/search.png') }}"
-                             alt="" aria-hidden="true">
+                        {{-- A real submit button, so the magnifier can be
+                             tapped as well as Enter pressed. --}}
+                        <button class="hm-blog__search-icon" type="submit" aria-label="Search blog posts">
+                            <img src="{{ asset('assets/images/blog/search.png') }}" alt="" aria-hidden="true">
+                        </button>
                     </div>
 
                     {{-- Vanilla dropdown — Bootstrap's JS bundle is not loaded
@@ -76,17 +88,28 @@
                             <img class="hm-blog__cat-icon"
                                  src="{{ asset('assets/images/blog/menu.png') }}"
                                  alt="" aria-hidden="true">
-                            <span class="hm-blog__cat-label">Categories</span>
+                            <span class="hm-blog__cat-label">{{ $category !== '' ? $category : 'Categories' }}</span>
                             <i class="fa-solid fa-chevron-down hm-blog__cat-caret" aria-hidden="true"></i>
                         </button>
 
+                        {{-- The categories the posts themselves use (Blog::categories()),
+                             not a list written here: a category typed on a post in the
+                             panel appears straight away, and one nothing uses never does. --}}
                         <ul class="hm-blog__cat-menu" id="hmBlogCatMenu">
-                            @foreach (['All Categories', 'Design', 'Development', 'Career Advice', 'Interview Tips'] as $category)
-                                <li><button type="button">{{ $category }}</button></li>
+                            <li>
+                                <a href="{{ route('frontend.blog', array_filter(['q' => $search])) }}"
+                                   @class(['is-active' => $category === ''])>All Categories</a>
+                            </li>
+                            @foreach ($categories as $name)
+                                <li>
+                                    <a href="{{ route('frontend.blog', array_filter(['q' => $search, 'category' => $name])) }}"
+                                       @class(['is-active' => $category === $name])
+                                       @if ($category === $name) aria-current="true" @endif>{{ $name }}</a>
+                                </li>
                             @endforeach
                         </ul>
                     </div>
-                </div>
+                </form>
 
                 <p class="hm-blog__count">Showing {{ $from }}&ndash;{{ $to }} of {{ $total }} Results</p>
             </div>
@@ -132,7 +155,18 @@
                         </article>
                     </div>
                 @empty
-                    <div class="col-12"><p class="hm-blog__count">No blog posts yet.</p></div>
+                    <div class="col-12">
+                        <p class="hm-blog__count">
+                            @if ($category !== '' || $search !== '')
+                                {{-- "No blog posts yet" would be a lie here: there are
+                                     posts, just none matching this filter. --}}
+                                Nothing matched that filter.
+                                <a href="{{ route('frontend.blog') }}">Show all posts</a>
+                            @else
+                                No blog posts yet.
+                            @endif
+                        </p>
+                    </div>
                 @endforelse
             </div>
 
@@ -172,8 +206,7 @@
             var root = document.querySelector('[data-hm-cat]');
             if (!root) return;
 
-            var btn   = root.querySelector('.hm-blog__cat-btn');
-            var label = root.querySelector('.hm-blog__cat-label');
+            var btn = root.querySelector('.hm-blog__cat-btn');
 
             function close() {
                 root.classList.remove('is-open');
@@ -186,15 +219,9 @@
                 btn.setAttribute('aria-expanded', open ? 'true' : 'false');
             });
 
-            // Picking a category reflects the choice on the trigger and closes
-            // the menu. The filtering itself waits on the backend query.
-            root.querySelectorAll('.hm-blog__cat-menu button').forEach(function (item) {
-                item.addEventListener('click', function () {
-                    label.textContent = item.textContent;
-                    close();
-                    btn.focus();
-                });
-            });
+            // Picking a category is a link now: the page reloads filtered and
+            // the server puts the chosen name on the trigger, so there is
+            // nothing to reflect here.
 
             document.addEventListener('click', function (e) {
                 if (!root.contains(e.target)) close();

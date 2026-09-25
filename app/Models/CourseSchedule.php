@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ExpiresAfterStartDate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,6 +15,8 @@ use Illuminate\Support\Carbon;
  */
 class CourseSchedule extends Model
 {
+    use ExpiresAfterStartDate;
+
     /** How many batches the home-page section shows before "View All Schedules". */
     public const MAX_HOME = 4;
 
@@ -41,7 +44,14 @@ class CourseSchedule extends Model
         'fee'        => 'decimal:2',
         'show_fee'   => 'boolean',
         'is_active'  => 'boolean',
+        'expired_at' => 'datetime',
     ];
+
+    /** Listed up to its start date, switched off the day after (ExpiresAfterStartDate). */
+    public function expiryDateColumn(): string
+    {
+        return 'start_date';
+    }
 
     public function course(): BelongsTo
     {
@@ -54,27 +64,23 @@ class CourseSchedule extends Model
     }
 
     /**
-     * Batches the site is allowed to list: anything that has not finished.
+     * Batches the site is allowed to list: those starting today or later.
      *
-     * A batch that has already started but is still running counts — it is what
-     * an admin means by "upcoming" when they enter a course running to the end
-     * of September. The earlier rule required the start date to be in the future
-     * too, which quietly hid a live batch the day it began.
+     * Since 2026-09-24 a batch is listed up to and including its start date and
+     * switched off the day after (ExpiresAfterStartDate), whatever its end date.
+     * The one exception is a batch an admin has re-activated after it expired —
+     * it carries an expired_at stamp and stays listed until they hide it.
      *
-     * Without an end date there is nothing to expire against, so such a batch
-     * falls back to the old rule and drops off the day it starts.
+     * The date check is kept alongside the sweep so a past batch never shows in
+     * the gap before the day's sweep has run.
      *
      * Kept in step with $shows_on_site below — change one, change the other.
      */
     public function scopeUpcoming(Builder $q): Builder
     {
-        $today = Carbon::today()->toDateString();
-
         return $q->where(fn ($sub) => $sub
-            ->whereDate('end_date', '>=', $today)
-            ->orWhere(fn ($noEnd) => $noEnd
-                ->whereNull('end_date')
-                ->whereDate('start_date', '>=', $today)));
+            ->whereDate('start_date', '>=', Carbon::today()->toDateString())
+            ->orWhereNotNull('expired_at'));
     }
 
     /**
@@ -91,14 +97,10 @@ class CourseSchedule extends Model
             return false;
         }
 
-        $today = Carbon::today();
-
-        return $this->end_date
-            ? $this->end_date->gte($today)
-            : $this->start_date->gte($today);
+        return $this->start_date->gte(Carbon::today()) || $this->expired_at !== null;
     }
 
-    /** Started, but not finished — listed on the site, and badged differently. */
+    /** Past its start date but re-activated by an admin — listed, and badged differently. */
     public function getIsRunningAttribute(): bool
     {
         return $this->shows_on_site && $this->start_date->lt(Carbon::today());

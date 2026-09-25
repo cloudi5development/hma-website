@@ -33,6 +33,29 @@ class Blog extends Model
         return $q->where('is_active', true)->orderBy('sort_order')->orderBy('id');
     }
 
+    /**
+     * The categories the posts themselves use, for the listing's filter.
+     *
+     * Read from the posts rather than kept as a list somewhere: a category is
+     * free text on the post, so the only categories that can be chosen are the
+     * ones that would actually return something.
+     *
+     * Deliberately NOT built on scopeActive(): that orders by sort_order, and
+     * MySQL refuses an ORDER BY on a column a SELECT DISTINCT does not carry.
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    public static function categories(): \Illuminate\Support\Collection
+    {
+        return static::query()
+            ->where('is_active', true)
+            ->whereNotNull('category')
+            ->where('category', '!=', '')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category');
+    }
+
     /** Posts flagged for the home "Latest Blog" grid. */
     public function scopeForHome(Builder $q): Builder
     {

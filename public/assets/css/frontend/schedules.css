@@ -403,10 +403,18 @@
     }
 
     .hm-sched__table,
-    .hm-sched__table tbody,
-    .hm-sched__table tr,
     .hm-sched__table td {
         display: block;
+        width: 100%;
+    }
+
+    /* The cards themselves are the grid now: two to a row once there is room
+       for them (see the 576px tier). Stretch, not start, so two cards beside
+       each other are the same height. */
+    .hm-sched__table tbody {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
         width: 100%;
     }
 
@@ -423,14 +431,25 @@
         border: 0;
     }
 
+    /* Inside a card everything stacks, one fact per line: start date, then end
+       date, then duration, then fee. A card is only half a row wide once they
+       pair up, so there is no room to put two side by side. The gap spaces
+       them, so no cell carries a margin of its own. */
     .hm-sched__row {
-        margin-bottom: 18px;
-        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 0;
+        padding: 18px;
         border-radius: var(--hm-radius, 18px);
         background: var(--hm-white, #fff);
         border: 1px solid rgba(42, 29, 20, .07);
         box-shadow: var(--hm-shadow-sm, 0 6px 18px rgba(42, 29, 20, .08));
     }
+
+    /* Two cards side by side are only as tidy as their buttons: this pins the
+       action row to the bottom so they line up whatever the card above it. */
+    .hm-sched__table td.hm-sched__action { margin-top: auto; }
 
     .hm-sched__row:hover { background: var(--hm-white, #fff); }
     .hm-sched__row:hover td:first-child { box-shadow: none; }
@@ -456,24 +475,23 @@
        icon beside the name, so it is named specifically enough to win. */
     .hm-sched__table td.hm-sched__course {
         display: flex;
+        align-items: center;
         min-width: 0;
         padding-bottom: 14px;
-        margin-bottom: 14px;
         border-bottom: 1px solid rgba(42, 29, 20, .07);
     }
 
-    /* Category sits right under the course name, then the facts pair up. */
-    .hm-sched__table tbody td[data-label="Category"] { margin-bottom: 16px; }
-
-    .hm-sched__table tbody td[data-label="Start Date"],
-    .hm-sched__table tbody td[data-label="End Date"],
-    .hm-sched__table tbody td[data-label="Duration"],
-    .hm-sched__table tbody td[data-label="Fee"] {
-        display: inline-block;
-        width: 50%;
-        margin-bottom: 16px;
-        vertical-align: top;
+    /* The daily timing is the one line too long for half a card, and it is set
+       nowrap so a date never breaks mid-way. Here it is allowed to wrap rather
+       than spill across the column beside it; the icon stays on the first line. */
+    .hm-sched__stack-time {
+        white-space: normal;
+        align-items: flex-start;
     }
+
+    /* A flex item will not shrink below its content by default, and the daily
+       time line is long enough to stretch a half-width card if allowed to. */
+    .hm-sched__table tbody td[data-label] { min-width: 0; }
 
     .hm-sched__table td.hm-sched__action {
         width: auto;
@@ -501,6 +519,19 @@
     }
 
     .hm-sched__foot { margin-top: 6px; }
+}
+
+/* Wide enough for two batches side by side. Below this a card would be about
+   190px across, which is not enough for the course name, the dates and the
+   Apply button, so phones keep one to a row. */
+@media (min-width: 576px) and (max-width: 991.98px) {
+    .hm-sched__table tbody { grid-template-columns: 1fr 1fr; }
+
+    .hm-sched__btn {
+        flex: 1;
+        justify-content: center;
+        gap: 10px;
+    }
 }
 
 @media (max-width: 575.98px) {

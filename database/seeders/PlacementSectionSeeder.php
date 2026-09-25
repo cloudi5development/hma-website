@@ -195,3 +195,5 @@ class PlacementSectionSeeder extends Seeder
         ];
     }
 }
+
+

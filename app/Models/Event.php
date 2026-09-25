@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ExpiresAfterStartDate;
 use App\Models\Concerns\HasPageVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use Illuminate\Support\Str;
 
 class Event extends Model
 {
-    use HasPageVisibility;
+    use ExpiresAfterStartDate, HasPageVisibility;
 
     /** The three card colour sets the CSS ships (hm-ev-card--{tone}). */
     public const TONES = ['purple', 'teal', 'green'];
@@ -72,7 +73,14 @@ class Event extends Model
         'total_seats'         => 'integer',
         'available_seats'     => 'integer',
         'event_date'          => 'date',
+        'expired_at'          => 'datetime',
     ];
+
+    /** Listed up to its event date, switched off the day after (ExpiresAfterStartDate). */
+    public function expiryDateColumn(): string
+    {
+        return 'event_date';
+    }
 
     /** Slug is derived from the title whenever it is left blank. */
     protected static function booted(): void

@@ -76,7 +76,7 @@
                 @forelse ($events as $event)
                     {{-- col-6 on phones so two cards still share a row, as on the
                          blog listing; four across from xl. --}}
-                    <div class="col-6 col-lg-4 col-xl-3">
+                    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
                         <article class="hm-evl-card hm-evl-card--{{ $event->tone }}">
 
                             <img class="hm-evl-card__person"
